@@ -1,0 +1,84 @@
+class Player {
+    id: string
+    username: string
+    hand: Card[]
+    uno: boolean
+
+    getId(): string
+
+    getHand(): Card[]
+    addToHand(card: Card | Card[]): void
+
+    removeCard(cardId: number | number[]): Card[]
+
+    setIsUno(isUno: boolean): void
+    isUno(): boolean
+}
+
+class GameBoard {
+    id: string
+    discardPile: Card[]
+    drawPile: Card[] // This is a stack
+    currentColor: string
+
+    getId(): string
+
+    getDiscardPile(): Card[]
+    addToDiscardPile(card: Card | Card[]): void
+    cleanDiscardPile(): Card[] // This is used to clean the discardPile and add to drawPile
+
+    getDrawPile(): Card[]
+    addToDrawPile(card: Card | Card[]): void
+    shuffleDrawPile(): void
+    removeFromDrawPile(amount: number): Card[]
+
+    setCurrentColor(color: string): void
+    getCurrentColor(): string
+}
+
+class GameRoom {
+    id: string
+    ownerId: string // player.id
+    maxPlayers: number
+    full: boolean
+    started: boolean
+    gameBoard: GameBoard
+    currentPlayers: Player[]
+    playerOrder: Player[]
+    direction: number
+    currentPlayerIndex: number
+
+    getId(): string
+    getOwnerId(): string
+    getMaxPlayer(): number
+    isFull(): boolean
+    setHasStarted(started: boolean): void
+    hasStarted(): boolean
+    getGameBoard(): GameBoard
+    
+    getCurrentPlayers(): Player[]
+    addCurrentPlayer(player: Player): void
+    removeCurrentPlayer(player: Player): void
+
+    // THIS IS TO BE CONSTRUCTED AFTER GAME HAS STARTED
+    setPlayerOrder(players: Player[]): void
+    getPlayerOrder(): Player[]
+    removeFromPlayerOrder(player: Player): void
+    setDirection(direction: number): void
+    getDirection(): number
+    setCurrentPlayerIndex(index: number): void
+    getCurrentPlayerIndex(): number
+}
+
+class GameService {
+    1. Create a room using websockets:
+        - Initialize current Player
+        - Initialize GameRoom 
+        - Multiple people can connect using GameRoom.id if not full
+        - On player join, add player to GameRoom and if they leave do the opposite
+        - Log to console who joined and left
+        - Only owner can start the game
+
+    2. Starting the game:
+        - LEAVE THIS FOR TOMMORROW
+}
