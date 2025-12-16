@@ -15,6 +15,13 @@ class Player {
     isUno(): boolean
 }
 
+class Card {
+    id: string
+    name: string
+    color: CardColor
+    value: CardValue
+}
+
 class GameBoard {
     id: string
     discardPile: Card[]
@@ -38,6 +45,7 @@ class GameBoard {
 
 class GameRoom {
     id: string
+    name: string
     ownerId: string // player.id
     maxPlayers: number
     full: boolean
@@ -71,14 +79,30 @@ class GameRoom {
 }
 
 class GameService {
-    1. Create a room using websockets:
-        - Initialize current Player
-        - Initialize GameRoom 
-        - Multiple people can connect using GameRoom.id if not full
-        - On player join, add player to GameRoom and if they leave do the opposite
-        - Log to console who joined and left
-        - Only owner can start the game
+    ON SERVER CONNECTION
+        - Establish websocket connection (/)
 
-    2. Starting the game:
-        - LEAVE THIS FOR TOMMORROW
+    1. Player create a room in the namespace: 
+        - On "create-room" event:
+            - Initialize Player based on their socket 
+            - Initialize GameRoom
+            - Create a room in the namespace
+            - Connect player to that room
+
+    2. Players join created room:
+        - On "join-room" event:
+            If exists room id 
+            If room is not full
+            If room hasnt started
+                Connect them to the room
+            Else
+                Dont connect and emit and error
+
+    3. Players leave created room:
+        - On "leave-room" event:
+            - Remove them from currentPlayers
+            - Disconnect them from the room
+
+    4. Starting the game:
+        - IMPLEMENT THIS LATER
 }
