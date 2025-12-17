@@ -1,5 +1,5 @@
 class Player {
-    id: string
+    socketId: string
     username: string
     hand: Card[]
     uno: boolean
@@ -7,9 +7,9 @@ class Player {
     getId(): string
 
     getHand(): Card[]
-    addToHand(card: Card | Card[]): void
+    addToHand(cards: Card[]): void
 
-    removeCard(cardId: number | number[]): Card[]
+    removeCard(cardIds: number[]): Card[]
 
     setIsUno(isUno: boolean): void
     isUno(): boolean
@@ -31,11 +31,11 @@ class GameBoard {
     getId(): string
 
     getDiscardPile(): Card[]
-    addToDiscardPile(card: Card | Card[]): void
+    addToDiscardPile(cards: Card[]): void
     cleanDiscardPile(): Card[] // This is used to clean the discardPile and add to drawPile
 
     getDrawPile(): Card[]
-    addToDrawPile(card: Card | Card[]): void
+    addToDrawPile(cards: Card[]): void
     shuffleDrawPile(): void
     removeFromDrawPile(amount: number): Card[]
 
@@ -52,6 +52,8 @@ class GameRoom {
     started: boolean
     gameBoard: GameBoard
     currentPlayers: Player[]
+    
+    // THIS IS TO BE CONSTRUCTED AFTER GAME HAS STARTED
     playerOrder: Player[]
     direction: number
     currentPlayerIndex: number
@@ -68,7 +70,6 @@ class GameRoom {
     addCurrentPlayer(player: Player): void
     removeCurrentPlayer(player: Player): void
 
-    // THIS IS TO BE CONSTRUCTED AFTER GAME HAS STARTED
     setPlayerOrder(players: Player[]): void
     getPlayerOrder(): Player[]
     removeFromPlayerOrder(player: Player): void
@@ -78,31 +79,41 @@ class GameRoom {
     getCurrentPlayerIndex(): number
 }
 
+// @Injectable - Singleton
 class GameService {
+    rooms: Map<GameRoom> roomId, room
+
     ON SERVER CONNECTION
         - Establish websocket connection (/)
 
     1. Player create a room in the namespace: 
         - On "create-room" event:
             - Initialize Player based on their socket 
-            - Initialize GameRoom
-            - Create a room in the namespace
-            - Connect player to that room
+            - Create logical GameRoom 
+            - Create a network room
+            - Join current player to network room
+            - Add them to GameRoom currentPlayer
+            - Add GameRoom to rooms
 
     2. Players join created room:
         - On "join-room" event:
-            If exists room id 
+            If exists room id in rooms
             If room is not full
             If room hasnt started
-                Connect them to the room
+                - Join them to network room
+                - Add them to GameRoom currentPlayer
             Else
-                Dont connect and emit and error
+                Dont connect and emit error
 
     3. Players leave created room:
         - On "leave-room" event:
+            - Disconnect them from network room
             - Remove them from currentPlayers
-            - Disconnect them from the room
 
-    4. Starting the game:
+    4. If theres no Player in a room
+        - Remove network room
+        - Remove empty room
+
+    5. Starting the game:
         - IMPLEMENT THIS LATER
 }
