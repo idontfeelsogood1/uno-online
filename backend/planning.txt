@@ -1,15 +1,13 @@
 class Player {
-    socketId: string
-    username: string
+    readonly socketId: string
+    readonly username: string
     hand: Card[]
     uno: boolean
-
-    getId(): string
 
     getHand(): Card[]
     addToHand(cards: Card[]): void
 
-    removeCard(cardIds: number[]): Card[]
+    removeCards(cardIds: string[]): Card[]
 
     setIsUno(isUno: boolean): void
     isUno(): boolean
@@ -31,13 +29,13 @@ class GameBoard {
     getId(): string
 
     getDiscardPile(): Card[]
-    addToDiscardPile(cards: Card[]): void
-    cleanDiscardPile(): Card[] // This is used to clean the discardPile and add to drawPile
+    pushToDiscardPile(cards: Card[]): void
+    clearDiscardPile(): Card[] // This is used to clean the discardPile and add to drawPile
 
     getDrawPile(): Card[]
-    addToDrawPile(cards: Card[]): void
+    pushToDrawPile(cards: Card[]): void
     shuffleDrawPile(): void
-    removeFromDrawPile(amount: number): Card[]
+    popFromDrawPile(amount: number): Card[]
 
     setCurrentColor(color: string): void
     getCurrentColor(): string
@@ -68,11 +66,11 @@ class GameRoom {
     
     getCurrentPlayers(): Player[]
     addCurrentPlayer(player: Player): void
-    removeCurrentPlayer(player: Player): void
+    removeCurrentPlayer(player: Player): Player
 
     setPlayerOrder(players: Player[]): void
     getPlayerOrder(): Player[]
-    removeFromPlayerOrder(player: Player): void
+    removeFromPlayerOrder(player: Player): Player
     setDirection(direction: number): void
     getDirection(): number
     setCurrentPlayerIndex(index: number): void
