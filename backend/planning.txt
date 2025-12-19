@@ -14,19 +14,17 @@ class Player {
 }
 
 class Card {
-    id: string
-    name: string
-    color: CardColor
-    value: CardValue
+    readonly id: string
+    readonly name: string
+    readonly color: CardColor
+    readonly value: CardValue
 }
 
 class GameBoard {
-    id: string
+    readonly id: string
     discardPile: Card[]
     drawPile: Card[] // This is a stack
-    currentColor: string
-
-    getId(): string
+    currentColor: CardColor
 
     getDiscardPile(): Card[]
     pushToDiscardPile(cards: Card[]): void
@@ -37,28 +35,24 @@ class GameBoard {
     shuffleDrawPile(): void
     popFromDrawPile(amount: number): Card[]
 
-    setCurrentColor(color: string): void
-    getCurrentColor(): string
+    setCurrentColor(color: CardColor): void
+    getCurrentColor(): CardColor
 }
 
 class GameRoom {
-    id: string
-    name: string
-    ownerId: string // player.id
-    maxPlayers: number
-    full: boolean
-    started: boolean
+    readonly id: string
+    readonly name: string
+    readonly ownerId: string | player.id
+    readonly maxPlayers: number
     gameBoard: GameBoard
+
+    // SET AS DEFAULT VALUE
+    started: boolean
     currentPlayers: Player[]
-    
-    // THIS IS TO BE CONSTRUCTED AFTER GAME HAS STARTED
     playerOrder: Player[]
     direction: number
     currentPlayerIndex: number
 
-    getId(): string
-    getOwnerId(): string
-    getMaxPlayer(): number
     isFull(): boolean
     setHasStarted(started: boolean): void
     hasStarted(): boolean
