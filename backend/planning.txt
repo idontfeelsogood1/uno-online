@@ -60,11 +60,11 @@ class GameRoom {
     
     getCurrentPlayers(): Player[]
     addCurrentPlayer(player: Player): void
-    removeCurrentPlayer(player: Player): Player
+    removeCurrentPlayer(playerSocketId: string): Player
 
-    setPlayerOrder(players: Player[]): void
+    setPlayerOrder(playerOrder: Player[]): void
     getPlayerOrder(): Player[]
-    removeFromPlayerOrder(player: Player): Player
+    removeFromPlayerOrder(playerSocketId: string): Player
     setDirection(direction: number): void
     getDirection(): number
     setCurrentPlayerIndex(index: number): void
