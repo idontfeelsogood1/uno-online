@@ -6,11 +6,11 @@ export class Player {
   private hand: Card[];
   private uno: boolean;
 
-  constructor(socketId: string, username: string, hand: Card[], uno: boolean) {
+  constructor(socketId: string, username: string) {
     this.socketId = socketId;
     this.username = username;
-    this.hand = hand;
-    this.uno = uno;
+    this.hand = [];
+    this.uno = false;
   }
 
   public getHand(): Card[] {
@@ -24,13 +24,13 @@ export class Player {
   }
 
   public removeCards(cardIds: string[]): Card[] {
-    const idsToRemove = new Set(cardIds);
+    const idsToRemove: Set<string> = new Set(cardIds);
     const removedItems: Card[] = [];
 
     for (const card of this.hand) {
       if (idsToRemove.has(card.id)) {
-        const index = this.hand.indexOf(card);
-        const arr = this.hand.splice(index, 1);
+        const index: number = this.hand.indexOf(card);
+        const arr: Card[] = this.hand.splice(index, 1);
         removedItems.push(arr[0]);
       }
     }

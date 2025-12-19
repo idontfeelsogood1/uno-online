@@ -1,7 +1,5 @@
 import { Player } from './Player';
-import { Card } from '../card/Card';
-import { CardColor } from '../card/card-color.enum';
-import { CardValue } from '../card/card-value.enum';
+import { Card, CardColor, CardValue } from '../card/Card';
 
 // Mock Card class or interface if needed, or use simple objects for testing
 const mockCard1 = {
@@ -27,7 +25,7 @@ describe('Player', () => {
 
   beforeEach(() => {
     // Reset player before each test
-    player = new Player(socketId, username, [], false);
+    player = new Player(socketId, username);
   });
 
   it('should be defined', () => {
