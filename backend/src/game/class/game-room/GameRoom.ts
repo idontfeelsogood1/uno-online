@@ -6,12 +6,12 @@ export class GameRoom {
   readonly name: string;
   readonly ownerId: string;
   readonly maxPlayers: number;
-  gameBoard: GameBoard;
-  started: boolean;
-  currentPlayers: Player[];
-  playerOrder: Player[];
-  direction: number;
-  currentPlayerIndex: number;
+  private gameBoard: GameBoard;
+  private started: boolean;
+  private currentPlayers: Player[];
+  private playerOrder: Player[];
+  private direction: number;
+  private currentPlayerIndex: number;
 
   constructor(
     id: string,
