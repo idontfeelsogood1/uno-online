@@ -1,16 +1,18 @@
-import { Card } from '../card/Card';
+import { Card, CardColor, CardValue } from '../card/Card';
 
 export class GameBoard {
   readonly id: string;
   private discardPile: Card[];
   private drawPile: Card[];
   private currentTopCard: Card | null;
+  private enforcedColor: CardColor | null;
 
   constructor(id: string) {
     this.id = id;
     this.discardPile = [];
     this.drawPile = [];
     this.currentTopCard = null;
+    this.enforcedColor = null;
   }
 
   public getDiscardPile(): Card[] {
@@ -83,6 +85,55 @@ export class GameBoard {
 
   public getCurrentTopCard(): Card {
     return this.currentTopCard!;
+  }
+
+  public setEnforcedColor(color: CardColor): void {
+    this.enforcedColor = color;
+  }
+
+  public getEnforcedColor(): CardColor {
+    return this.enforcedColor!;
+  }
+
+  public getCardType(card: Card): string {
+    if (
+      card.value === CardValue.SKIP ||
+      card.value === CardValue.REVERSE ||
+      card.value === CardValue.DRAW_TWO
+    ) {
+      return 'ACTION';
+    }
+    if (
+      card.value === CardValue.WILD ||
+      card.value === CardValue.WILD_DRAW_FOUR
+    ) {
+      return 'WILD';
+    }
+    return 'NUMBER';
+  }
+
+  public processPattern(cards: Card[]): nextTurnEvents {}
+}
+
+export class nextTurnEvents {
+  readonly skip_amount: number;
+  readonly reverse_amount: number;
+  readonly draw_two_amount: number;
+  readonly wild_amount: number;
+  readonly wild_draw_four_amount: number;
+
+  constructor(
+    skip_amount: number,
+    reverse_amount: number,
+    draw_two_amount: number,
+    wild_amount: number,
+    wild_draw_four_amount: number,
+  ) {
+    this.skip_amount = skip_amount;
+    this.reverse_amount = reverse_amount;
+    this.draw_two_amount = draw_two_amount;
+    this.wild_amount = wild_amount;
+    this.wild_draw_four_amount = wild_draw_four_amount;
   }
 }
 
