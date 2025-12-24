@@ -38,6 +38,19 @@ export class Player {
     return removedItems;
   }
 
+  public getCardsToPlay(cardIds: string[]): Card[] {
+    const idsToFind: Set<string> = new Set(cardIds);
+    const cardsToPlay: Card[] = [];
+
+    for (const card of this.hand) {
+      if (idsToFind.has(card.id)) {
+        cardsToPlay.push(card);
+      }
+    }
+
+    return cardsToPlay;
+  }
+
   public setIsUno(isUno: boolean): void {
     this.uno = isUno;
   }
