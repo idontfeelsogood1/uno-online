@@ -11,6 +11,8 @@ class Player {
 
     setIsUno(isUno: boolean): void
     isUno(): boolean
+
+    getCardsToPlay(cardIds: string[]): Card[]
 }
 
 class Card {
@@ -24,7 +26,8 @@ class GameBoard {
     readonly id: string
     discardPile: Card[]
     drawPile: Card[] // This is a stack
-    currentColor: CardColor
+    currentTopCard: Card | null
+    enforcedColor: CardColor | null
 
     getDiscardPile(): Card[]
     pushToDiscardPile(cards: Card[]): void
@@ -35,8 +38,14 @@ class GameBoard {
     shuffleDrawPile(): void
     popFromDrawPile(amount: number): Card[]
 
-    setCurrentColor(color: CardColor): void
-    getCurrentColor(): CardColor
+    setCurrentTopCard(card: Card):void
+    getCurrentTopCard(): Card
+
+    setEnforcedColor(color: CardColor): void
+    getEnforcedColor(): CardColor
+
+    getCardType(card: Card): string
+    processPattern(cards: Card[]): nextTurnEvents
 }
 
 class GameRoom {
@@ -69,6 +78,7 @@ class GameRoom {
     getDirection(): number
     setCurrentPlayerIndex(index: number): void
     getCurrentPlayerIndex(): number
+    getPlayerFromOrder(): Player
 }
 
 // @Injectable - Singleton
@@ -129,14 +139,6 @@ class GameService {
     addRoom(room: GameRoom): void
     getRoom(roomId: string): GameRoom
     removeRoom(roomId: string): GameRoom
-
-    // IMPLEMENT: (ADD TEST AFTER FINISH)
-        GameBoard.processPattern: 
-            Returns obj containing events for next round
-        Player.getCardsToPlay:
-            return cards to play
-        GameBoard.getPlayerFromOrder
-            return the currently playing Player from playerOrder using currentPlayerIndex
 
     // STARTING THE GAME: startGame() throws error if error
         If player.socketId === room.ownerId AND room.currentPlayers > 1:
