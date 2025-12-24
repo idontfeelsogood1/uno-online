@@ -40,7 +40,7 @@ class GameBoard {
 }
 
 class GameRoom {
-    readonly id: string
+    readonly id: string // ALSO USES FOR NETWORK ID
     readonly name: string
     readonly ownerId: string | player.id
     readonly maxPlayers: number
@@ -72,8 +72,8 @@ class GameRoom {
 }
 
 // @Injectable - Singleton
-class GameService {
-    rooms: Map<GameRoom> roomId, room
+class GameGateway {
+    game: GameService
 
     ON SERVER CONNECTION
         - Establish websocket connection (/)
@@ -105,7 +105,110 @@ class GameService {
     4. If theres no Player in a room
         - Remove network room
         - Remove empty room
-
-    5. Starting the game:
-        - IMPLEMENT THIS LATER
 }
+
+// @Injectable - Singleton
+class GameService {
+    rooms: Map<GameRoom> roomId, room
+
+    createPlayer(
+        socketId: string,
+        username: string
+    ): Player
+    addPlayerToRoom(roomId: string, player: Player): void
+    getPlayerOfRoom(roomId: string, playerSocketId: string): Player
+    removePlayerFromRoom(roomId: string, playerSocketId: string): Player
+
+    createRoom(
+        id: string,
+        name: string,
+        ownerId: string,
+        maxPlayer: number,
+        gameBoard: new GameBoard(id: string),
+    ): GameRoom
+    addRoom(room: GameRoom): void
+    getRoom(roomId: string): GameRoom
+    removeRoom(roomId: string): GameRoom
+
+    // IMPLEMENT: (ADD TEST AFTER FINISH)
+        GameBoard.processPattern: 
+            Returns obj containing events for next round
+        Player.getCardsToPlay:
+            return cards to play
+        GameBoard.getPlayerFromOrder
+            return the currently playing Player from playerOrder using currentPlayerIndex
+
+    // STARTING THE GAME: startGame() throws error if error
+        If player.socketId === room.ownerId AND room.currentPlayers > 1:
+            Set room.started = true
+        Set playerOrder
+        Get the cards
+        Push cards to drawPile
+        shuffleDrawPile
+        Push 7 cards to each player hand FROM drawPile
+        Start discardPile with 1 top card from drawPile (ONLY ALLOW NUMBER CARDS)
+        Set currentTopCard
+    
+    // GAMEPLAY: processGame(player: Player)
+        Ordered by playerOrder
+
+        Get player's hand:
+        If player's cards === 2:
+            Allow player to uno
+
+        Player get cardsToPlay:
+        If cardsToPlay is a valid pattern starting with top card:
+            Remove cards from player's hand
+            Push cards to discardPile
+            Set currentTopCard
+            Set next turn events of action cards based on return obj of processPattern
+            Move on to next player
+        Else: 
+            Throws an error
+
+        Get player's hand:
+        If player's cards === 1 AND player has not uno:
+            Push 2 cards to player's hand from drawPile
+
+        If player's cards === 0:
+            Wins the round
+            Announce winner
+            Do cleanup operations
+
+        Player draws a card from drawPile:
+            If amount > drawPile:
+                clearDiscardPile
+                pushToDrawPile
+                shuffleDrawPile
+            Push card from drawPile to player's hand
+}   
+
+public processPattern(cards: Card[], enforcedColor: CardColor): nextTurnEvents {
+    // Initialize pseudo top card with currentTopCard
+    // Start from the pseudo top card
+    // First card must match pseudo top card color or value (Except for wilds)
+    // If wild AND (firstCard.color === enforcedColor || firstCardType === 'WIlD'):
+      // Update pseudo top card with first card in cards
+    // Else :
+      // Throws an error
+
+    // Only 1 card type per move (currType === topType)
+      // If currType !== topType:
+        // throws an error
+
+    // For number type:
+      // Must be correct stacking pattern (1, 1, 2, 2, 3, 3)
+      // If:
+        // currCard.color === topCard.color AND currCard.value - topCard.value must be off by 0 or 1 (same color matching pattern)
+        // OR
+        // currCard.color !== topCard.color AND currCard.value === topCard.value (different color same value)
+          // Update pseudo top card
+      // Else:
+          // Throws an error 
+
+    // For action type AND wild type:
+      // If currCard.value === topCard.value:
+        // Update pseudo top card
+      // Else:
+        // Throws an error 
+  }
