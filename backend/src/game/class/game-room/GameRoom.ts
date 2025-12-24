@@ -115,6 +115,10 @@ export class GameRoom {
   public getCurrentPlayerIndex(): number {
     return this.currentPlayerIndex;
   }
+
+  public getPlayerFromOrder(): Player {
+    return this.playerOrder[this.currentPlayerIndex];
+  }
 }
 
 class PlayerNotFound extends Error {
