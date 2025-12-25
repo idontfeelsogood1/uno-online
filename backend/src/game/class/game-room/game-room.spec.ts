@@ -122,5 +122,15 @@ describe('GameRoom', () => {
       gameRoom.setCurrentPlayerIndex(2);
       expect(gameRoom.getCurrentPlayerIndex()).toBe(2);
     });
+
+    it('should get correct player from order based on current index', () => {
+      // Setup: Order is [Player2, Player1]
+      // Index is 1 (which should be Player1)
+      gameRoom.setPlayerOrder([player2, player1]);
+      gameRoom.setCurrentPlayerIndex(1);
+
+      const currentPlayer = gameRoom.getPlayerFromOrder();
+      expect(currentPlayer).toBe(player1);
+    });
   });
 });
