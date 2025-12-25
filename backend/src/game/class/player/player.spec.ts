@@ -1,97 +1,136 @@
-import { Player } from './Player';
-import { Card, CardColor, CardValue } from '../card/Card';
+import { GameRoom } from '../game-room/GameRoom';
+import { Player } from '../player/Player';
+import { GameBoard } from '../game-board/GameBoard';
 
-// Mock Card class or interface if needed, or use simple objects for testing
-const mockCard1 = {
-  id: 'c1',
-  color: CardColor.RED,
-  value: CardValue.ONE,
-} as Card;
-const mockCard2 = {
-  id: 'c2',
-  color: CardColor.BLUE,
-  value: CardValue.TWO,
-} as Card;
-const mockCard3 = {
-  id: 'c3',
-  color: CardColor.GREEN,
-  value: CardValue.THREE,
-} as Card;
+// Mock dependencies
+const mockGameBoard = {} as GameBoard;
+const player1 = { socketId: 's1', username: 'Player1' } as Player;
+const player2 = { socketId: 's2', username: 'Player2' } as Player;
+const player3 = { socketId: 's3', username: 'Player3' } as Player;
 
-describe('Player', () => {
-  let player: Player;
-  const socketId = 'socket-123';
-  const username = 'TestPlayer';
+describe('GameRoom', () => {
+  let gameRoom: GameRoom;
+  const roomId = 'room-123';
+  const roomName = 'Test Room';
+  const ownerId = 'owner-id';
+  const maxPlayers = 2;
 
   beforeEach(() => {
-    // Reset player before each test
-    player = new Player(socketId, username);
+    gameRoom = new GameRoom(
+      roomId,
+      roomName,
+      ownerId,
+      maxPlayers,
+      mockGameBoard,
+    );
   });
 
   it('should be defined', () => {
-    expect(player).toBeDefined();
+    expect(gameRoom).toBeDefined();
   });
 
-  describe('constructor', () => {
-    it('should initialize with correct values', () => {
-      expect(player.socketId).toBe(socketId);
-      expect(player.username).toBe(username);
-      expect(player.getHand()).toEqual([]);
-      expect(player.isUno()).toBe(false);
-    });
-  });
-
-  describe('pushToHand', () => {
-    it('should add cards to the hand', () => {
-      player.pushToHand([mockCard1, mockCard2]);
-      expect(player.getHand()).toHaveLength(2);
-      expect(player.getHand()).toEqual([mockCard1, mockCard2]);
-    });
-
-    it('should append cards to an existing hand', () => {
-      player.pushToHand([mockCard1]);
-      player.pushToHand([mockCard2]);
-      expect(player.getHand()).toHaveLength(2);
-      expect(player.getHand()[1]).toEqual(mockCard2);
+  describe('Initialization', () => {
+    it('should initialize with correct default values', () => {
+      expect(gameRoom.id).toBe(roomId);
+      expect(gameRoom.name).toBe(roomName);
+      expect(gameRoom.ownerId).toBe(ownerId);
+      expect(gameRoom.maxPlayers).toBe(maxPlayers);
+      expect(gameRoom.getGameBoard()).toBe(mockGameBoard);
+      expect(gameRoom.hasStarted()).toBe(false);
+      expect(gameRoom.getCurrentPlayers()).toEqual([]);
+      expect(gameRoom.getPlayerOrder()).toEqual([]);
+      expect(gameRoom.getDirection()).toBe(1);
+      expect(gameRoom.getCurrentPlayerIndex()).toBe(0);
     });
   });
 
-  describe('removeCards', () => {
-    beforeEach(() => {
-      player.pushToHand([mockCard1, mockCard2, mockCard3]);
+  describe('Game State', () => {
+    it('should set and check if game has started', () => {
+      gameRoom.setHasStarted(true);
+      expect(gameRoom.hasStarted()).toBe(true);
     });
 
-    it('should remove specific cards by ID and return them', () => {
-      const removed = player.removeCards(['c1', 'c3']);
+    it('should check if room is full', () => {
+      gameRoom.addCurrentPlayer(player1);
+      expect(gameRoom.isFull()).toBe(false);
 
-      expect(removed).toHaveLength(2);
-      expect(removed).toContain(mockCard1);
-      expect(removed).toContain(mockCard3);
-
-      const hand = player.getHand();
-      expect(hand).toHaveLength(1);
-      expect(hand[0]).toEqual(mockCard2);
-    });
-
-    it('should handle removing non-existent cards gracefully', () => {
-      const removed = player.removeCards(['c99']);
-      expect(removed).toHaveLength(0);
-      expect(player.getHand()).toHaveLength(3); // Hand remains unchanged
-    });
-
-    it('should correctly update the hand after removal', () => {
-      player.removeCards(['c2']);
-      expect(player.getHand()).toEqual([mockCard1, mockCard3]);
+      gameRoom.addCurrentPlayer(player2);
+      expect(gameRoom.isFull()).toBe(true);
     });
   });
 
-  describe('Uno Status', () => {
-    it('should set and get isUno correctly', () => {
-      player.setIsUno(true);
-      expect(player.isUno()).toBe(true);
+  describe('Current Players Management', () => {
+    it('should add players to current players list', () => {
+      gameRoom.addCurrentPlayer(player1);
+      expect(gameRoom.getCurrentPlayers()).toHaveLength(1);
+      expect(gameRoom.getCurrentPlayers()[0]).toBe(player1);
+    });
 
-      player.setIsUno(false);
-      expect(player.isUno()).toBe(false);
+    it('should remove a player by socket ID', () => {
+      gameRoom.addCurrentPlayer(player1);
+      gameRoom.addCurrentPlayer(player2);
+
+      const removed = gameRoom.removeCurrentPlayer('s1');
+
+      expect(removed).toBe(player1);
+      expect(gameRoom.getCurrentPlayers()).toHaveLength(1);
+      expect(gameRoom.getCurrentPlayers()[0]).toBe(player2);
+    });
+
+    it('should throw PlayerNotFound if player to remove does not exist', () => {
+      gameRoom.addCurrentPlayer(player1);
+
+      expect(() => {
+        gameRoom.removeCurrentPlayer('s99');
+      }).toThrow(); // Checking that it throws the custom error
+    });
+  });
+
+  describe('Player Order Management', () => {
+    it('should set and get player order', () => {
+      const order = [player2, player1];
+      gameRoom.setPlayerOrder(order);
+      expect(gameRoom.getPlayerOrder()).toEqual(order);
+    });
+
+    it('should remove player from player order', () => {
+      gameRoom.setPlayerOrder([player1, player2, player3]);
+
+      const removed = gameRoom.removeFromPlayerOrder('s2');
+
+      expect(removed).toBe(player2);
+      expect(gameRoom.getPlayerOrder()).toHaveLength(2);
+      expect(gameRoom.getPlayerOrder()).toEqual([player1, player3]);
+    });
+
+    it('should throw PlayerNotFound when removing invalid player from order', () => {
+      gameRoom.setPlayerOrder([player1]);
+
+      expect(() => {
+        gameRoom.removeFromPlayerOrder('s99');
+      }).toThrow();
+    });
+  });
+
+  describe('Turn Logic State', () => {
+    it('should set and get direction', () => {
+      gameRoom.setDirection(-1);
+      expect(gameRoom.getDirection()).toBe(-1);
+    });
+
+    it('should set and get current player index', () => {
+      gameRoom.setCurrentPlayerIndex(2);
+      expect(gameRoom.getCurrentPlayerIndex()).toBe(2);
+    });
+
+    it('should get correct player from order based on current index', () => {
+      // Setup: Order is [Player2, Player1]
+      // Index is 1 (which should be Player1)
+      gameRoom.setPlayerOrder([player2, player1]);
+      gameRoom.setCurrentPlayerIndex(1);
+
+      const currentPlayer = gameRoom.getPlayerFromOrder();
+      expect(currentPlayer).toBe(player1);
     });
   });
 });
