@@ -8,7 +8,7 @@ export class GameRoom {
   readonly maxPlayers: number;
   private gameBoard: GameBoard;
   private started: boolean;
-  private currentPlayers: Player[];
+  private currentPlayers: Map<string, Player>;
   private playerOrder: Player[];
   private direction: number;
   private currentPlayerIndex: number;
@@ -26,7 +26,7 @@ export class GameRoom {
     this.maxPlayers = maxPlayer;
     this.gameBoard = gameBoard;
     this.started = false;
-    this.currentPlayers = [];
+    this.currentPlayers = new Map();
     this.playerOrder = [];
     this.direction = 1;
     this.currentPlayerIndex = 0;
@@ -41,7 +41,7 @@ export class GameRoom {
   }
 
   public isFull(): boolean {
-    return this.currentPlayers.length === this.maxPlayers;
+    return this.currentPlayers.size === this.maxPlayers;
   }
 
   public getGameBoard(): GameBoard {
@@ -49,29 +49,28 @@ export class GameRoom {
   }
 
   public addCurrentPlayer(player: Player): void {
-    this.currentPlayers.push(player);
+    this.currentPlayers.set(player.socketId, player);
   }
 
   public getCurrentPlayers(): Player[] {
-    return this.currentPlayers;
+    return [...this.currentPlayers.values()];
   }
 
   public removeCurrentPlayer(playerSocketId: string): Player {
-    const index = this.currentPlayers.findIndex((player) => {
-      return player.socketId === playerSocketId;
-    });
-
-    if (index !== -1) {
-      return this.currentPlayers.splice(index, 1)[0];
-    } else {
-      throw new PlayerNotFound(
-        `
-        playerSocketId: ${playerSocketId},
-        currentPlayers: ${JSON.stringify(this.currentPlayers)}
-      `,
-        {},
-      );
+    if (this.currentPlayers.has(playerSocketId)) {
+      const removedPlayer: Player = this.currentPlayers.get(playerSocketId)!;
+      this.currentPlayers.delete(playerSocketId);
+      return removedPlayer;
     }
+
+    const obj: object = Object.fromEntries(this.currentPlayers);
+    throw new PlayerNotFound(
+      `
+        playerSocketId: ${playerSocketId},
+        currentPlayers: ${JSON.stringify(obj)}
+        `,
+      {},
+    );
   }
 
   public setPlayerOrder(playerOrder: Player[]): void {
