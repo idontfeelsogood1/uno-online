@@ -1,4 +1,5 @@
 import { Card, CardColor, CardValue } from '../card/Card';
+import { randomUUID } from 'crypto';
 
 export class GameBoard {
   readonly id: string;
@@ -223,6 +224,85 @@ export class GameBoard {
       wild_amount,
       wild_draw_four_amount,
     );
+  }
+
+  public generateUnoDeck(): Card[] {
+    const deck: Card[] = [];
+
+    // Helper to generate a unique ID
+    const generateId = (): string => randomUUID();
+
+    const colors = [
+      CardColor.RED,
+      CardColor.BLUE,
+      CardColor.GREEN,
+      CardColor.YELLOW,
+    ];
+
+    const numberValues = [
+      CardValue.ONE,
+      CardValue.TWO,
+      CardValue.THREE,
+      CardValue.FOUR,
+      CardValue.FIVE,
+      CardValue.SIX,
+      CardValue.SEVEN,
+      CardValue.EIGHT,
+      CardValue.NINE,
+    ];
+
+    const actionValues = [
+      CardValue.SKIP,
+      CardValue.REVERSE,
+      CardValue.DRAW_TWO,
+    ];
+
+    // 1. Add Number Cards (0-9) and Action Cards
+    colors.forEach((color) => {
+      // ONE '0' card per color
+      deck.push(
+        new Card(
+          generateId(),
+          `${color} ${CardValue.ZERO}`,
+          color,
+          CardValue.ZERO,
+        ),
+      );
+
+      // TWO of each number (1-9) per color
+      numberValues.forEach((value) => {
+        for (let i = 0; i < 2; i++) {
+          deck.push(new Card(generateId(), `${color} ${value}`, color, value));
+        }
+      });
+
+      // TWO of each action (Skip, Reverse, Draw Two) per color
+      actionValues.forEach((value) => {
+        for (let i = 0; i < 2; i++) {
+          deck.push(new Card(generateId(), `${color} ${value}`, color, value));
+        }
+      });
+    });
+
+    // 2. Add Wild Cards (4 of each)
+    for (let i = 0; i < 4; i++) {
+      // Standard Wild
+      deck.push(
+        new Card(generateId(), 'Wild', CardColor.BLACK, CardValue.WILD),
+      );
+
+      // Wild Draw Four
+      deck.push(
+        new Card(
+          generateId(),
+          'Wild Draw Four',
+          CardColor.BLACK,
+          CardValue.WILD_DRAW_FOUR,
+        ),
+      );
+    }
+
+    return deck;
   }
 }
 
