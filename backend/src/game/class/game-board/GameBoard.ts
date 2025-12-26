@@ -112,7 +112,118 @@ export class GameBoard {
     return 'NUMBER';
   }
 
-  public processPattern(cards: Card[]): nextTurnEvents {}
+  // ALLOW STACKING CARD OF 1 TYPE PER HAND
+  public processPattern(cards: Card[]): void {
+    let pseudoTopCard: Card = this.currentTopCard!;
+
+    const firstCardIsWild: boolean = this.getCardType(cards[0]) === 'WILD';
+    const topCardIsWild: boolean = this.getCardType(pseudoTopCard) === 'WILD';
+    const firstCardMatchEnforcedColorOrWild: boolean =
+      cards[0].color === this.enforcedColor ||
+      this.getCardType(cards[0]) === 'WILD';
+
+    // THIS ENSURES ONLY THE FIRST CARD OF HAND THAT MATCHES THE CONSTRAINT IS SET AS pseudoTopCard
+    if (
+      firstCardIsWild ||
+      (topCardIsWild && firstCardMatchEnforcedColorOrWild)
+    ) {
+      pseudoTopCard = cards[0];
+    } else if (topCardIsWild) {
+      throw new EnforcedColorMismatch(
+        `
+        Enforced color: ${this.enforcedColor}
+        Top Card: ${pseudoTopCard.name}
+        First card in cards: ${cards[0].name},
+        `,
+        {},
+      );
+    }
+
+    for (const card of cards) {
+      if (this.getCardType(card) !== this.getCardType(pseudoTopCard)) {
+        throw new CardTypeMismatch(
+          `
+          Top card: ${pseudoTopCard.name}
+          Top card type: ${this.getCardType(pseudoTopCard)}
+          -------------------------------------------------
+          Current card: ${card.name}
+          Current card type: ${this.getCardType(card)}
+          `,
+          {},
+        );
+      }
+
+      if (this.getCardType(pseudoTopCard) === 'NUMBER') {
+        const sameColorMatchingPattern: boolean =
+          card.color === pseudoTopCard.color &&
+          (parseInt(card.value) - parseInt(pseudoTopCard.value) === 0 ||
+            parseInt(card.value) - parseInt(pseudoTopCard.value) === 1);
+        const differentColorSameValue: boolean =
+          card.color !== pseudoTopCard.color &&
+          card.value === pseudoTopCard.value;
+
+        if (sameColorMatchingPattern || differentColorSameValue) {
+          pseudoTopCard = card;
+        } else {
+          throw new CardPatternMismatch(
+            `
+            Top card: ${pseudoTopCard.name}
+            Top card type: ${this.getCardType(pseudoTopCard)}
+            -------------------------------------------------
+            Current card: ${card.name}
+            Current card type: ${this.getCardType(card)}
+            `,
+            {},
+          );
+        }
+      }
+
+      if (
+        this.getCardType(pseudoTopCard) === 'ACTION' ||
+        this.getCardType(pseudoTopCard) === 'WILD'
+      ) {
+        if (card.value === pseudoTopCard.value) {
+          pseudoTopCard = card;
+        } else {
+          throw new CardPatternMismatch(
+            `
+            Top card: ${pseudoTopCard.name}
+            Top card type: ${this.getCardType(pseudoTopCard)}
+            -------------------------------------------------
+            Current card: ${card.name}
+            Current card type: ${this.getCardType(card)}
+            `,
+            {},
+          );
+        }
+      }
+    }
+  }
+
+  // CALL THIS AFTER processPattern SUCCEED
+  public getNextTurnEvents(cards: Card[]): nextTurnEvents {
+    let skip_amount: number = 0;
+    let reverse_amount: number = 0;
+    let draw_two_amount: number = 0;
+    let wild_amount: number = 0;
+    let wild_draw_four_amount: number = 0;
+
+    for (const card of cards) {
+      if (card.value === CardValue.SKIP) skip_amount++;
+      if (card.value === CardValue.REVERSE) reverse_amount++;
+      if (card.value === CardValue.DRAW_TWO) draw_two_amount++;
+      if (card.value === CardValue.WILD) wild_amount++;
+      if (card.value === CardValue.WILD_DRAW_FOUR) wild_draw_four_amount++;
+    }
+
+    return new nextTurnEvents(
+      skip_amount,
+      reverse_amount,
+      draw_two_amount,
+      wild_amount,
+      wild_draw_four_amount,
+    );
+  }
 }
 
 export class nextTurnEvents {
@@ -134,6 +245,24 @@ export class nextTurnEvents {
     this.draw_two_amount = draw_two_amount;
     this.wild_amount = wild_amount;
     this.wild_draw_four_amount = wild_draw_four_amount;
+  }
+}
+
+export class EnforcedColorMismatch extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+  }
+}
+
+export class CardTypeMismatch extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+  }
+}
+
+export class CardPatternMismatch extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
   }
 }
 
