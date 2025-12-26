@@ -8,7 +8,7 @@ import {
 import { Card, CardColor, CardValue } from '../card/Card';
 
 // ==========================================
-// EXPANDED MOCKS
+// MOCKS
 // ==========================================
 
 // Helper to create valid card mocks quickly
@@ -22,6 +22,7 @@ const createCard = (
 };
 
 // --- RED SUIT ---
+const redZero = createCard('r0', CardColor.RED, CardValue.ZERO, 'Red Zero');
 const redOne = createCard('r1', CardColor.RED, CardValue.ONE, 'Red One');
 const redTwo = createCard('r2', CardColor.RED, CardValue.TWO, 'Red Two');
 const redThree = createCard('r3', CardColor.RED, CardValue.THREE, 'Red Three');
@@ -42,6 +43,7 @@ const redReverse = createCard(
 );
 
 // --- BLUE SUIT ---
+const blueZero = createCard('b0', CardColor.BLUE, CardValue.ZERO, 'Blue Zero');
 const blueOne = createCard('b1', CardColor.BLUE, CardValue.ONE, 'Blue One'); // Bridge from Red One
 const blueThree = createCard(
   'b3',
@@ -66,6 +68,12 @@ const blueReverse = createCard(
 );
 
 // --- GREEN SUIT ---
+const greenZero = createCard(
+  'g0',
+  CardColor.GREEN,
+  CardValue.ZERO,
+  'Green Zero',
+);
 const greenFour = createCard(
   'g4',
   CardColor.GREEN,
@@ -99,6 +107,12 @@ const greenReverse = createCard(
 );
 
 // --- YELLOW SUIT ---
+const yellowZero = createCard(
+  'y0',
+  CardColor.YELLOW,
+  CardValue.ZERO,
+  'Yellow Zero',
+);
 const yellowSix = createCard(
   'y6',
   CardColor.YELLOW,
@@ -164,6 +178,37 @@ describe('GameBoard', () => {
   it('should be defined', () => {
     expect(gameBoard).toBeDefined();
     expect(gameBoard.id).toBe('test-room-id');
+  });
+
+  // ==========================================
+  // DECK GENERATION (NEW)
+  // ==========================================
+  describe('Deck Generation', () => {
+    it('should generate a standard Uno deck of 108 cards', () => {
+      const deck = gameBoard.generateUnoDeck();
+      expect(deck).toHaveLength(108);
+
+      // Verify Color Distribution (25 per color)
+      // 1 Zero + 2*(1-9) + 2*Skip + 2*Reverse + 2*DrawTwo = 1 + 18 + 6 = 25
+      const reds = deck.filter((c) => c.color === CardColor.RED);
+      const blues = deck.filter((c) => c.color === CardColor.BLUE);
+      const greens = deck.filter((c) => c.color === CardColor.GREEN);
+      const yellows = deck.filter((c) => c.color === CardColor.YELLOW);
+
+      expect(reds).toHaveLength(25);
+      expect(blues).toHaveLength(25);
+      expect(greens).toHaveLength(25);
+      expect(yellows).toHaveLength(25);
+
+      // Verify Wild Distribution (4 each)
+      const wilds = deck.filter((c) => c.value === CardValue.WILD);
+      const wildDrawFours = deck.filter(
+        (c) => c.value === CardValue.WILD_DRAW_FOUR,
+      );
+
+      expect(wilds).toHaveLength(4);
+      expect(wildDrawFours).toHaveLength(4);
+    });
   });
 
   describe('Discard Pile Management', () => {
@@ -265,6 +310,23 @@ describe('GameBoard', () => {
       it('should allow a Long Sequential Run (Ladder)', () => {
         expect(() => {
           gameBoard.processPattern([redTwo, redThree, redFour, redFive]);
+        }).not.toThrow();
+      });
+
+      it('should allow bridging including multiple zeroes', () => {
+        gameBoard.setCurrentTopCard(greenZero);
+        expect(() => {
+          gameBoard.processPattern([
+            blueZero,
+            yellowZero,
+            redZero,
+            redOne,
+            redTwo,
+            redThree,
+            blueThree,
+            blueFour,
+            greenFour,
+          ]);
         }).not.toThrow();
       });
 
