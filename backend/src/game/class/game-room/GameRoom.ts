@@ -138,5 +138,6 @@ export class GameRoom {
 export class PlayerNotFound extends Error {
   constructor(message: string, options: object) {
     super(message, options);
+    this.name = 'PlayerNotFound';
   }
 }
