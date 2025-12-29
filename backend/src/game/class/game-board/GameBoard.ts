@@ -304,6 +304,16 @@ export class GameBoard {
 
     return deck;
   }
+
+  // ONLY ALLOWS NUMBER TYPE
+  public startDiscardPile(): void {
+    this.drawPile.forEach((card, index) => {
+      if (this.getCardType(card) === 'NUMBER') {
+        const card = this.drawPile.splice(index, 1);
+        return this.pushToDiscardPile(card);
+      }
+    });
+  }
 }
 
 export class nextTurnEvents {
