@@ -1,4 +1,4 @@
-import { GameRoom } from './GameRoom';
+import { GameRoom, PlayerNotFound } from './GameRoom';
 import { Player } from '../player/Player';
 import { GameBoard } from '../game-board/GameBoard';
 
@@ -66,6 +66,17 @@ describe('GameRoom', () => {
       expect(gameRoom.getCurrentPlayers()[0]).toBe(player1);
     });
 
+    it('should get a specific player by socket ID', () => {
+      gameRoom.addCurrentPlayer(player1);
+      expect(gameRoom.getCurrentPlayer('s1')).toBe(player1);
+    });
+
+    it('should throw PlayerNotFound if getting a non-existent player', () => {
+      expect(() => {
+        gameRoom.getCurrentPlayer('s99');
+      }).toThrow(PlayerNotFound);
+    });
+
     it('should remove a player by socket ID', () => {
       gameRoom.addCurrentPlayer(player1);
       gameRoom.addCurrentPlayer(player2);
@@ -82,7 +93,7 @@ describe('GameRoom', () => {
 
       expect(() => {
         gameRoom.removeCurrentPlayer('s99');
-      }).toThrow(); // Checking that it throws the custom error
+      }).toThrow(PlayerNotFound);
     });
   });
 
@@ -108,7 +119,7 @@ describe('GameRoom', () => {
 
       expect(() => {
         gameRoom.removeFromPlayerOrder('s99');
-      }).toThrow();
+      }).toThrow(PlayerNotFound);
     });
   });
 
