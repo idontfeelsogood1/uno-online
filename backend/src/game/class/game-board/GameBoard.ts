@@ -331,23 +331,27 @@ export class nextTurnEvents {
 export class EnforcedColorMismatch extends Error {
   constructor(message: string, options: object) {
     super(message, options);
+    this.name = 'EnforcedColorMismatch';
   }
 }
 
 export class CardTypeMismatch extends Error {
   constructor(message: string, options: object) {
     super(message, options);
+    this.name = 'CardTypeMismatch';
   }
 }
 
 export class CardPatternMismatch extends Error {
   constructor(message: string, options: object) {
     super(message, options);
+    this.name = 'CardPatternMismatch';
   }
 }
 
 export class AmountGreaterThanDrawPile extends Error {
   constructor(message: string, options: object) {
     super(message, options);
+    this.name = 'AmountGreaterThanDrawPile';
   }
 }
