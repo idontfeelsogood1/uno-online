@@ -52,6 +52,21 @@ export class GameRoom {
     this.currentPlayers.set(player.socketId, player);
   }
 
+  public getCurrentPlayer(playerSocketId: string): Player {
+    if (this.currentPlayers.has(playerSocketId)) {
+      return this.currentPlayers.get(playerSocketId)!;
+    }
+
+    const obj: object = Object.fromEntries(this.currentPlayers);
+    throw new PlayerNotFound(
+      `
+        playerSocketId: ${playerSocketId},
+        currentPlayers: ${JSON.stringify(obj)}
+        `,
+      {},
+    );
+  }
+
   public getCurrentPlayers(): Player[] {
     return [...this.currentPlayers.values()];
   }
@@ -120,7 +135,7 @@ export class GameRoom {
   }
 }
 
-class PlayerNotFound extends Error {
+export class PlayerNotFound extends Error {
   constructor(message: string, options: object) {
     super(message, options);
   }
