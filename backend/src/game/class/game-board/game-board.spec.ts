@@ -541,4 +541,23 @@ describe('GameBoard', () => {
       expect(events.reverse_amount).toBe(0);
     });
   });
+
+  describe('startDiscardPile', () => {
+    it('should only take 1 number card from draw pile and start the discard pile', () => {
+      const gameBoard = new GameBoard('room-id');
+      const cards = [
+        createCard('s1', CardColor.RED, CardValue.SKIP, 'S1'),
+        createCard('d1', CardColor.RED, CardValue.DRAW_TWO, 'D1'),
+        createCard('r0', CardColor.RED, CardValue.ZERO, 'R0'),
+        createCard('w1', CardColor.BLACK, CardValue.WILD_DRAW_FOUR, 'WD4'),
+      ];
+
+      gameBoard.pushToDrawPile(cards);
+      gameBoard.startDiscardPile();
+
+      expect(gameBoard.getDrawPile().length).toBe(3);
+      expect(gameBoard.getDiscardPile().length).toBe(1);
+      expect(gameBoard.getDiscardPile()[0].id).toBe('r0');
+    });
+  });
 });
