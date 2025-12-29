@@ -88,16 +88,18 @@ class GameGateway {
     ON SERVER CONNECTION
         - Establish websocket connection (/)
 
-    1. Player create a room in the namespace: 
+    1. Player create a room in the namespace:
+    - expects: name, maxPlayers, playerSocketId 
         - On "create-room" event:
             - Initialize Player based on their socket 
             - Create logical GameRoom 
             - Create a network room
             - Join current player to network room
             - Add them to GameRoom currentPlayer
-            - Add GameRoom to rooms
+            - Add GameRoom to game.rooms
 
     2. Players join created room:
+    - expects: roomId, playerSocketId
         - On "join-room" event:
             If exists room id in rooms
             If room is not full
@@ -108,10 +110,12 @@ class GameGateway {
                 Dont connect and emit error
 
     3. Players leave created room:
-        - On "leave-room" event:
+    - expects: roomId, playerSocketId
+        - On "leave-room" or "disconnect" events:
             - Disconnect them from network room
             - Remove them from currentPlayers
 
+    THIS IS TO BE ADDED AS CHECK
     4. If theres no Player in a room
         - Remove network room
         - Remove empty room
@@ -121,28 +125,15 @@ class GameGateway {
 class GameService {
     rooms: Map<GameRoom> roomId, room
 
-    createPlayer(
-        socketId: string,
-        username: string
-    ): Player
-    addPlayerToRoom(roomId: string, player: Player): void
-    getPlayerOfRoom(roomId: string, playerSocketId: string): Player
-    removePlayerFromRoom(roomId: string, playerSocketId: string): Player
-
-    createRoom(
-        id: string,
-        name: string,
-        ownerId: string,
-        maxPlayer: number,
-        gameBoard: new GameBoard(id: string),
-    ): GameRoom
-    addRoom(room: GameRoom): void
-    getRoom(roomId: string): GameRoom
-    removeRoom(roomId: string): GameRoom
-
-    // STARTING THE GAME: startGame() throws error if error
+    // STARTING THE GAME: 
+    - "start-game" event 
+    - expects: networkRoomId, playerSocketId from the client
+    - get room, player from ids
+    startGame(room: GameRoom, player: Player) 
         If player.socketId === room.ownerId AND room.currentPlayers > 1:
             Set room.started = true
+        Else:
+            Throws an error
         Set playerOrder
         Get the cards
         Push cards to drawPile
@@ -151,66 +142,55 @@ class GameService {
         Start discardPile with 1 top card from drawPile (ONLY ALLOW NUMBER CARDS)
         Set currentTopCard
     
-    // GAMEPLAY: processGame(player: Player)
-        Ordered by playerOrder
-
-        Get player's hand:
-        If player's cards === 2:
-            Allow player to uno
-
-        Player get cardsToPlay:
-        If cardsToPlay is a valid pattern starting with top card:
-            Remove cards from player's hand
-            Push cards to discardPile
-            Set currentTopCard
-            Set next turn events of action cards based on return obj of processPattern
-            Move on to next player
-        Else: 
-            Throws an error
-
-        Get player's hand:
-        If player's cards === 1 AND player has not uno:
-            Push 2 cards to player's hand from drawPile
-
-        If player's cards === 0:
-            Wins the round
-            Announce winner
-            Do cleanup operations
-
+    // GAMEPLAY: 
+    // THINK IN TERMS OF SOCKET EVENTS, REACT TO EVENTS THAT WAS THROWN
+    - "draw-cards" event
+    - expects: networkRoomId, playerSocketId, amount from the client
+    - get room, player from ids
+    drawCards(room: GameRoom, player: Player, amount: number): void
+        if player !== room.getPlayerFromOrder:
+            throw an error
         Player draws a card from drawPile:
             If amount > drawPile:
                 clearDiscardPile
                 pushToDrawPile
                 shuffleDrawPile
             Push card from drawPile to player's hand
+
+    - "uno" event 
+    - expects: networkRoomId, playerSocketId from the client
+    - get room, player from ids
+    uno(room: GameRoom, player: Player): void
+        if player !== room.getPlayerFromOrder:
+            throw an error
+        Get player's hand:
+        If player's cards === 2:
+            Set player.uno = true
+        Else:
+            throw an error
+
+    - "play-cards" event
+    - expects: networkRoomId, playerSocketId, cardIds from the client
+    - get room, player, cardsToPlay from ids
+    playCards(room: GameRoom, player: Player, cardsToPlay: Card[]): nextTurnEvents
+        if player !== room.getPlayerFromOrder:
+            throw an error
+        If cardsToPlay is a valid pattern starting with top card:
+            Remove cards from player's hand
+            Push cards to discardPile
+            Set currentTopCard
+        Else: 
+            Throws an error
+    Update current room turn event
+    Update currentPlayerIndex
+
+    Call this after "play-cards"
+    processTurn(room: GameRoom): void 
+        Current player is determined by currentPlayerIndex of playerOrder 
+        currentPlayer = room.getPlayerFromOrder()
+
+        Determines current turn events based on turnEvents of room
+
+        Dispatch "new-turn" event with data for clients
 }   
 
-public processPattern(cards: Card[], enforcedColor: CardColor): nextTurnEvents {
-    // Initialize pseudo top card with currentTopCard
-    // Start from the pseudo top card
-    // First card must match pseudo top card color or value (Except for wilds)
-    // If wild AND (firstCard.color === enforcedColor || firstCardType === 'WIlD'):
-      // Update pseudo top card with first card in cards
-    // Else :
-      // Throws an error
-
-    // Only 1 card type per move (currType === topType)
-      // If currType !== topType:
-        // throws an error
-
-    // For number type:
-      // Must be correct stacking pattern (1, 1, 2, 2, 3, 3)
-      // If:
-        // currCard.color === topCard.color AND currCard.value - topCard.value must be off by 0 or 1 (same color matching pattern)
-        // OR
-        // currCard.color !== topCard.color AND currCard.value === topCard.value (different color same value)
-          // Update pseudo top card
-      // Else:
-          // Throws an error 
-
-    // For action type AND wild type:
-      // If currCard.value === topCard.value:
-        // Update pseudo top card
-      // Else:
-        // Throws an error 
-  }
