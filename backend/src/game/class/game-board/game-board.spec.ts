@@ -524,7 +524,7 @@ describe('GameBoard', () => {
     });
   });
 
-  describe('Next Turn Events', () => {
+  describe('Turn Events', () => {
     it('should calculate events correctly for mixed action types', () => {
       const cards = [
         createCard('s1', CardColor.RED, CardValue.SKIP, 'S1'),
@@ -533,7 +533,7 @@ describe('GameBoard', () => {
         createCard('w1', CardColor.BLACK, CardValue.WILD_DRAW_FOUR, 'WD4'),
       ];
 
-      const events = gameBoard.getNextTurnEvents(cards);
+      const events = gameBoard.getTurnEvents(cards);
 
       expect(events.skip_amount).toBe(1);
       expect(events.draw_two_amount).toBe(2);
