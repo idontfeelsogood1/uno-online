@@ -202,7 +202,7 @@ export class GameBoard {
   }
 
   // CALL THIS AFTER processPattern SUCCEED
-  public getNextTurnEvents(cards: Card[]): nextTurnEvents {
+  public getTurnEvents(cards: Card[]): TurnEvents {
     let skip_amount: number = 0;
     let reverse_amount: number = 0;
     let draw_two_amount: number = 0;
@@ -217,7 +217,7 @@ export class GameBoard {
       if (card.value === CardValue.WILD_DRAW_FOUR) wild_draw_four_amount++;
     }
 
-    return new nextTurnEvents(
+    return new TurnEvents(
       skip_amount,
       reverse_amount,
       draw_two_amount,
@@ -316,7 +316,7 @@ export class GameBoard {
   }
 }
 
-export class nextTurnEvents {
+export class TurnEvents {
   readonly skip_amount: number;
   readonly reverse_amount: number;
   readonly draw_two_amount: number;
