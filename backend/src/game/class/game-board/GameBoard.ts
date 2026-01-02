@@ -5,6 +5,7 @@ export class GameBoard {
   readonly id: string;
   private discardPile: Card[];
   private drawPile: Card[];
+  private turnEvents: TurnEvents;
   private currentTopCard: Card | null;
   private enforcedColor: CardColor | null;
 
@@ -12,6 +13,7 @@ export class GameBoard {
     this.id = id;
     this.discardPile = [];
     this.drawPile = [];
+    this.turnEvents = new TurnEvents(0, 0, 0, 0, 0);
     this.currentTopCard = null;
     this.enforcedColor = null;
   }
@@ -202,7 +204,7 @@ export class GameBoard {
   }
 
   // CALL THIS AFTER processPattern SUCCEED
-  public getTurnEvents(cards: Card[]): TurnEvents {
+  public setTurnEvents(cards: Card[]): void {
     let skip_amount: number = 0;
     let reverse_amount: number = 0;
     let draw_two_amount: number = 0;
@@ -217,13 +219,17 @@ export class GameBoard {
       if (card.value === CardValue.WILD_DRAW_FOUR) wild_draw_four_amount++;
     }
 
-    return new TurnEvents(
+    this.turnEvents = new TurnEvents(
       skip_amount,
       reverse_amount,
       draw_two_amount,
       wild_amount,
       wild_draw_four_amount,
     );
+  }
+
+  public getTurnEvents(): TurnEvents {
+    return this.turnEvents;
   }
 
   public generateUnoDeck(): Card[] {
