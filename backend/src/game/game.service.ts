@@ -3,6 +3,7 @@ import { GameRoom } from './class/game-room/GameRoom';
 import { GameBoard } from './class/game-board/GameBoard';
 import { Player } from './class/player/Player';
 import { PlayerNotFound } from './class/game-room/GameRoom';
+import { Card } from './class/card/Card';
 
 @Injectable()
 export class GameService {
@@ -138,6 +139,59 @@ export class GameService {
       `,
       {},
     );
+  }
+
+  public startGame(room: GameRoom, player: Player) {
+    if (player.socketId !== room.ownerId) {
+      throw new NotRoomOwner(
+        `
+        ownerId: ${room.ownerId}
+        playerId: ${player.socketId}
+        `,
+        {},
+      );
+    }
+
+    const currentPlayers: Player[] = room.getCurrentPlayers();
+    if (currentPlayers.length <= 1) {
+      throw new PlayersCountMustBeGreaterThanOne(
+        `
+        roomPlayerCount: ${currentPlayers.length}
+        `,
+        {},
+      );
+    }
+
+    room.setHasStarted(true);
+    room.setPlayerOrder(currentPlayers);
+
+    const game: GameBoard = room.getGameBoard();
+    const cards: Card[] = game.generateUnoDeck();
+
+    game.pushToDrawPile(cards);
+    game.shuffleDrawPile();
+
+    const playerOrder: Player[] = room.getPlayerOrder();
+    playerOrder.forEach((player) => {
+      player.pushToHand(game.popFromDrawPile(7));
+    });
+
+    game.startDiscardPile();
+    game.setCurrentTopCard(game.getDiscardPile()[0]);
+  }
+}
+
+export class PlayersCountMustBeGreaterThanOne extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'PlayersCountMustBeGreaterThanOne';
+  }
+}
+
+export class NotRoomOwner extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'NotRoomOwner';
   }
 }
 
