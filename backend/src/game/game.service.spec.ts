@@ -5,6 +5,7 @@ import {
   NotRoomOwner,
   PlayersCountMustBeGreaterThanOne,
   NotPlayerTurn,
+  CannotUno,
 } from './game.service';
 import { AmountGreaterThanDrawPile } from './class/game-board/GameBoard';
 import { GameRoom, PlayerNotFound } from './class/game-room/GameRoom';
@@ -223,7 +224,7 @@ describe('GameService', () => {
   });
 
   // ==========================================
-  // DRAW CARDS LOGIC (NEW)
+  // DRAW CARDS LOGIC
   // ==========================================
   describe('Draw Cards Logic', () => {
     let room: GameRoom;
@@ -283,6 +284,74 @@ describe('GameService', () => {
       expect(clearDiscardSpy).toHaveBeenCalled();
       expect(pushDrawSpy).toHaveBeenCalled();
       expect(shuffleSpy).toHaveBeenCalled();
+    });
+  });
+
+  // ==========================================
+  // UNO LOGIC (NEW)
+  // ==========================================
+  describe('Uno Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+    let gameBoard: GameBoard;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner-socket', 'Owner');
+      player2 = service.createPlayer('p2-socket', 'Player 2');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, player2);
+
+      service.startGame(room, owner);
+      gameBoard = room.getGameBoard();
+    });
+
+    it('should set isUno to true when current player has 2 cards and calls uno', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Manipulate hand to have exactly 2 cards
+      const hand = currentPlayer.getHand();
+      while (hand.length > 0) hand.pop(); // Clear hand
+      const cards = gameBoard.generateUnoDeck();
+      hand.push(cards[0]);
+      hand.push(cards[1]);
+
+      service.uno(room, currentPlayer);
+
+      expect(currentPlayer.isUno()).toBe(true);
+    });
+
+    it('should throw NotPlayerTurn if non-current player calls uno', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      const notCurrentPlayer =
+        currentPlayer.socketId === owner.socketId ? player2 : owner;
+
+      expect(() => {
+        service.uno(room, notCurrentPlayer);
+      }).toThrow(NotPlayerTurn);
+    });
+
+    it('should throw CannotUno if hand has more than 2 cards', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      // StartGame gives 7 cards
+      expect(() => {
+        service.uno(room, currentPlayer);
+      }).toThrow(CannotUno);
+    });
+
+    it('should throw CannotUno if hand has fewer than 2 cards', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Manipulate hand to have 1 card
+      const hand = currentPlayer.getHand();
+      while (hand.length > 0) hand.pop();
+      hand.push(gameBoard.generateUnoDeck()[0]);
+
+      expect(() => {
+        service.uno(room, currentPlayer);
+      }).toThrow(CannotUno);
     });
   });
 });
