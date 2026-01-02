@@ -85,20 +85,20 @@ export class GameService {
     roomId: string,
     playerSocketId: string,
   ): Player | null {
-    if (!this.rooms.has(roomId)) {
-      const obj: object = Object.fromEntries(this.rooms);
-      throw new RoomNotFound(
-        `
-        roomId: ${roomId}
-        rooms: ${JSON.stringify(obj)}
-        `,
-        {},
-      );
-    }
-
     try {
+      if (!this.rooms.has(roomId)) {
+        const obj: object = Object.fromEntries(this.rooms);
+        throw new RoomNotFound(
+          `
+          roomId: ${roomId}
+          rooms: ${JSON.stringify(obj)}
+          `,
+          {},
+        );
+      }
       return this.rooms.get(roomId)!.getCurrentPlayer(playerSocketId);
     } catch (err) {
+      if (err instanceof RoomNotFound) throw err;
       if (err instanceof PlayerNotFound) throw err;
       return null;
     }
@@ -108,20 +108,20 @@ export class GameService {
     roomId: string,
     playerSocketId: string,
   ): Player | null {
-    if (!this.rooms.has(roomId)) {
-      const obj: object = Object.fromEntries(this.rooms);
-      throw new RoomNotFound(
-        `
-        roomId: ${roomId}
-        rooms: ${JSON.stringify(obj)}
-        `,
-        {},
-      );
-    }
-
     try {
+      if (!this.rooms.has(roomId)) {
+        const obj: object = Object.fromEntries(this.rooms);
+        throw new RoomNotFound(
+          `
+          roomId: ${roomId}
+          rooms: ${JSON.stringify(obj)}
+          `,
+          {},
+        );
+      }
       return this.rooms.get(roomId)!.removeCurrentPlayer(playerSocketId);
     } catch (err) {
+      if (err instanceof RoomNotFound) throw err;
       if (err instanceof PlayerNotFound) throw err;
       return null;
     }
@@ -181,7 +181,7 @@ export class GameService {
     game.setCurrentTopCard(game.getDiscardPile()[0]);
   }
 
-  public drawCards(room: GameRoom, player: Player, amount: number): void {
+  public isCurrentPlayer(room: GameRoom, player: Player): boolean {
     const currentPlayer: Player = room.getPlayerFromOrder();
 
     if (player.socketId !== currentPlayer.socketId) {
@@ -194,10 +194,17 @@ export class GameService {
       );
     }
 
+    return true;
+  }
+
+  public drawCards(room: GameRoom, player: Player, amount: number): void {
     const game: GameBoard = room.getGameBoard();
+
     try {
+      this.isCurrentPlayer(room, player);
       player.pushToHand(game.popFromDrawPile(amount));
     } catch (err) {
+      if (err instanceof NotPlayerTurn) throw err;
       if (err instanceof AmountGreaterThanDrawPile) {
         const clearedCards: Card[] = game.clearDiscardPile();
         game.pushToDrawPile(clearedCards);
