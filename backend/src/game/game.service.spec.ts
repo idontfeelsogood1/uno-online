@@ -6,6 +6,7 @@ import {
   PlayersCountMustBeGreaterThanOne,
   NotPlayerTurn,
 } from './game.service';
+import { AmountGreaterThanDrawPile } from './class/game-board/GameBoard';
 import { GameRoom, PlayerNotFound } from './class/game-room/GameRoom';
 import { Player } from './class/player/Player';
 import { GameBoard } from './class/game-board/GameBoard';
@@ -276,8 +277,9 @@ describe('GameService', () => {
       const shuffleSpy = jest.spyOn(gameBoard, 'shuffleDrawPile');
 
       // 3. Attempt to draw (Logic: tries pop -> fails -> catch -> reshuffle)
-      service.drawCards(room, currentPlayer, 1);
-
+      expect(() => {
+        service.drawCards(room, currentPlayer, 1);
+      }).toThrow(AmountGreaterThanDrawPile);
       expect(clearDiscardSpy).toHaveBeenCalled();
       expect(pushDrawSpy).toHaveBeenCalled();
       expect(shuffleSpy).toHaveBeenCalled();
