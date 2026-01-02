@@ -213,6 +213,34 @@ export class GameService {
       }
     }
   }
+
+  public uno(room: GameRoom, player: Player): void {
+    try {
+      this.isCurrentPlayer(room, player);
+
+      const hand: Card[] = player.getHand();
+      if (hand.length === 2) {
+        player.setIsUno(true);
+      } else {
+        throw new CannotUno(
+          `
+          playerHandLength: ${hand.length}
+          `,
+          {},
+        );
+      }
+    } catch (err) {
+      if (err instanceof NotPlayerTurn) throw err;
+      if (err instanceof CannotUno) throw err;
+    }
+  }
+}
+
+export class CannotUno extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'CannotUno';
+  }
 }
 
 export class NotPlayerTurn extends Error {
