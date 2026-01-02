@@ -1,5 +1,10 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GameService, RoomNotFound } from './game.service';
+import {
+  GameService,
+  RoomNotFound,
+  NotRoomOwner,
+  PlayersCountMustBeGreaterThanOne,
+} from './game.service';
 import { GameRoom, PlayerNotFound } from './class/game-room/GameRoom';
 import { Player } from './class/player/Player';
 import { GameBoard } from './class/game-board/GameBoard';
@@ -29,7 +34,6 @@ describe('GameService', () => {
       const room = service.createRoom(roomId, roomName, ownerId, maxPlayers);
       expect(room).toBeInstanceOf(GameRoom);
       expect(room.id).toBe(roomId);
-      // Validates GameBoard is injected automatically inside createRoom
       expect(room.getGameBoard()).toBeInstanceOf(GameBoard);
     });
 
@@ -96,7 +100,6 @@ describe('GameService', () => {
     });
 
     it('should add a player to a room', () => {
-      // Adding player to the specific room ID managed by service
       expect(() => {
         service.addPlayerToRoom(roomId, player);
       }).not.toThrow();
@@ -120,7 +123,6 @@ describe('GameService', () => {
     });
 
     it('should throw PlayerNotFound if player not found in room', () => {
-      // Based on your code: `if (err instanceof PlayerNotFound) throw err;`
       expect(() => {
         service.getPlayerOfRoom(roomId, 'non-existent-socket');
       }).toThrow(PlayerNotFound);
@@ -144,6 +146,77 @@ describe('GameService', () => {
       expect(() => {
         service.removePlayerFromRoom(roomId, 'invalid-socket');
       }).toThrow(PlayerNotFound);
+    });
+  });
+
+  // ==========================================
+  // START GAME LOGIC (NEW)
+  // ==========================================
+  describe('Start Game Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+
+    beforeEach(() => {
+      // Setup: Create Room with Owner
+      owner = service.createPlayer('owner-socket', 'Owner');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+
+      // Add second player
+      player2 = service.createPlayer('p2-socket', 'Player 2');
+      service.addPlayerToRoom(room.id, player2);
+    });
+
+    it('should start the game successfully when conditions are met', () => {
+      service.startGame(room, owner);
+
+      expect(room.hasStarted()).toBe(true);
+
+      // Verify Player Order was set
+      expect(room.getPlayerOrder()).toHaveLength(2);
+      expect(room.getPlayerOrder()).toContain(owner);
+      expect(room.getPlayerOrder()).toContain(player2);
+
+      // Verify Cards were dealt (7 cards each)
+      expect(owner.getHand()).toHaveLength(7);
+      expect(player2.getHand()).toHaveLength(7);
+
+      // Verify GameBoard State
+      const gameBoard = room.getGameBoard();
+      expect(gameBoard.getDiscardPile().length).toBeGreaterThan(0); // Should have 1 top card
+      expect(gameBoard.getCurrentTopCard()).toBeDefined();
+    });
+
+    it('should throw NotRoomOwner if non-owner tries to start', () => {
+      expect(() => {
+        service.startGame(room, player2);
+      }).toThrow(NotRoomOwner);
+      expect(room.hasStarted()).toBe(false);
+    });
+
+    it('should throw PlayersCountMustBeGreaterThanOne if only 1 player is in room', () => {
+      // Remove player 2 to simulate solo lobby
+      service.removePlayerFromRoom(room.id, player2.socketId);
+
+      expect(() => {
+        service.startGame(room, owner);
+      }).toThrow(PlayersCountMustBeGreaterThanOne);
+      expect(room.hasStarted()).toBe(false);
+    });
+
+    it('should shuffle the deck and start discard pile', () => {
+      const gameBoard = room.getGameBoard();
+
+      // Spy on GameBoard methods to ensure they are called
+      const shuffleSpy = jest.spyOn(gameBoard, 'shuffleDrawPile');
+      const discardSpy = jest.spyOn(gameBoard, 'startDiscardPile');
+
+      service.startGame(room, owner);
+
+      expect(shuffleSpy).toHaveBeenCalled();
+      expect(discardSpy).toHaveBeenCalled();
     });
   });
 });
