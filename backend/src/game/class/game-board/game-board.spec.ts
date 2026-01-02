@@ -533,7 +533,8 @@ describe('GameBoard', () => {
         createCard('w1', CardColor.BLACK, CardValue.WILD_DRAW_FOUR, 'WD4'),
       ];
 
-      const events = gameBoard.getTurnEvents(cards);
+      gameBoard.setTurnEvents(cards);
+      const events = gameBoard.getTurnEvents();
 
       expect(events.skip_amount).toBe(1);
       expect(events.draw_two_amount).toBe(2);
