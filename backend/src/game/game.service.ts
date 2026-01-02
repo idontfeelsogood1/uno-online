@@ -4,6 +4,7 @@ import { GameBoard } from './class/game-board/GameBoard';
 import { Player } from './class/player/Player';
 import { PlayerNotFound } from './class/game-room/GameRoom';
 import { Card } from './class/card/Card';
+import { AmountGreaterThanDrawPile } from './class/game-board/GameBoard';
 
 @Injectable()
 export class GameService {
@@ -178,6 +179,38 @@ export class GameService {
 
     game.startDiscardPile();
     game.setCurrentTopCard(game.getDiscardPile()[0]);
+  }
+
+  public drawCards(room: GameRoom, player: Player, amount: number): void {
+    const currentPlayer: Player = room.getPlayerFromOrder();
+
+    if (player.socketId !== currentPlayer.socketId) {
+      throw new NotPlayerTurn(
+        `
+        playerId: ${player.socketId}
+        currentPlayerTurnId: ${currentPlayer.socketId}
+        `,
+        {},
+      );
+    }
+
+    const game: GameBoard = room.getGameBoard();
+    try {
+      player.pushToHand(game.popFromDrawPile(amount));
+    } catch (err) {
+      if (err instanceof AmountGreaterThanDrawPile) {
+        const clearedCards: Card[] = game.clearDiscardPile();
+        game.pushToDrawPile(clearedCards);
+        game.shuffleDrawPile();
+      }
+    }
+  }
+}
+
+export class NotPlayerTurn extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'NotPlayerTurn';
   }
 }
 
