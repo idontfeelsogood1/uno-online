@@ -202,6 +202,7 @@ export class GameService {
         const clearedCards: Card[] = game.clearDiscardPile();
         game.pushToDrawPile(clearedCards);
         game.shuffleDrawPile();
+        throw err;
       }
     }
   }
