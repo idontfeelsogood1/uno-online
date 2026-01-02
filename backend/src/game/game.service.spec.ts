@@ -4,6 +4,7 @@ import {
   RoomNotFound,
   NotRoomOwner,
   PlayersCountMustBeGreaterThanOne,
+  NotPlayerTurn,
 } from './game.service';
 import { GameRoom, PlayerNotFound } from './class/game-room/GameRoom';
 import { Player } from './class/player/Player';
@@ -150,7 +151,7 @@ describe('GameService', () => {
   });
 
   // ==========================================
-  // START GAME LOGIC (NEW)
+  // START GAME LOGIC
   // ==========================================
   describe('Start Game Logic', () => {
     let room: GameRoom;
@@ -217,6 +218,69 @@ describe('GameService', () => {
 
       expect(shuffleSpy).toHaveBeenCalled();
       expect(discardSpy).toHaveBeenCalled();
+    });
+  });
+
+  // ==========================================
+  // DRAW CARDS LOGIC (NEW)
+  // ==========================================
+  describe('Draw Cards Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+    let gameBoard: GameBoard;
+
+    beforeEach(() => {
+      // Setup and Start a Game
+      owner = service.createPlayer('owner-socket', 'Owner');
+      player2 = service.createPlayer('p2-socket', 'Player 2');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, player2);
+
+      service.startGame(room, owner);
+      gameBoard = room.getGameBoard();
+    });
+
+    it('should allow the current player to draw cards', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      const initialHandSize = currentPlayer.getHand().length;
+
+      service.drawCards(room, currentPlayer, 1);
+
+      expect(currentPlayer.getHand()).toHaveLength(initialHandSize + 1);
+    });
+
+    it('should throw NotPlayerTurn if a non-current player tries to draw', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      const notCurrentPlayer =
+        currentPlayer.socketId === owner.socketId ? player2 : owner;
+
+      expect(() => {
+        service.drawCards(room, notCurrentPlayer, 1);
+      }).toThrow(NotPlayerTurn);
+    });
+
+    it('should reshuffle discard pile if draw pile runs out', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Simulate a nearly empty/drained draw pile
+      // 1. Drain the draw pile manually
+      const remainingDraw = gameBoard.getDrawPile().length;
+      gameBoard.popFromDrawPile(remainingDraw);
+
+      // 2. Spy on the reshuffle methods
+      const clearDiscardSpy = jest.spyOn(gameBoard, 'clearDiscardPile');
+      const pushDrawSpy = jest.spyOn(gameBoard, 'pushToDrawPile');
+      const shuffleSpy = jest.spyOn(gameBoard, 'shuffleDrawPile');
+
+      // 3. Attempt to draw (Logic: tries pop -> fails -> catch -> reshuffle)
+      service.drawCards(room, currentPlayer, 1);
+
+      expect(clearDiscardSpy).toHaveBeenCalled();
+      expect(pushDrawSpy).toHaveBeenCalled();
+      expect(shuffleSpy).toHaveBeenCalled();
     });
   });
 });
