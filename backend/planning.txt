@@ -125,11 +125,13 @@ class GameGateway {
 class GameService {
     rooms: Map<GameRoom> roomId, room
 
+    // METHODS SHOULD THROW ERRORS TO SIGNAL GameGateway TO EMIT SOME EVENTS FOR THE CLIENT
+
     // STARTING THE GAME: 
     - "start-game" event 
     - expects: networkRoomId, playerSocketId from the client
     - get room, player from ids
-    startGame(room: GameRoom, player: Player) 
+    startGame(room: GameRoom, player: Player): void
         If player.socketId === room.ownerId AND room.currentPlayers > 1:
             Set room.started = true
         Else:
@@ -141,11 +143,14 @@ class GameService {
         Push 7 cards to each player hand FROM drawPile
         Start discardPile with 1 top card from drawPile (ONLY ALLOW NUMBER CARDS)
         Set currentTopCard
+        
     
     // GAMEPLAY: 
     // THINK IN TERMS OF SOCKET EVENTS, REACT TO EVENTS THAT WAS THROWN
+    // SEND BACK A NEW STATE FOR EVERY EVENTS
+    
     - "draw-cards" event
-    - expects: networkRoomId, playerSocketId, amount from the client
+    - expects: roomNetworkId, playerSocketId, amount from the client
     - get room, player from ids
     drawCards(room: GameRoom, player: Player, amount: number): void
         if player !== room.getPlayerFromOrder:
@@ -158,10 +163,10 @@ class GameService {
             Push card from drawPile to player's hand
 
     - "uno" event 
-    - expects: networkRoomId, playerSocketId from the client
+    - expects: roomNetworkId, playerSocketId from the client
     - get room, player from ids
     uno(room: GameRoom, player: Player): void
-        if player !== room.getPlayerFromOrder:
+        If player !== room.getPlayerFromOrder:
             throw an error
         Get player's hand:
         If player's cards === 2:
@@ -169,6 +174,7 @@ class GameService {
         Else:
             throw an error
 
+    // THE PLAYER PLAYS A HAND, THEN PROCESS THE TURN EVENTS 
     - "play-cards" event
     - expects: networkRoomId, playerSocketId, cardIds from the client
     - get room, player, cardsToPlay from ids
@@ -178,19 +184,32 @@ class GameService {
         If cardsToPlay is a valid pattern starting with top card:
             Remove cards from player's hand
             Push cards to discardPile
+            Set turnEvents
             Set currentTopCard
         Else: 
             Throws an error
-    Update current room turn event
-    Update currentPlayerIndex
 
-    Call this after "play-cards"
+    // LET THE currentPlayer CHOOSE ENFORCED COLOR IF TOP CARD OF THE HAND THEY PLAY IS WILD
+    // ELSE PROCESS THE EVENTS FOR THE NEXT PLAYER
     processTurn(room: GameRoom): void 
         Current player is determined by currentPlayerIndex of playerOrder 
         currentPlayer = room.getPlayerFromOrder()
 
-        Determines current turn events based on turnEvents of room
+        If currentTopCard === 'WILD': 
+        - Dispatch event "choose-enforce-color" for the currentPlayer
+        - Wait for response from client
+        - Set enforcedColor
+        // currentPlayer's turn end
 
-        Dispatch "new-turn" event with data for clients
+        // Next player turn
+        Determines turn events based on turnEvents of GameBoard
+        updateDirection(reverse_amount: number)
+        updateCurrentPlayerIndex(skip_amount?: number, direction: number)
+        If draw_two:
+            Pop cards from drawPile
+            Push cards to player's hand
+        If wild_draw_four:
+            Pop cards from drawPile
+            Push cards to player's hand
 }   
 
