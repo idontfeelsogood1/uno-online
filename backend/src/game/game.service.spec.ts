@@ -7,10 +7,14 @@ import {
   NotPlayerTurn,
   CannotUno,
 } from './game.service';
-import { AmountGreaterThanDrawPile } from './class/game-board/GameBoard';
+import {
+  AmountGreaterThanDrawPile,
+  CardPatternMismatch,
+} from './class/game-board/GameBoard';
 import { GameRoom, PlayerNotFound } from './class/game-room/GameRoom';
 import { Player } from './class/player/Player';
 import { GameBoard } from './class/game-board/GameBoard';
+import { Card, CardColor, CardValue } from './class/card/Card';
 
 describe('GameService', () => {
   let service: GameService;
@@ -288,7 +292,7 @@ describe('GameService', () => {
   });
 
   // ==========================================
-  // UNO LOGIC (NEW)
+  // UNO LOGIC
   // ==========================================
   describe('Uno Logic', () => {
     let room: GameRoom;
@@ -352,6 +356,92 @@ describe('GameService', () => {
       expect(() => {
         service.uno(room, currentPlayer);
       }).toThrow(CannotUno);
+    });
+  });
+
+  // ==========================================
+  // PLAY CARDS LOGIC (NEW)
+  // ==========================================
+  describe('Play Cards Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+    let gameBoard: GameBoard;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner-socket', 'Owner');
+      player2 = service.createPlayer('p2-socket', 'Player 2');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, player2);
+
+      service.startGame(room, owner);
+      gameBoard = room.getGameBoard();
+    });
+
+    it('should successfully play a valid card', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      const topCard = gameBoard.getCurrentTopCard();
+
+      // Construct a card that matches the top card (e.g. same color)
+      // to ensure the move is valid regardless of random start state
+      const validCard = new Card(
+        topCard.id,
+        topCard.name,
+        topCard.color,
+        topCard.value,
+      );
+
+      // Force-add this card to player's hand
+      currentPlayer.pushToHand([validCard]);
+      const initialHandSize = currentPlayer.getHand().length;
+
+      // Play the card
+      service.playCards(room, currentPlayer, [validCard.id]);
+
+      // Verify state changes
+      expect(currentPlayer.getHand()).toHaveLength(initialHandSize - 1);
+      expect(gameBoard.getCurrentTopCard().id).toBe(validCard.id);
+      expect(gameBoard.getDiscardPile()).toContain(validCard);
+    });
+
+    it('should throw NotPlayerTurn if non-current player tries to play', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      const notCurrentPlayer =
+        currentPlayer.socketId === owner.socketId ? player2 : owner;
+
+      // Just try to play first card in hand
+      const cardToPlay = notCurrentPlayer.getHand()[0];
+
+      expect(() => {
+        service.playCards(room, notCurrentPlayer, [cardToPlay.id]);
+      }).toThrow(NotPlayerTurn);
+    });
+
+    it('should propagate CardPatternMismatch from GameBoard if move is invalid', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      const topCard = gameBoard.getCurrentTopCard();
+
+      // Create an Invalid Card (Different Color AND Different Value)
+      // Use a fixed color that is definitely different
+      const invalidColor =
+        topCard.color === CardColor.RED ? CardColor.BLUE : CardColor.RED;
+      const invalidValue =
+        topCard.value === CardValue.ONE ? CardValue.TWO : CardValue.ONE;
+
+      const invalidCard = new Card(
+        'invalid-card',
+        'Invalid Card',
+        invalidColor,
+        invalidValue,
+      );
+
+      currentPlayer.pushToHand([invalidCard]);
+
+      expect(() => {
+        service.playCards(room, currentPlayer, [invalidCard.id]);
+      }).toThrow(CardPatternMismatch);
     });
   });
 });
