@@ -1,6 +1,11 @@
 import { Injectable } from '@nestjs/common';
 import { GameRoom } from './class/game-room/GameRoom';
-import { GameBoard } from './class/game-board/GameBoard';
+import {
+  CardPatternMismatch,
+  CardTypeMismatch,
+  EnforcedColorMismatch,
+  GameBoard,
+} from './class/game-board/GameBoard';
 import { Player } from './class/player/Player';
 import { PlayerNotFound } from './class/game-room/GameRoom';
 import { Card } from './class/card/Card';
@@ -232,6 +237,27 @@ export class GameService {
     } catch (err) {
       if (err instanceof NotPlayerTurn) throw err;
       if (err instanceof CannotUno) throw err;
+    }
+  }
+
+  public playCards(room: GameRoom, player: Player, cardIds: string[]): void {
+    try {
+      this.isCurrentPlayer(room, player);
+      const game: GameBoard = room.getGameBoard();
+
+      const cardsToPlay: Card[] = player.getCardsToPlay(cardIds);
+      game.processPattern(cardsToPlay);
+
+      const removedCards: Card[] = player.removeCards(cardIds);
+      game.pushToDiscardPile(removedCards);
+
+      game.setTurnEvents(removedCards);
+      game.setCurrentTopCard(removedCards[removedCards.length - 1]);
+    } catch (err) {
+      if (err instanceof NotPlayerTurn) throw err;
+      if (err instanceof EnforcedColorMismatch) throw err;
+      if (err instanceof CardTypeMismatch) throw err;
+      if (err instanceof CardPatternMismatch) throw err;
     }
   }
 }
