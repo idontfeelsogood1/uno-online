@@ -6,6 +6,7 @@ import {
   PlayersCountMustBeGreaterThanOne,
   NotPlayerTurn,
   CannotUno,
+  HaveNotChoosenColor, // Added Import
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -228,7 +229,7 @@ describe('GameService', () => {
   });
 
   // ==========================================
-  // TURN VALIDATION LOGIC (NEW)
+  // TURN VALIDATION LOGIC
   // ==========================================
   describe('Turn Validation Logic', () => {
     let room: GameRoom;
@@ -453,6 +454,47 @@ describe('GameService', () => {
       expect(() => {
         service.playCards(room, currentPlayer, [invalidCard.id]);
       }).toThrow(CardPatternMismatch);
+    });
+
+    // --- NEW WILD CARD TESTS ---
+
+    it('should successfully play a Wild card with a selected color', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Create a Wild Card
+      const wildCard = new Card(
+        'wild-card-id',
+        'Wild',
+        CardColor.BLACK, // Typically Wilds are black/none until played
+        CardValue.WILD,
+      );
+
+      currentPlayer.pushToHand([wildCard]);
+
+      // Play Wild with explicit color choice
+      service.playCards(room, currentPlayer, [wildCard.id], CardColor.BLUE);
+
+      // Verify Enforced Color was set
+      expect(gameBoard.getEnforcedColor()).toBe(CardColor.BLUE);
+      expect(gameBoard.getCurrentTopCard().id).toBe(wildCard.id);
+    });
+
+    it('should throw HaveNotChoosenColor if Wild card played without color', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      const wildCard = new Card(
+        'wild-card-id',
+        'Wild',
+        CardColor.BLACK,
+        CardValue.WILD,
+      );
+
+      currentPlayer.pushToHand([wildCard]);
+
+      // Play Wild WITHOUT color
+      expect(() => {
+        service.playCards(room, currentPlayer, [wildCard.id]);
+      }).toThrow(HaveNotChoosenColor);
     });
   });
 });
