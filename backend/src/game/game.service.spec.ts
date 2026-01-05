@@ -228,6 +228,39 @@ describe('GameService', () => {
   });
 
   // ==========================================
+  // TURN VALIDATION LOGIC (NEW)
+  // ==========================================
+  describe('Turn Validation Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner-socket', 'Owner');
+      player2 = service.createPlayer('p2-socket', 'Player 2');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, player2);
+      service.startGame(room, owner);
+    });
+
+    it('should return true if it is the player turn', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      expect(service.isPlayerTurn(room, currentPlayer)).toBe(true);
+    });
+
+    it('should throw NotPlayerTurn if it is not the player turn', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      const notCurrentPlayer =
+        currentPlayer.socketId === owner.socketId ? player2 : owner;
+      expect(() => service.isPlayerTurn(room, notCurrentPlayer)).toThrow(
+        NotPlayerTurn,
+      );
+    });
+  });
+
+  // ==========================================
   // DRAW CARDS LOGIC
   // ==========================================
   describe('Draw Cards Logic', () => {
@@ -256,16 +289,6 @@ describe('GameService', () => {
       service.drawCards(room, currentPlayer, 1);
 
       expect(currentPlayer.getHand()).toHaveLength(initialHandSize + 1);
-    });
-
-    it('should throw NotPlayerTurn if a non-current player tries to draw', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-      const notCurrentPlayer =
-        currentPlayer.socketId === owner.socketId ? player2 : owner;
-
-      expect(() => {
-        service.drawCards(room, notCurrentPlayer, 1);
-      }).toThrow(NotPlayerTurn);
     });
 
     it('should reshuffle discard pile if draw pile runs out', () => {
@@ -327,7 +350,7 @@ describe('GameService', () => {
       hand.push(cardToPlay);
 
       // Call Uno with the ID of the card we intend to play
-      service.uno(room, currentPlayer, [cardToPlay.id]);
+      service.uno(currentPlayer, [cardToPlay.id]);
 
       expect(currentPlayer.isUno()).toBe(true);
     });
@@ -343,22 +366,9 @@ describe('GameService', () => {
       hand.push(cardToPlay);
 
       // Call Uno with the ID of the card we intend to play
-      service.uno(room, currentPlayer, [cardToPlay.id]);
+      service.uno(currentPlayer, [cardToPlay.id]);
 
       expect(currentPlayer.isUno()).toBe(true);
-    });
-
-    it('should throw NotPlayerTurn if non-current player calls uno', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-      const notCurrentPlayer =
-        currentPlayer.socketId === owner.socketId ? player2 : owner;
-
-      // Mock a card ID (doesn't matter for this check)
-      const mockCardId = 'some-card-id';
-
-      expect(() => {
-        service.uno(room, notCurrentPlayer, [mockCardId]);
-      }).toThrow(NotPlayerTurn);
     });
 
     it('should throw CannotUno if calculating the move leaves > 1 card', () => {
@@ -368,7 +378,7 @@ describe('GameService', () => {
       const cardToPlay = currentPlayer.getHand()[0];
 
       expect(() => {
-        service.uno(room, currentPlayer, [cardToPlay.id]);
+        service.uno(currentPlayer, [cardToPlay.id]);
       }).toThrow(CannotUno);
     });
   });
@@ -418,19 +428,6 @@ describe('GameService', () => {
       expect(currentPlayer.getHand()).toHaveLength(initialHandSize - 1);
       expect(gameBoard.getCurrentTopCard().id).toBe(validCard.id);
       expect(gameBoard.getDiscardPile()).toContain(validCard);
-    });
-
-    it('should throw NotPlayerTurn if non-current player tries to play', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-      const notCurrentPlayer =
-        currentPlayer.socketId === owner.socketId ? player2 : owner;
-
-      // Just try to play first card in hand
-      const cardToPlay = notCurrentPlayer.getHand()[0];
-
-      expect(() => {
-        service.playCards(room, notCurrentPlayer, [cardToPlay.id]);
-      }).toThrow(NotPlayerTurn);
     });
 
     it('should propagate CardPatternMismatch from GameBoard if move is invalid', () => {
