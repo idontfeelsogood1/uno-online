@@ -219,17 +219,26 @@ export class GameService {
     }
   }
 
-  public uno(room: GameRoom, player: Player): void {
+  // COMPARE THE OFFSET OF THE PLAYER'S REAL HAND AND THE CARDS THEY WANT TO PLAY
+  public uno(room: GameRoom, player: Player, cardToPlayIds: string[]): void {
     try {
       this.isCurrentPlayer(room, player);
 
       const hand: Card[] = player.getHand();
-      if (hand.length === 2) {
+      const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
+      const oneOrZeroCardRemaining =
+        hand.length - cardsToPlay.length === 0 ||
+        hand.length - cardsToPlay.length === 1;
+
+      if (oneOrZeroCardRemaining) {
         player.setIsUno(true);
       } else {
         throw new CannotUno(
           `
           playerHandLength: ${hand.length}
+          cardsToPlayLength: ${cardsToPlay.length}
+          remainingCards (hand - CardsToPlay): ${hand.length - cardsToPlay.length}
+          Must be 0 or 1
           `,
           {},
         );
@@ -240,15 +249,19 @@ export class GameService {
     }
   }
 
-  public playCards(room: GameRoom, player: Player, cardIds: string[]): void {
+  public playCards(
+    room: GameRoom,
+    player: Player,
+    cardToPlayIds: string[],
+  ): void {
     try {
       this.isCurrentPlayer(room, player);
       const game: GameBoard = room.getGameBoard();
 
-      const cardsToPlay: Card[] = player.getCardsToPlay(cardIds);
+      const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
       game.processPattern(cardsToPlay);
 
-      const removedCards: Card[] = player.removeCards(cardIds);
+      const removedCards: Card[] = player.removeCards(cardToPlayIds);
       game.pushToDiscardPile(removedCards);
 
       game.setTurnEvents(removedCards);
