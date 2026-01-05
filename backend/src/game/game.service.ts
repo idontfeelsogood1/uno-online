@@ -186,7 +186,7 @@ export class GameService {
     game.setCurrentTopCard(game.getDiscardPile()[0]);
   }
 
-  public isCurrentPlayer(room: GameRoom, player: Player): boolean {
+  public isPlayerTurn(room: GameRoom, player: Player): boolean {
     const currentPlayer: Player = room.getPlayerFromOrder();
 
     if (player.socketId !== currentPlayer.socketId) {
@@ -206,10 +206,8 @@ export class GameService {
     const game: GameBoard = room.getGameBoard();
 
     try {
-      this.isCurrentPlayer(room, player);
       player.pushToHand(game.popFromDrawPile(amount));
     } catch (err) {
-      if (err instanceof NotPlayerTurn) throw err;
       if (err instanceof AmountGreaterThanDrawPile) {
         const clearedCards: Card[] = game.clearDiscardPile();
         game.pushToDrawPile(clearedCards);
@@ -220,10 +218,8 @@ export class GameService {
   }
 
   // COMPARE THE OFFSET OF THE PLAYER'S REAL HAND AND THE CARDS THEY WANT TO PLAY
-  public uno(room: GameRoom, player: Player, cardToPlayIds: string[]): void {
+  public uno(player: Player, cardToPlayIds: string[]): void {
     try {
-      this.isCurrentPlayer(room, player);
-
       const hand: Card[] = player.getHand();
       const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
       const oneOrZeroCardRemaining =
@@ -244,7 +240,6 @@ export class GameService {
         );
       }
     } catch (err) {
-      if (err instanceof NotPlayerTurn) throw err;
       if (err instanceof CannotUno) throw err;
     }
   }
@@ -255,7 +250,6 @@ export class GameService {
     cardToPlayIds: string[],
   ): void {
     try {
-      this.isCurrentPlayer(room, player);
       const game: GameBoard = room.getGameBoard();
 
       const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
@@ -267,7 +261,6 @@ export class GameService {
       game.setTurnEvents(removedCards);
       game.setCurrentTopCard(removedCards[removedCards.length - 1]);
     } catch (err) {
-      if (err instanceof NotPlayerTurn) throw err;
       if (err instanceof EnforcedColorMismatch) throw err;
       if (err instanceof CardTypeMismatch) throw err;
       if (err instanceof CardPatternMismatch) throw err;
