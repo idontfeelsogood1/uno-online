@@ -284,6 +284,37 @@ export class GameService {
       if (err instanceof CardPatternMismatch) throw err;
     }
   }
+
+  public processCurrentTurn(room: GameRoom): void {
+    try {
+      const currentPlayer: Player = room.getPlayerFromOrder();
+      const hand: Card[] = currentPlayer.getHand();
+      const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
+
+      if (zeroOrOneCardLeftOnHand && currentPlayer.isUno() === false) {
+        this.drawCards(room, currentPlayer, 2);
+      }
+      if (hand.length === 0 && currentPlayer.isUno() === true) {
+        throw new PlayerWon(
+          `
+          playerSocketId: ${currentPlayer.socketId}
+          username: ${currentPlayer.username}
+          `,
+          {},
+        );
+      }
+    } catch (err) {
+      if (err instanceof AmountGreaterThanDrawPile) throw err;
+      if (err instanceof PlayerWon) throw err;
+    }
+  }
+}
+
+export class PlayerWon extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'PlayerWon';
+  }
 }
 
 export class HaveNotChoosenColor extends Error {
