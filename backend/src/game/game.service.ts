@@ -8,7 +8,7 @@ import {
 } from './class/game-board/GameBoard';
 import { Player } from './class/player/Player';
 import { PlayerNotFound } from './class/game-room/GameRoom';
-import { Card } from './class/card/Card';
+import { Card, CardColor } from './class/card/Card';
 import { AmountGreaterThanDrawPile } from './class/game-board/GameBoard';
 
 @Injectable()
@@ -222,7 +222,7 @@ export class GameService {
     try {
       const hand: Card[] = player.getHand();
       const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
-      const oneOrZeroCardRemaining =
+      const oneOrZeroCardRemaining: boolean =
         hand.length - cardsToPlay.length === 0 ||
         hand.length - cardsToPlay.length === 1;
 
@@ -248,11 +248,28 @@ export class GameService {
     room: GameRoom,
     player: Player,
     cardToPlayIds: string[],
+    wildColor?: CardColor,
   ): void {
     try {
       const game: GameBoard = room.getGameBoard();
 
       const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
+      const cardsToPlayTopCardType: string = game.getCardType(
+        cardsToPlay[cardsToPlay.length - 1],
+      );
+      if (cardsToPlayTopCardType === 'WILD' && wildColor) {
+        game.setEnforcedColor(wildColor);
+      }
+      if (cardsToPlayTopCardType === 'WILD' && !wildColor) {
+        throw new HaveNotChoosenColor(
+          `
+          topCard: ${cardsToPlay[cardsToPlay.length - 1].name}
+          color: ${wildColor}
+          `,
+          {},
+        );
+      }
+
       game.processPattern(cardsToPlay);
 
       const removedCards: Card[] = player.removeCards(cardToPlayIds);
@@ -261,10 +278,18 @@ export class GameService {
       game.setTurnEvents(removedCards);
       game.setCurrentTopCard(removedCards[removedCards.length - 1]);
     } catch (err) {
+      if (err instanceof HaveNotChoosenColor) throw err;
       if (err instanceof EnforcedColorMismatch) throw err;
       if (err instanceof CardTypeMismatch) throw err;
       if (err instanceof CardPatternMismatch) throw err;
     }
+  }
+}
+
+export class HaveNotChoosenColor extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'HaveNotChooseColor';
   }
 }
 
