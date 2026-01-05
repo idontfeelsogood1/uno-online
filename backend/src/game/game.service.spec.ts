@@ -6,7 +6,8 @@ import {
   PlayersCountMustBeGreaterThanOne,
   NotPlayerTurn,
   CannotUno,
-  HaveNotChoosenColor, // Added Import
+  HaveNotChoosenColor,
+  PlayerWon, // Added Import
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -409,23 +410,19 @@ describe('GameService', () => {
       const currentPlayer = room.getPlayerFromOrder();
       const topCard = gameBoard.getCurrentTopCard();
 
-      // Construct a card that matches the top card (e.g. same color)
-      // to ensure the move is valid regardless of random start state
+      // Construct a card that matches the topCard
       const validCard = new Card(
-        'valid-card-id', // Use a distinct ID
+        'valid-card-id',
         topCard.name,
         topCard.color,
         topCard.value,
       );
 
-      // Force-add this card to player's hand
       currentPlayer.pushToHand([validCard]);
       const initialHandSize = currentPlayer.getHand().length;
 
-      // Play the card
       service.playCards(room, currentPlayer, [validCard.id]);
 
-      // Verify state changes
       expect(currentPlayer.getHand()).toHaveLength(initialHandSize - 1);
       expect(gameBoard.getCurrentTopCard().id).toBe(validCard.id);
       expect(gameBoard.getDiscardPile()).toContain(validCard);
@@ -435,8 +432,7 @@ describe('GameService', () => {
       const currentPlayer = room.getPlayerFromOrder();
       const topCard = gameBoard.getCurrentTopCard();
 
-      // Create an Invalid Card (Different Color AND Different Value)
-      // Use a fixed color that is definitely different
+      // Create an Invalid Card
       const invalidColor =
         topCard.color === CardColor.RED ? CardColor.BLUE : CardColor.RED;
       const invalidValue =
@@ -461,20 +457,17 @@ describe('GameService', () => {
     it('should successfully play a Wild card with a selected color', () => {
       const currentPlayer = room.getPlayerFromOrder();
 
-      // Create a Wild Card
       const wildCard = new Card(
         'wild-card-id',
         'Wild',
-        CardColor.BLACK, // Typically Wilds are black/none until played
+        CardColor.BLACK,
         CardValue.WILD,
       );
 
       currentPlayer.pushToHand([wildCard]);
 
-      // Play Wild with explicit color choice
       service.playCards(room, currentPlayer, [wildCard.id], CardColor.BLUE);
 
-      // Verify Enforced Color was set
       expect(gameBoard.getEnforcedColor()).toBe(CardColor.BLUE);
       expect(gameBoard.getCurrentTopCard().id).toBe(wildCard.id);
     });
@@ -491,10 +484,102 @@ describe('GameService', () => {
 
       currentPlayer.pushToHand([wildCard]);
 
-      // Play Wild WITHOUT color
       expect(() => {
         service.playCards(room, currentPlayer, [wildCard.id]);
       }).toThrow(HaveNotChoosenColor);
+    });
+  });
+
+  // ==========================================
+  // PROCESS CURRENT TURN LOGIC (NEW)
+  // ==========================================
+  describe('Process Current Turn Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+    let gameBoard: GameBoard;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner-socket', 'Owner');
+      player2 = service.createPlayer('p2-socket', 'Player 2');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, player2);
+      service.startGame(room, owner);
+      gameBoard = room.getGameBoard();
+    });
+
+    it('should penalize player (draw 2) if they have 0 card left and did not call Uno', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Setup: 1 card, isUno = false
+      const hand = currentPlayer.getHand();
+      while (hand.length > 0) hand.pop();
+      currentPlayer.setIsUno(false);
+
+      const drawSpy = jest.spyOn(service, 'drawCards');
+
+      service.processCurrentTurn(room);
+
+      expect(drawSpy).toHaveBeenCalledWith(room, currentPlayer, 2);
+    });
+
+    it('should penalize player (draw 2) if they have 1 card left and did not call Uno', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Setup: 1 card, isUno = false
+      const hand = currentPlayer.getHand();
+      while (hand.length > 0) hand.pop();
+      hand.push(gameBoard.generateUnoDeck()[0]);
+      currentPlayer.setIsUno(false);
+
+      const drawSpy = jest.spyOn(service, 'drawCards');
+
+      service.processCurrentTurn(room);
+
+      expect(drawSpy).toHaveBeenCalledWith(room, currentPlayer, 2);
+    });
+
+    it('should throw PlayerWon if player has 0 cards and called Uno', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Setup: 0 cards, isUno = true
+      const hand = currentPlayer.getHand();
+      while (hand.length > 0) hand.pop();
+      currentPlayer.setIsUno(true);
+
+      expect(() => {
+        service.processCurrentTurn(room);
+      }).toThrow(PlayerWon);
+    });
+
+    it('should do nothing if player has > 1 cards', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      // Default hand is 7 cards
+      currentPlayer.setIsUno(false);
+
+      const drawSpy = jest.spyOn(service, 'drawCards');
+
+      service.processCurrentTurn(room);
+
+      expect(drawSpy).not.toHaveBeenCalled();
+    });
+
+    it('should do nothing if player has 1 card but called Uno', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Setup: 1 card, isUno = true
+      const hand = currentPlayer.getHand();
+      while (hand.length > 0) hand.pop();
+      hand.push(gameBoard.generateUnoDeck()[0]);
+      currentPlayer.setIsUno(true);
+
+      const drawSpy = jest.spyOn(service, 'drawCards');
+
+      service.processCurrentTurn(room);
+
+      expect(drawSpy).not.toHaveBeenCalled();
     });
   });
 });
