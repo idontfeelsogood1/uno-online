@@ -167,7 +167,7 @@ class GameService {
     - expects: roomNetworkId, playerSocketId, cardsId from the client
     - get room, player, from ids
     - check if its player's turn
-    uno(room: GameRoom, player: Player, cardsId: string[]): void
+    uno(player: Player, cardsId: string[]): void
         Get player's hand:
         If player's cards - cardsToPlay === 0 or 1:
             Set player.uno = true
