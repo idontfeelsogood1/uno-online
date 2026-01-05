@@ -312,17 +312,38 @@ describe('GameService', () => {
       gameBoard = room.getGameBoard();
     });
 
-    it('should set isUno to true when current player has 2 cards and calls uno', () => {
+    it('should set isUno to true when playing a card will leave 1 card remaining', () => {
       const currentPlayer = room.getPlayerFromOrder();
 
       // Manipulate hand to have exactly 2 cards
       const hand = currentPlayer.getHand();
       while (hand.length > 0) hand.pop(); // Clear hand
       const cards = gameBoard.generateUnoDeck();
-      hand.push(cards[0]);
-      hand.push(cards[1]);
 
-      service.uno(room, currentPlayer);
+      const cardToKeep = cards[0];
+      const cardToPlay = cards[1];
+
+      hand.push(cardToKeep);
+      hand.push(cardToPlay);
+
+      // Call Uno with the ID of the card we intend to play
+      service.uno(room, currentPlayer, [cardToPlay.id]);
+
+      expect(currentPlayer.isUno()).toBe(true);
+    });
+
+    it('should set isUno to true when playing final card leaves 0 remaining (winning move)', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+
+      // Manipulate hand to have exactly 1 card (the one we are about to play)
+      const hand = currentPlayer.getHand();
+      while (hand.length > 0) hand.pop();
+      const cards = gameBoard.generateUnoDeck();
+      const cardToPlay = cards[0];
+      hand.push(cardToPlay);
+
+      // Call Uno with the ID of the card we intend to play
+      service.uno(room, currentPlayer, [cardToPlay.id]);
 
       expect(currentPlayer.isUno()).toBe(true);
     });
@@ -332,35 +353,28 @@ describe('GameService', () => {
       const notCurrentPlayer =
         currentPlayer.socketId === owner.socketId ? player2 : owner;
 
+      // Mock a card ID (doesn't matter for this check)
+      const mockCardId = 'some-card-id';
+
       expect(() => {
-        service.uno(room, notCurrentPlayer);
+        service.uno(room, notCurrentPlayer, [mockCardId]);
       }).toThrow(NotPlayerTurn);
     });
 
-    it('should throw CannotUno if hand has more than 2 cards', () => {
+    it('should throw CannotUno if calculating the move leaves > 1 card', () => {
       const currentPlayer = room.getPlayerFromOrder();
-      // StartGame gives 7 cards
-      expect(() => {
-        service.uno(room, currentPlayer);
-      }).toThrow(CannotUno);
-    });
+      // StartGame gives 7 cards. Playing 1 leaves 6. 6 > 1.
 
-    it('should throw CannotUno if hand has fewer than 2 cards', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-
-      // Manipulate hand to have 1 card
-      const hand = currentPlayer.getHand();
-      while (hand.length > 0) hand.pop();
-      hand.push(gameBoard.generateUnoDeck()[0]);
+      const cardToPlay = currentPlayer.getHand()[0];
 
       expect(() => {
-        service.uno(room, currentPlayer);
+        service.uno(room, currentPlayer, [cardToPlay.id]);
       }).toThrow(CannotUno);
     });
   });
 
   // ==========================================
-  // PLAY CARDS LOGIC (NEW)
+  // PLAY CARDS LOGIC
   // ==========================================
   describe('Play Cards Logic', () => {
     let room: GameRoom;
@@ -387,7 +401,7 @@ describe('GameService', () => {
       // Construct a card that matches the top card (e.g. same color)
       // to ensure the move is valid regardless of random start state
       const validCard = new Card(
-        topCard.id,
+        'valid-card-id', // Use a distinct ID
         topCard.name,
         topCard.color,
         topCard.value,
