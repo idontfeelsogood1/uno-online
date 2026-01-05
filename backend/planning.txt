@@ -148,6 +148,7 @@ class GameService {
     // GAMEPLAY: 
     // THINK IN TERMS OF SOCKET EVENTS, REACT TO EVENTS THAT WAS THROWN
     // SEND BACK A NEW STATE FOR EVERY EVENTS
+    // METHODS SHOULD RETURN AN ActionResults FOR THE FRONTEND TO PLAY ANIMATIONS
 
     - "draw-cards" event
     - expects: roomNetworkId, playerSocketId, amount from the client
@@ -164,10 +165,10 @@ class GameService {
     Set player.uno to false after they draw the cards
 
     - "uno" event 
-    - expects: roomNetworkId, playerSocketId, cardsId from the client
+    - expects: roomNetworkId, playerSocketId, cardToPlayIds from the client
     - get room, player, from ids
     - check if its player's turn
-    uno(player: Player, cardsId: string[]): void
+    uno(player: Player, cardToPlayIds: string[]): void
         Get player's hand:
         If player's cards - cardsToPlay === 0 or 1:
             Set player.uno = true
@@ -176,38 +177,43 @@ class GameService {
 
     // THE PLAYER PLAYS A HAND, THEN PROCESS THE TURN EVENTS 
     - "play-cards" event
-    - expects: networkRoomId, playerSocketId, cardIds from the client
+    - expects: networkRoomId, playerSocketId, cardToPlayIds, wildColor? from the client
     - get room, player from ids
     - check if its player's turn
-    playCards(room: GameRoom, player: Player, cardIds: string[]): void
+    playCards(room: GameRoom, player: Player, cardToPlayIds: string[], wildColor?: CardColor): void
+        If cardsToPlay top card is 'WILD' && wildColor: 
+            Set enforcedColor = wildColor
+        If cardsToPlay top card is 'WILD' && !wildColor:  
+            Throw an error
+            
         If cardsToPlay is a valid pattern starting with top card:
             Remove cards from player's hand
             Push cards to discardPile
             Set turnEvents
             Set currentTopCard
         Else: 
-            Throws an error
+            Throw an error
     Set player.uno to false when playCards throw an error
 
-    // PROCESS THE EVENTS FOR THE CURRENT PLAYER AND THE NEXT PLAYER
-    processTurn(room: GameRoom): void 
+    // PROCESS THE EVENTS FOR THE CURRENT PLAYER 
+    processCurrentTurn(room: GameRoom): void 
         Current player is determined by currentPlayerIndex of playerOrder 
         currentPlayer = room.getPlayerFromOrder()
 
         If player.hand === 0 OR 1 AND player.uno === false:
             Pop 2 cards from drawPile
             Push the cards to player's hand
+        If player.hand === 0 AND player.uno === true:   
+            Announce winner
+            Throw an error
 
-        If currentTopCard === 'WILD': 
-        - Dispatch event "choose-enforce-color" for the currentPlayer
-        - Wait for response from client
-        - Set enforcedColor
-        // currentPlayer's turn end
-
-        // Next player turn
+    // NEXT PLAYER'S TURN
+    processNextTurn(room: GameRoom): void
         Determines turn events based on turnEvents of GameBoard
         updateDirection(reverse_amount: number)
         updateCurrentPlayerIndex(skip_amount?: number, direction: number)
+        nextPlayer = room.getPlayerFromOrder()
+
         If draw_two:
             Pop cards from drawPile
             Push cards to player's hand
