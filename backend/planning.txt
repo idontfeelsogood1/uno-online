@@ -144,7 +144,7 @@ class GameService {
         Start discardPile with 1 top card from drawPile (ONLY ALLOW NUMBER CARDS)
         Set currentTopCard
         
-    
+
     // GAMEPLAY: 
     // THINK IN TERMS OF SOCKET EVENTS, REACT TO EVENTS THAT WAS THROWN
     // SEND BACK A NEW STATE FOR EVERY EVENTS
@@ -152,23 +152,22 @@ class GameService {
     - "draw-cards" event
     - expects: roomNetworkId, playerSocketId, amount from the client
     - get room, player from ids
+    - check if its player's turn
     drawCards(room: GameRoom, player: Player, amount: number): void
-        if player !== room.getPlayerFromOrder:
-            throw an error
         Player draws a card from drawPile:
             If amount > drawPile:
                 clearDiscardPile
                 pushToDrawPile
                 shuffleDrawPile
+                throw an error
             Push card from drawPile to player's hand
     Set player.uno to false after they draw the cards
 
     - "uno" event 
     - expects: roomNetworkId, playerSocketId, cardsId from the client
     - get room, player, from ids
+    - check if its player's turn
     uno(room: GameRoom, player: Player, cardsId: string[]): void
-        If player !== room.getPlayerFromOrder:
-            throw an error
         Get player's hand:
         If player's cards - cardsToPlay === 0 or 1:
             Set player.uno = true
@@ -179,9 +178,8 @@ class GameService {
     - "play-cards" event
     - expects: networkRoomId, playerSocketId, cardIds from the client
     - get room, player from ids
+    - check if its player's turn
     playCards(room: GameRoom, player: Player, cardIds: string[]): void
-        if player !== room.getPlayerFromOrder:
-            throw an error
         If cardsToPlay is a valid pattern starting with top card:
             Remove cards from player's hand
             Push cards to discardPile
@@ -196,8 +194,9 @@ class GameService {
         Current player is determined by currentPlayerIndex of playerOrder 
         currentPlayer = room.getPlayerFromOrder()
 
-        HANDLES UNO EVENT, UNO PENALTY ONLY APPLIES WHEN PLAYER HAVE 1 CARD IN HAND
-        AND HAVE NOT UNO WHEN THEY CALLED THEIR 2ND TO LAST CARD
+        If player.hand === 0 OR 1 AND player.uno === false:
+            Pop 2 cards from drawPile
+            Push the cards to player's hand
 
         If currentTopCard === 'WILD': 
         - Dispatch event "choose-enforce-color" for the currentPlayer
