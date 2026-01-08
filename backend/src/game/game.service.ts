@@ -326,18 +326,6 @@ export class GameService {
     const direction: number = room.getDirection();
     const playerOrder: Player[] = room.getPlayerOrder();
 
-    // IF THERE IS NO SKIPs IN THE PLAYER'S HAND
-    if (skip_amount === 0) {
-      if (direction === 1) {
-        if (currentIndex === playerOrder.length - 1) currentIndex = 0;
-        else currentIndex++;
-      }
-      if (direction === -1) {
-        if (currentIndex === 0) currentIndex = playerOrder.length - 1;
-        else currentIndex--;
-      }
-    }
-
     while (skip_amount) {
       if (direction === 1) {
         if (currentIndex === playerOrder.length - 1) currentIndex = 0;
@@ -348,6 +336,16 @@ export class GameService {
         else currentIndex--;
       }
       skip_amount--;
+    }
+
+    // UPDATE THE INDEX BY DEFAULT (FOR NON-SKIP AND SKIPS)
+    if (direction === 1) {
+      if (currentIndex === playerOrder.length - 1) currentIndex = 0;
+      else currentIndex++;
+    }
+    if (direction === -1) {
+      if (currentIndex === 0) currentIndex = playerOrder.length - 1;
+      else currentIndex--;
     }
 
     room.setCurrentPlayerIndex(currentIndex);
