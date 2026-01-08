@@ -357,6 +357,24 @@ export class GameService {
 
     room.setCurrentPlayerIndex(currentIndex);
   }
+
+  public processNextTurn(room: GameRoom): void {
+    this.updateDirection(room);
+    this.updateCurrentPlayerIndex(room);
+    const nextPlayer: Player = room.getPlayerFromOrder();
+    const game: GameBoard = room.getGameBoard();
+    const { draw_two_amount, wild_draw_four_amount }: TurnEvents =
+      game.getTurnEvents();
+
+    if (draw_two_amount) {
+      const cards: Card[] = game.popFromDrawPile(2 * draw_two_amount);
+      nextPlayer.pushToHand(cards);
+    }
+    if (wild_draw_four_amount) {
+      const cards: Card[] = game.popFromDrawPile(4 * wild_draw_four_amount);
+      nextPlayer.pushToHand(cards);
+    }
+  }
 }
 
 export class PlayerWon extends Error {
