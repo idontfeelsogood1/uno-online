@@ -7,7 +7,7 @@ import {
   NotPlayerTurn,
   CannotUno,
   HaveNotChoosenColor,
-  PlayerWon, // Added Import
+  PlayerWon,
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -491,7 +491,7 @@ describe('GameService', () => {
   });
 
   // ==========================================
-  // PROCESS CURRENT TURN LOGIC (NEW)
+  // PROCESS CURRENT TURN LOGIC
   // ==========================================
   describe('Process Current Turn Logic', () => {
     let room: GameRoom;
@@ -580,6 +580,149 @@ describe('GameService', () => {
       service.processCurrentTurn(room);
 
       expect(drawSpy).not.toHaveBeenCalled();
+    });
+  });
+
+  // ==========================================
+  // DIRECTION UPDATE LOGIC
+  // ==========================================
+  describe('Update Direction Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner-socket', 'Owner');
+      player2 = service.createPlayer('player2-socket', 'Player 2');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, player2);
+      service.startGame(room, owner);
+    });
+
+    it('should flip direction from 1 to -1 when reverse_amount is 1', () => {
+      room.setDirection(1);
+      service.updateDirection(room, 1);
+      expect(room.getDirection()).toBe(-1);
+    });
+
+    it('should flip direction from -1 to 1 when reverse_amount is 1', () => {
+      room.setDirection(-1);
+      service.updateDirection(room, 1);
+      expect(room.getDirection()).toBe(1);
+    });
+
+    it('should keep direction same when reverse_amount is 2 (double flip)', () => {
+      room.setDirection(1);
+      service.updateDirection(room, 2);
+      expect(room.getDirection()).toBe(1);
+    });
+
+    it('should do nothing when reverse_amount is 0', () => {
+      room.setDirection(1);
+      service.updateDirection(room, 0);
+      expect(room.getDirection()).toBe(1);
+    });
+  });
+
+  // ==========================================
+  // PLAYER INDEX UPDATE LOGIC
+  // ==========================================
+  describe('Update Current Player Index Logic', () => {
+    let room: GameRoom;
+
+    beforeEach(() => {
+      const owner = service.createPlayer('p1', 'P1');
+      room = service.createRoom('room-1', 'Test', owner.socketId, 4);
+      service.addRoom(room);
+
+      // Add 3 more players
+      const p2 = service.createPlayer('p2', 'P2');
+      const p3 = service.createPlayer('p3', 'P3');
+      const p4 = service.createPlayer('p4', 'P4');
+
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, p2);
+      service.addPlayerToRoom(room.id, p3);
+      service.addPlayerToRoom(room.id, p4);
+
+      // Start game to set order
+      service.startGame(room, owner);
+    });
+
+    it('should move to next player (index + 1) when direction is 1 (move 1 step)', () => {
+      room.setDirection(1);
+      room.setCurrentPlayerIndex(0); // P1
+
+      service.updateCurrentPlayerIndex(room, 0); // 0 skips + 1 default = 1 step
+
+      expect(room.getCurrentPlayerIndex()).toBe(1); // P2
+    });
+
+    it('should wrap around to 0 when at last player and moving right (move 1 step)', () => {
+      room.setDirection(1);
+      room.setCurrentPlayerIndex(3); // P4 (last)
+
+      service.updateCurrentPlayerIndex(room, 0);
+
+      expect(room.getCurrentPlayerIndex()).toBe(0); // P1
+    });
+
+    it('should move to previous player (index - 1) when direction is -1 (move 1 step)', () => {
+      room.setDirection(-1);
+      room.setCurrentPlayerIndex(2); // P3
+
+      service.updateCurrentPlayerIndex(room, 0);
+
+      expect(room.getCurrentPlayerIndex()).toBe(1); // P2
+    });
+
+    it('should wrap around to last player when at first player and moving left (move 1 step)', () => {
+      room.setDirection(-1);
+      room.setCurrentPlayerIndex(0); // P1
+
+      service.updateCurrentPlayerIndex(room, 0);
+
+      expect(room.getCurrentPlayerIndex()).toBe(3); // P4
+    });
+
+    it('should skip a player (move 2 steps)', () => {
+      room.setDirection(1);
+      room.setCurrentPlayerIndex(0); // P1
+
+      // 1 skip card = 1 loop + 1 default = 2 steps
+      service.updateCurrentPlayerIndex(room, 1);
+
+      expect(room.getCurrentPlayerIndex()).toBe(2); // P3
+    });
+
+    it('should skip 2 players (move 3 steps)', () => {
+      room.setDirection(1);
+      room.setCurrentPlayerIndex(0); // P1
+
+      // 2 skip cards = 2 loops + 1 default = 3 steps
+      service.updateCurrentPlayerIndex(room, 2);
+
+      expect(room.getCurrentPlayerIndex()).toBe(3); // P4
+    });
+
+    it('should skip a player while wrapping around to index 0 (move 2 steps, right)', () => {
+      room.setDirection(1);
+      room.setCurrentPlayerIndex(2); // P3
+
+      service.updateCurrentPlayerIndex(room, 1);
+
+      expect(room.getCurrentPlayerIndex()).toBe(0); // P1
+    });
+
+    it('should skip a player while wrapping around to index 3 (move 2 steps, left)', () => {
+      room.setDirection(-1);
+      room.setCurrentPlayerIndex(1); // P2
+
+      service.updateCurrentPlayerIndex(room, 1);
+
+      expect(room.getCurrentPlayerIndex()).toBe(3); // P4
     });
   });
 });
