@@ -5,6 +5,7 @@ import {
   CardTypeMismatch,
   EnforcedColorMismatch,
   GameBoard,
+  TurnEvents,
 } from './class/game-board/GameBoard';
 import { Player } from './class/player/Player';
 import { PlayerNotFound } from './class/game-room/GameRoom';
@@ -285,6 +286,10 @@ export class GameService {
     }
   }
 
+  // **************************
+  // CALL THESE AFTER playCards
+  // **************************
+
   public processCurrentTurn(room: GameRoom): void {
     try {
       const currentPlayer: Player = room.getPlayerFromOrder();
@@ -309,8 +314,9 @@ export class GameService {
     }
   }
 
-  public updateDirection(room: GameRoom, reverse_amount: number): void {
+  public updateDirection(room: GameRoom): void {
     let direction: number = room.getDirection();
+    let { reverse_amount }: TurnEvents = room.getGameBoard().getTurnEvents();
 
     while (reverse_amount) {
       if (direction === 1) direction = -1;
@@ -321,8 +327,9 @@ export class GameService {
     room.setDirection(direction);
   }
 
-  public updateCurrentPlayerIndex(room: GameRoom, skip_amount: number): void {
+  public updateCurrentPlayerIndex(room: GameRoom): void {
     let currentIndex: number = room.getCurrentPlayerIndex();
+    let { skip_amount }: TurnEvents = room.getGameBoard().getTurnEvents();
     const direction: number = room.getDirection();
     const playerOrder: Player[] = room.getPlayerOrder();
 
