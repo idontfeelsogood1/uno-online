@@ -308,6 +308,50 @@ export class GameService {
       if (err instanceof PlayerWon) throw err;
     }
   }
+
+  public updateDirection(room: GameRoom, reverse_amount: number): void {
+    let direction: number = room.getDirection();
+
+    while (reverse_amount) {
+      if (direction === 1) direction = -1;
+      else if (direction === -1) direction = 1;
+      reverse_amount--;
+    }
+
+    room.setDirection(direction);
+  }
+
+  public updateCurrentPlayerIndex(room: GameRoom, skip_amount: number): void {
+    let currentIndex: number = room.getCurrentPlayerIndex();
+    const direction: number = room.getDirection();
+    const playerOrder: Player[] = room.getPlayerOrder();
+
+    // IF THERE IS NO SKIPs IN THE PLAYER'S HAND
+    if (skip_amount === 0) {
+      if (direction === 1) {
+        if (currentIndex === playerOrder.length - 1) currentIndex = 0;
+        else currentIndex++;
+      }
+      if (direction === -1) {
+        if (currentIndex === 0) currentIndex = playerOrder.length - 1;
+        else currentIndex--;
+      }
+    }
+
+    while (skip_amount) {
+      if (direction === 1) {
+        if (currentIndex === playerOrder.length - 1) currentIndex = 0;
+        else currentIndex++;
+      }
+      if (direction === -1) {
+        if (currentIndex === 0) currentIndex = playerOrder.length - 1;
+        else currentIndex--;
+      }
+      skip_amount--;
+    }
+
+    room.setCurrentPlayerIndex(currentIndex);
+  }
 }
 
 export class PlayerWon extends Error {
