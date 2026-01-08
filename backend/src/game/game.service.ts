@@ -366,13 +366,15 @@ export class GameService {
     const { draw_two_amount, wild_draw_four_amount }: TurnEvents =
       game.getTurnEvents();
 
-    if (draw_two_amount) {
-      const cards: Card[] = game.popFromDrawPile(2 * draw_two_amount);
-      nextPlayer.pushToHand(cards);
-    }
-    if (wild_draw_four_amount) {
-      const cards: Card[] = game.popFromDrawPile(4 * wild_draw_four_amount);
-      nextPlayer.pushToHand(cards);
+    try {
+      if (draw_two_amount) {
+        this.drawCards(room, nextPlayer, draw_two_amount * 2);
+      }
+      if (wild_draw_four_amount) {
+        this.drawCards(room, nextPlayer, wild_draw_four_amount * 4);
+      }
+    } catch (err) {
+      if (err instanceof AmountGreaterThanDrawPile) throw err;
     }
   }
 }
