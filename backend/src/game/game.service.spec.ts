@@ -779,4 +779,107 @@ describe('GameService', () => {
       expect(room.getCurrentPlayerIndex()).toBe(3); // P4
     });
   });
+
+  // ==========================================
+  // PROCESS NEXT TURN LOGIC (NEW)
+  // ==========================================
+  describe('Process Next Turn Logic', () => {
+    let room: GameRoom;
+    let gameBoard: GameBoard;
+    let owner: Player;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner', 'Owner');
+      room = service.createRoom('room-1', 'Test', owner.socketId, 4);
+      service.addRoom(room);
+
+      // Add other players to total 4
+      const p2 = service.createPlayer('p2', 'P2');
+      const p3 = service.createPlayer('p3', 'P3');
+      const p4 = service.createPlayer('p4', 'P4');
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, p2);
+      service.addPlayerToRoom(room.id, p3);
+      service.addPlayerToRoom(room.id, p4);
+
+      service.startGame(room, owner);
+      gameBoard = room.getGameBoard();
+    });
+
+    it('should update direction and player index', () => {
+      // Mock TurnEvents to be standard
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        reverse_amount: 0,
+        skip_amount: 0,
+        draw_two_amount: 0,
+        wild_draw_four_amount: 0,
+      } as TurnEvents);
+
+      const directionSpy = jest.spyOn(service, 'updateDirection');
+      const indexSpy = jest.spyOn(service, 'updateCurrentPlayerIndex');
+
+      service.processNextTurn(room);
+
+      expect(directionSpy).toHaveBeenCalledWith(room);
+      expect(indexSpy).toHaveBeenCalledWith(room);
+    });
+
+    it('should make next player draw 2 cards if draw_two_amount is 1', () => {
+      // Setup turn events
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        reverse_amount: 0,
+        skip_amount: 0,
+        draw_two_amount: 1,
+        wild_draw_four_amount: 0,
+      } as TurnEvents);
+
+      // Current player is index 0. Next should be index 1.
+      room.setCurrentPlayerIndex(0);
+      const nextPlayer = room.getPlayerOrder()[1];
+      const initialHand = nextPlayer.getHand().length;
+
+      service.processNextTurn(room);
+
+      // Should have advanced
+      expect(room.getCurrentPlayerIndex()).toBe(1);
+      // Hand should have increased by 2
+      expect(nextPlayer.getHand()).toHaveLength(initialHand + 2);
+    });
+
+    it('should make next player draw 4 cards if wild_draw_four_amount is 1', () => {
+      // Setup turn events
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        reverse_amount: 0,
+        skip_amount: 0,
+        draw_two_amount: 0,
+        wild_draw_four_amount: 1,
+      } as TurnEvents);
+
+      room.setCurrentPlayerIndex(0);
+      const nextPlayer = room.getPlayerOrder()[1];
+      const initialHand = nextPlayer.getHand().length;
+
+      service.processNextTurn(room);
+
+      expect(room.getCurrentPlayerIndex()).toBe(1);
+      expect(nextPlayer.getHand()).toHaveLength(initialHand + 4);
+    });
+
+    it('should stack draws correctly (e.g. 2 * draw_two_amount)', () => {
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        reverse_amount: 0,
+        skip_amount: 0,
+        draw_two_amount: 2, // Stacked twice
+        wild_draw_four_amount: 0,
+      } as TurnEvents);
+
+      room.setCurrentPlayerIndex(0);
+      const nextPlayer = room.getPlayerOrder()[1];
+      const initialHand = nextPlayer.getHand().length;
+
+      service.processNextTurn(room);
+
+      expect(nextPlayer.getHand()).toHaveLength(initialHand + 4); // 2 * 2 = 4
+    });
+  });
 });
