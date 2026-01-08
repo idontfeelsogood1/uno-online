@@ -12,6 +12,7 @@ import {
 import {
   AmountGreaterThanDrawPile,
   CardPatternMismatch,
+  TurnEvents,
 } from './class/game-board/GameBoard';
 import { GameRoom, PlayerNotFound } from './class/game-room/GameRoom';
 import { Player } from './class/player/Player';
@@ -589,6 +590,7 @@ describe('GameService', () => {
   describe('Update Direction Logic', () => {
     let room: GameRoom;
     let owner: Player;
+    let gameBoard: GameBoard;
     let player2: Player;
 
     beforeEach(() => {
@@ -599,29 +601,47 @@ describe('GameService', () => {
       service.addPlayerToRoom(room.id, owner);
       service.addPlayerToRoom(room.id, player2);
       service.startGame(room, owner);
+      gameBoard = room.getGameBoard();
     });
 
     it('should flip direction from 1 to -1 when reverse_amount is 1', () => {
       room.setDirection(1);
-      service.updateDirection(room, 1);
+      // Mock getTurnEvents to return reverse_amount = 1
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        reverse_amount: 1,
+      } as TurnEvents);
+
+      service.updateDirection(room);
       expect(room.getDirection()).toBe(-1);
     });
 
     it('should flip direction from -1 to 1 when reverse_amount is 1', () => {
       room.setDirection(-1);
-      service.updateDirection(room, 1);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        reverse_amount: 1,
+      } as TurnEvents);
+
+      service.updateDirection(room);
       expect(room.getDirection()).toBe(1);
     });
 
     it('should keep direction same when reverse_amount is 2 (double flip)', () => {
       room.setDirection(1);
-      service.updateDirection(room, 2);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        reverse_amount: 2,
+      } as TurnEvents);
+
+      service.updateDirection(room);
       expect(room.getDirection()).toBe(1);
     });
 
     it('should do nothing when reverse_amount is 0', () => {
       room.setDirection(1);
-      service.updateDirection(room, 0);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        reverse_amount: 0,
+      } as TurnEvents);
+
+      service.updateDirection(room);
       expect(room.getDirection()).toBe(1);
     });
   });
@@ -631,6 +651,7 @@ describe('GameService', () => {
   // ==========================================
   describe('Update Current Player Index Logic', () => {
     let room: GameRoom;
+    let gameBoard: GameBoard;
 
     beforeEach(() => {
       const owner = service.createPlayer('p1', 'P1');
@@ -649,13 +670,18 @@ describe('GameService', () => {
 
       // Start game to set order
       service.startGame(room, owner);
+      gameBoard = room.getGameBoard();
     });
 
     it('should move to next player (index + 1) when direction is 1 (move 1 step)', () => {
       room.setDirection(1);
       room.setCurrentPlayerIndex(0); // P1
 
-      service.updateCurrentPlayerIndex(room, 0); // 0 skips + 1 default = 1 step
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        skip_amount: 0, // 0 skips + 1 default = 1 step
+      } as TurnEvents);
+
+      service.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(1); // P2
     });
@@ -664,7 +690,11 @@ describe('GameService', () => {
       room.setDirection(1);
       room.setCurrentPlayerIndex(3); // P4 (last)
 
-      service.updateCurrentPlayerIndex(room, 0);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        skip_amount: 0,
+      } as TurnEvents);
+
+      service.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(0); // P1
     });
@@ -673,7 +703,11 @@ describe('GameService', () => {
       room.setDirection(-1);
       room.setCurrentPlayerIndex(2); // P3
 
-      service.updateCurrentPlayerIndex(room, 0);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        skip_amount: 0,
+      } as TurnEvents);
+
+      service.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(1); // P2
     });
@@ -682,7 +716,11 @@ describe('GameService', () => {
       room.setDirection(-1);
       room.setCurrentPlayerIndex(0); // P1
 
-      service.updateCurrentPlayerIndex(room, 0);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        skip_amount: 0,
+      } as TurnEvents);
+
+      service.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(3); // P4
     });
@@ -692,7 +730,11 @@ describe('GameService', () => {
       room.setCurrentPlayerIndex(0); // P1
 
       // 1 skip card = 1 loop + 1 default = 2 steps
-      service.updateCurrentPlayerIndex(room, 1);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        skip_amount: 1,
+      } as TurnEvents);
+
+      service.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(2); // P3
     });
@@ -702,7 +744,11 @@ describe('GameService', () => {
       room.setCurrentPlayerIndex(0); // P1
 
       // 2 skip cards = 2 loops + 1 default = 3 steps
-      service.updateCurrentPlayerIndex(room, 2);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        skip_amount: 2,
+      } as TurnEvents);
+
+      service.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(3); // P4
     });
@@ -711,7 +757,11 @@ describe('GameService', () => {
       room.setDirection(1);
       room.setCurrentPlayerIndex(2); // P3
 
-      service.updateCurrentPlayerIndex(room, 1);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        skip_amount: 1,
+      } as TurnEvents);
+
+      service.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(0); // P1
     });
@@ -720,7 +770,11 @@ describe('GameService', () => {
       room.setDirection(-1);
       room.setCurrentPlayerIndex(1); // P2
 
-      service.updateCurrentPlayerIndex(room, 1);
+      jest.spyOn(gameBoard, 'getTurnEvents').mockReturnValue({
+        skip_amount: 1,
+      } as TurnEvents);
+
+      service.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(3); // P4
     });
