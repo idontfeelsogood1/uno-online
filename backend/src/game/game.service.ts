@@ -72,19 +72,26 @@ export class GameService {
   }
 
   public addPlayerToRoom(roomId: string, player: Player): void {
-    if (this.rooms.has(roomId)) {
-      this.rooms.get(roomId)!.addCurrentPlayer(player);
-      return;
+    try {
+      const room: GameRoom = this.getRoom(roomId);
+      if (room.isFull()) {
+        throw new RoomIsFull(
+          `
+          maxPlayerSize: ${room.maxPlayers}
+          roomSize: ${room.getCurrentPlayers().length}
+          `,
+          {},
+        );
+      }
+      if (room.hasStarted()) {
+        throw new RoomHasStarted(``, {});
+      }
+      room.addCurrentPlayer(player);
+    } catch (err) {
+      if (err instanceof RoomNotFound) throw err;
+      if (err instanceof RoomIsFull) throw err;
+      if (err instanceof RoomHasStarted) throw err;
     }
-
-    const obj: object = Object.fromEntries(this.rooms);
-    throw new RoomNotFound(
-      `
-      roomId: ${roomId}
-      rooms: ${JSON.stringify(obj)}
-      `,
-      {},
-    );
   }
 
   public getPlayerOfRoom(
@@ -92,17 +99,8 @@ export class GameService {
     playerSocketId: string,
   ): Player | null {
     try {
-      if (!this.rooms.has(roomId)) {
-        const obj: object = Object.fromEntries(this.rooms);
-        throw new RoomNotFound(
-          `
-          roomId: ${roomId}
-          rooms: ${JSON.stringify(obj)}
-          `,
-          {},
-        );
-      }
-      return this.rooms.get(roomId)!.getCurrentPlayer(playerSocketId);
+      const room: GameRoom = this.getRoom(roomId);
+      return room.getCurrentPlayer(playerSocketId);
     } catch (err) {
       if (err instanceof RoomNotFound) throw err;
       if (err instanceof PlayerNotFound) throw err;
@@ -115,17 +113,8 @@ export class GameService {
     playerSocketId: string,
   ): Player | null {
     try {
-      if (!this.rooms.has(roomId)) {
-        const obj: object = Object.fromEntries(this.rooms);
-        throw new RoomNotFound(
-          `
-          roomId: ${roomId}
-          rooms: ${JSON.stringify(obj)}
-          `,
-          {},
-        );
-      }
-      return this.rooms.get(roomId)!.removeCurrentPlayer(playerSocketId);
+      const room: GameRoom = this.getRoom(roomId);
+      return room.removeCurrentPlayer(playerSocketId);
     } catch (err) {
       if (err instanceof RoomNotFound) throw err;
       if (err instanceof PlayerNotFound) throw err;
@@ -133,19 +122,14 @@ export class GameService {
     }
   }
 
-  public getAllPlayersFromRoom(roomId: string): Player[] {
-    if (this.rooms.has(roomId)) {
-      return this.rooms.get(roomId)!.getCurrentPlayers();
+  public getAllPlayersFromRoom(roomId: string): Player[] | null {
+    try {
+      const room: GameRoom = this.getRoom(roomId);
+      return room.getCurrentPlayers();
+    } catch (err) {
+      if (err instanceof RoomNotFound) throw err;
+      return null;
     }
-
-    const obj: object = Object.fromEntries(this.rooms);
-    throw new RoomNotFound(
-      `
-      roomId: ${roomId}
-      rooms: ${JSON.stringify(obj)}
-      `,
-      {},
-    );
   }
 
   public startGame(room: GameRoom, player: Player) {
@@ -376,6 +360,20 @@ export class GameService {
     } catch (err) {
       if (err instanceof AmountGreaterThanDrawPile) throw err;
     }
+  }
+}
+
+export class RoomHasStarted extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'RoomHasStarted';
+  }
+}
+
+export class RoomIsFull extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'RoomIsFull';
   }
 }
 
