@@ -8,6 +8,8 @@ import {
   CannotUno,
   HaveNotChoosenColor,
   PlayerWon,
+  RoomIsFull,
+  RoomHasStarted,
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -116,13 +118,32 @@ describe('GameService', () => {
 
       const players = service.getAllPlayersFromRoom(roomId);
       expect(players).toHaveLength(1);
-      expect(players[0]).toBe(player);
+      expect(players![0]).toBe(player);
     });
 
     it('should throw RoomNotFound when adding player to invalid room', () => {
       expect(() => {
         service.addPlayerToRoom('invalid-room', player);
       }).toThrow(RoomNotFound);
+    });
+
+    it('should throw RoomIsFull when adding player to a full room', () => {
+      expect(() => {
+        const newRoom = service.createRoom('room-2', 'Test Room', 'owner', 0);
+        service.addRoom(newRoom);
+        const newPlayer = service.createPlayer('socket-2', 'User2');
+        service.addPlayerToRoom(newRoom.id, newPlayer);
+      }).toThrow(RoomIsFull);
+    });
+
+    it('should throw RoomHasStarted when adding player to a started room', () => {
+      expect(() => {
+        const newRoom = service.createRoom('room-2', 'Test Room', 'owner', 4);
+        newRoom.setHasStarted(true);
+        service.addRoom(newRoom);
+        const newPlayer = service.createPlayer('socket-2', 'User2');
+        service.addPlayerToRoom(newRoom.id, newPlayer);
+      }).toThrow(RoomHasStarted);
     });
 
     it('should get a specific player from a room', () => {
