@@ -58,6 +58,21 @@ export class GameService {
     }
   }
 
+  public isPlayerInAnyRoom(playerSocketId: string): void {
+    try {
+      const room: GameRoom = this.getRoomOfPlayer(playerSocketId)!;
+      throw new PlayerIsInARoom(
+        `
+        Player is in room: ${room.name} --- ${room.id}
+        `,
+        {},
+      );
+    } catch (err) {
+      if (err instanceof PlayerNotInAnyRoom) return;
+      if (err instanceof PlayerIsInARoom) throw err;
+    }
+  }
+
   public addRoom(room: GameRoom): void {
     this.rooms.set(room.id, room);
   }
@@ -386,6 +401,13 @@ export class GameService {
     } catch (err) {
       if (err instanceof AmountGreaterThanDrawPile) throw err;
     }
+  }
+}
+
+export class PlayerIsInARoom extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'PlayerIsInARoom';
   }
 }
 
