@@ -15,9 +15,11 @@ import { AmountGreaterThanDrawPile } from './class/game-board/GameBoard';
 @Injectable()
 export class GameService {
   private rooms: Map<string, GameRoom>;
+  private players: Map<string, GameRoom>;
 
   constructor() {
     this.rooms = new Map();
+    this.players = new Map();
   }
 
   public createRoom(
@@ -27,6 +29,33 @@ export class GameService {
     maxPlayer: number,
   ): GameRoom {
     return new GameRoom(id, name, ownerId, maxPlayer, new GameBoard(id));
+  }
+
+  public setPlayerOfRoom(playerSocketId: string, roomId: string): void {
+    try {
+      const room: GameRoom = this.getRoom(roomId);
+      this.players.set(playerSocketId, room);
+    } catch (err) {
+      if (err instanceof RoomNotFound) throw err;
+    }
+  }
+
+  // IF THE CURRENT PLAYER IS IN A ROOM, IT WILL RETURN THE ROOM THEY'RE IN
+  public getRoomOfPlayer(playerSocketId: string): GameRoom | void {
+    try {
+      if (!this.players.has(playerSocketId)) {
+        const obj: object = Object.fromEntries(this.players);
+        throw new PlayerNotInAnyRoom(
+          `
+          players, rooms: ${JSON.stringify(obj)}
+          `,
+          {},
+        );
+      }
+      return this.players.get(playerSocketId)!;
+    } catch (err) {
+      if (err instanceof PlayerNotInAnyRoom) throw err;
+    }
   }
 
   public addRoom(room: GameRoom): void {
@@ -97,38 +126,35 @@ export class GameService {
   public getPlayerOfRoom(
     roomId: string,
     playerSocketId: string,
-  ): Player | null {
+  ): Player | void {
     try {
       const room: GameRoom = this.getRoom(roomId);
       return room.getCurrentPlayer(playerSocketId);
     } catch (err) {
       if (err instanceof RoomNotFound) throw err;
       if (err instanceof PlayerNotFound) throw err;
-      return null;
     }
   }
 
   public removePlayerFromRoom(
     roomId: string,
     playerSocketId: string,
-  ): Player | null {
+  ): Player | void {
     try {
       const room: GameRoom = this.getRoom(roomId);
       return room.removeCurrentPlayer(playerSocketId);
     } catch (err) {
       if (err instanceof RoomNotFound) throw err;
       if (err instanceof PlayerNotFound) throw err;
-      return null;
     }
   }
 
-  public getAllPlayersFromRoom(roomId: string): Player[] | null {
+  public getAllPlayersFromRoom(roomId: string): Player[] | void {
     try {
       const room: GameRoom = this.getRoom(roomId);
       return room.getCurrentPlayers();
     } catch (err) {
       if (err instanceof RoomNotFound) throw err;
-      return null;
     }
   }
 
@@ -360,6 +386,13 @@ export class GameService {
     } catch (err) {
       if (err instanceof AmountGreaterThanDrawPile) throw err;
     }
+  }
+}
+
+export class PlayerNotInAnyRoom extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'PlayerNotInAnyRoom';
   }
 }
 
