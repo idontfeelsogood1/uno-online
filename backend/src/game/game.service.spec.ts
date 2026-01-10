@@ -10,6 +10,7 @@ import {
   PlayerWon,
   RoomIsFull,
   RoomHasStarted,
+  PlayerNotInAnyRoom,
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -177,6 +178,40 @@ describe('GameService', () => {
       expect(() => {
         service.removePlayerFromRoom(roomId, 'invalid-socket');
       }).toThrow(PlayerNotFound);
+    });
+  });
+
+  // ==========================================
+  // PLAYER LOCATION TRACKING (NEW)
+  // ==========================================
+  describe('Player Location Tracking', () => {
+    const roomId = 'room-1';
+    let room: GameRoom;
+    const playerSocketId = 'socket-1';
+
+    beforeEach(() => {
+      room = service.createRoom(roomId, 'Test Room', 'owner', 4);
+      service.addRoom(room);
+    });
+
+    it('should map a player to a room and retrieve it', () => {
+      service.setPlayerOfRoom(playerSocketId, roomId);
+
+      const retrievedRoom = service.getRoomOfPlayer(playerSocketId);
+      expect(retrievedRoom).toBeInstanceOf(GameRoom);
+      expect((retrievedRoom as GameRoom).id).toBe(roomId);
+    });
+
+    it('should throw RoomNotFound when setting player to non-existent room', () => {
+      expect(() => {
+        service.setPlayerOfRoom(playerSocketId, 'invalid-room');
+      }).toThrow(RoomNotFound);
+    });
+
+    it('should throw PlayerNotInAnyRoom when getting room of untracked player', () => {
+      expect(() => {
+        service.getRoomOfPlayer('untracked-socket');
+      }).toThrow(PlayerNotInAnyRoom);
     });
   });
 
