@@ -11,6 +11,7 @@ import {
   RoomIsFull,
   RoomHasStarted,
   PlayerNotInAnyRoom,
+  PlayerIsInARoom,
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -212,6 +213,13 @@ describe('GameService', () => {
       expect(() => {
         service.getRoomOfPlayer('untracked-socket');
       }).toThrow(PlayerNotInAnyRoom);
+    });
+
+    it('should throw PlayerIsInARoom when getting room of tracked player', () => {
+      expect(() => {
+        service.setPlayerOfRoom(playerSocketId, roomId);
+        service.isPlayerInAnyRoom(playerSocketId);
+      }).toThrow(PlayerIsInARoom);
     });
   });
 
