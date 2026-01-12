@@ -4,8 +4,8 @@ import { GameBoard } from '../game-board/GameBoard';
 export class GameRoom {
   readonly id: string;
   readonly name: string;
-  readonly ownerId: string;
   readonly maxPlayers: number;
+  private ownerId: string;
   private gameBoard: GameBoard;
   private started: boolean;
   private currentPlayers: Map<string, Player>;
@@ -130,8 +130,46 @@ export class GameRoom {
     return this.currentPlayerIndex;
   }
 
+  public getOwnerId(): string {
+    return this.ownerId;
+  }
+
+  public setOwnerId(ownerId: string): void {
+    this.ownerId = ownerId;
+  }
+
   public getPlayerFromOrder(): Player {
     return this.playerOrder[this.currentPlayerIndex];
+  }
+
+  public transferOwner(): Player {
+    if (!this.isEmpty()) {
+      const newOwnerKey: string = Array.from(this.currentPlayers.keys())[0];
+      const newOwner: Player = this.currentPlayers.get(newOwnerKey)!;
+      this.setOwnerId(newOwner.socketId);
+      return newOwner;
+    }
+    throw new RoomIsEmpty(
+      `
+      currentPlayers size: ${this.currentPlayers.size}
+      `,
+      {},
+    );
+  }
+
+  public isEmpty(): boolean {
+    return this.currentPlayers.size === 0;
+  }
+
+  public isOwnerExists(): boolean {
+    return this.currentPlayers.has(this.getOwnerId());
+  }
+}
+
+export class RoomIsEmpty extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'RoomIsEmpty';
   }
 }
 
