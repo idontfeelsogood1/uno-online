@@ -12,6 +12,7 @@ import {
   RoomHasStarted,
   PlayerNotInAnyRoom,
   PlayerIsInARoom,
+  RemovedOrTransfered, // <--- Imported Class
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -183,7 +184,7 @@ describe('GameService', () => {
   });
 
   // ==========================================
-  // PLAYER LOCATION TRACKING (NEW)
+  // PLAYER LOCATION TRACKING
   // ==========================================
   describe('Player Location Tracking', () => {
     const roomId = 'room-1';
@@ -220,6 +221,77 @@ describe('GameService', () => {
         service.setPlayerOfRoom(playerSocketId, roomId);
         service.isPlayerInAnyRoom(playerSocketId);
       }).toThrow(PlayerIsInARoom);
+    });
+  });
+
+  // ==========================================
+  // ROOM CLEANUP & OWNERSHIP TRANSFER LOGIC (NEW)
+  // ==========================================
+  describe('Room Cleanup and Ownership Transfer', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner-1', 'Owner');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+    });
+
+    it('should remove the room if it becomes empty', () => {
+      // Setup: Remove the only player (owner)
+      service.removePlayerFromRoom(room.id, owner.socketId);
+
+      const result = service.transferOwnerOrRemoveRoomOnEmpty(room.id);
+
+      expect(result).toBeDefined();
+      expect(result).toBeInstanceOf(RemovedOrTransfered);
+      // Room was empty, so removedRoom should be set
+      expect(result?.removedRoom).toBeDefined();
+      expect(result?.removedRoom?.id).toBe(room.id);
+      expect(result?.transferedOwner).toBeNull();
+
+      // Verify room is actually removed from service
+      expect(() => service.getRoom(room.id)).toThrow(RoomNotFound);
+    });
+
+    it('should transfer ownership if owner leaves but room is not empty', () => {
+      // Setup: Add player 2
+      player2 = service.createPlayer('player-2', 'Player 2');
+      service.addPlayerToRoom(room.id, player2);
+
+      // Remove owner
+      service.removePlayerFromRoom(room.id, owner.socketId);
+
+      // Call transfer logic
+      const result = service.transferOwnerOrRemoveRoomOnEmpty(room.id);
+
+      expect(result).toBeDefined();
+      expect(result?.removedRoom).toBeNull();
+      // Owner should be transferred to the next player (player2)
+      expect(result?.transferedOwner).toBeDefined();
+      expect(result?.transferedOwner?.socketId).toBe(player2.socketId);
+
+      // Verify room still exists and has new owner
+      const updatedRoom = service.getRoom(room.id);
+      expect(updatedRoom.getOwnerId()).toBe(player2.socketId);
+    });
+
+    it('should do nothing if room is not empty and owner is still present', () => {
+      player2 = service.createPlayer('player-2', 'Player 2');
+      service.addPlayerToRoom(room.id, player2);
+
+      // Remove player 2 (not owner)
+      service.removePlayerFromRoom(room.id, player2.socketId);
+
+      const result = service.transferOwnerOrRemoveRoomOnEmpty(room.id);
+
+      expect(result?.removedRoom).toBeNull();
+      expect(result?.transferedOwner).toBeNull();
+
+      // Verify owner is still original
+      expect(room.getOwnerId()).toBe(owner.socketId);
     });
   });
 
