@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { GameRoom } from './class/game-room/GameRoom';
+import { GameRoom, RoomIsEmpty } from './class/game-room/GameRoom';
 import {
   CardPatternMismatch,
   CardTypeMismatch,
@@ -31,6 +31,28 @@ export class GameService {
     return new GameRoom(id, name, ownerId, maxPlayer, new GameBoard(id));
   }
 
+  public transferOwnerOrRemoveRoomOnEmpty(
+    roomId: string,
+  ): RemovedOrTransfered | void {
+    try {
+      const room: GameRoom = this.getRoom(roomId);
+      let transferedOwner: Player | null = null;
+      let removedRoom: GameRoom | null = null;
+
+      if (room.isEmpty()) {
+        removedRoom = this.removeRoom(roomId);
+      }
+      if (!room.isEmpty() && !room.isOwnerExists()) {
+        transferedOwner = room.transferOwner();
+      }
+
+      return new RemovedOrTransfered(transferedOwner, removedRoom);
+    } catch (err) {
+      if (err instanceof RoomNotFound) throw err;
+      if (err instanceof RoomIsEmpty) throw err;
+    }
+  }
+
   public setPlayerOfRoom(playerSocketId: string, roomId: string): void {
     try {
       const room: GameRoom = this.getRoom(roomId);
@@ -53,6 +75,16 @@ export class GameService {
         );
       }
       return this.players.get(playerSocketId)!;
+    } catch (err) {
+      if (err instanceof PlayerNotInAnyRoom) throw err;
+    }
+  }
+
+  public removeRoomOfPlayer(playerSocketId: string): GameRoom | void {
+    try {
+      const room: GameRoom = this.getRoomOfPlayer(playerSocketId)!;
+      this.players.delete(playerSocketId);
+      return room;
     } catch (err) {
       if (err instanceof PlayerNotInAnyRoom) throw err;
     }
@@ -164,6 +196,19 @@ export class GameService {
     }
   }
 
+  public removePlayerFromRoomPlayerOrder(
+    roomId: string,
+    playerSocketId: string,
+  ): Player | void {
+    try {
+      const room: GameRoom = this.getRoom(roomId);
+      room.removeFromPlayerOrder(playerSocketId);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+      return;
+    }
+  }
+
   public getAllPlayersFromRoom(roomId: string): Player[] | void {
     try {
       const room: GameRoom = this.getRoom(roomId);
@@ -174,10 +219,10 @@ export class GameService {
   }
 
   public startGame(room: GameRoom, player: Player) {
-    if (player.socketId !== room.ownerId) {
+    if (player.socketId !== room.getOwnerId()) {
       throw new NotRoomOwner(
         `
-        ownerId: ${room.ownerId}
+        ownerId: ${room.getOwnerId()}
         playerId: ${player.socketId}
         `,
         {},
@@ -401,6 +446,15 @@ export class GameService {
     } catch (err) {
       if (err instanceof AmountGreaterThanDrawPile) throw err;
     }
+  }
+}
+
+export class RemovedOrTransfered {
+  readonly transferedOwner: Player | null;
+  readonly removedRoom: GameRoom | null;
+  constructor(transferedOwner: Player | null, removedRoom: GameRoom | null) {
+    this.transferedOwner = transferedOwner;
+    this.removedRoom = removedRoom;
   }
 }
 
