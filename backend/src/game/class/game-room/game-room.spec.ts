@@ -1,4 +1,4 @@
-import { GameRoom, PlayerNotFound } from './GameRoom';
+import { GameRoom, PlayerNotFound, RoomIsEmpty } from './GameRoom';
 import { Player } from '../player/Player';
 import { GameBoard } from '../game-board/GameBoard';
 
@@ -33,7 +33,7 @@ describe('GameRoom', () => {
     it('should initialize with correct default values', () => {
       expect(gameRoom.id).toBe(roomId);
       expect(gameRoom.name).toBe(roomName);
-      expect(gameRoom.ownerId).toBe(ownerId);
+      expect(gameRoom.getOwnerId()).toBe(ownerId);
       expect(gameRoom.maxPlayers).toBe(maxPlayers);
       expect(gameRoom.getGameBoard()).toBe(mockGameBoard);
       expect(gameRoom.hasStarted()).toBe(false);
@@ -94,6 +94,50 @@ describe('GameRoom', () => {
       expect(() => {
         gameRoom.removeCurrentPlayer('s99');
       }).toThrow(PlayerNotFound);
+    });
+  });
+
+  describe('Owner Management', () => {
+    it('should set and get owner ID', () => {
+      const newOwnerId = 'new-owner-id';
+      gameRoom.setOwnerId(newOwnerId);
+      expect(gameRoom.getOwnerId()).toBe(newOwnerId);
+    });
+
+    it('should check if room is empty', () => {
+      expect(gameRoom.isEmpty()).toBe(true);
+      gameRoom.addCurrentPlayer(player1);
+      expect(gameRoom.isEmpty()).toBe(false);
+    });
+
+    it('should check if owner exists in the room', () => {
+      // Initially, the owner is not in currentPlayers
+      expect(gameRoom.isOwnerExists()).toBe(false);
+
+      // Add a player with the owner's ID
+      const ownerPlayer = { socketId: ownerId, username: 'Owner' } as Player;
+      gameRoom.addCurrentPlayer(ownerPlayer);
+      expect(gameRoom.isOwnerExists()).toBe(true);
+    });
+
+    it('should transfer owner to the next available player', () => {
+      // Setup: Add two players
+      gameRoom.addCurrentPlayer(player1);
+      gameRoom.addCurrentPlayer(player2);
+
+      // Assume player1 is the "first" in the map (insertion order)
+      const newOwner = gameRoom.transferOwner();
+
+      expect(newOwner).toBeDefined();
+      expect(newOwner).toBe(player1);
+      expect(gameRoom.getOwnerId()).toBe(player1.socketId);
+    });
+
+    it('should throw RoomIsEmpty when trying to transfer owner in an empty room', () => {
+      // Setup: Room is empty by default in beforeEach
+      expect(() => {
+        gameRoom.transferOwner();
+      }).toThrow(RoomIsEmpty);
     });
   });
 
