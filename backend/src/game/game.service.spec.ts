@@ -342,6 +342,14 @@ describe('GameService', () => {
       expect(room.hasStarted()).toBe(false);
     });
 
+    it('should throw RoomHasStarted if owner tries to restart', () => {
+      room.setHasStarted(true);
+      expect(room.hasStarted()).toBe(true);
+      expect(() => {
+        service.startGame(room, owner);
+      }).toThrow(RoomHasStarted);
+    });
+
     it('should throw PlayersCountMustBeGreaterThanOne if only 1 player is in room', () => {
       // Remove player 2 to simulate solo lobby
       service.removePlayerFromRoom(room.id, player2.socketId);
