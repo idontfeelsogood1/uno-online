@@ -16,6 +16,8 @@ import { CreateRoomDto } from './dto/create-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
 import { WsValidationFilter } from './filter/ws-validation.filter';
 import { WsRoomFilter } from './filter/ws-room.filter';
+import { WsGameFilter } from './filter/ws-game.filter';
+import { StartGameDto } from './dto/start-game.dto';
 
 @WebSocketGateway()
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -25,6 +27,10 @@ export class GameGateway implements OnGatewayDisconnect {
   server: Server;
 
   constructor(private readonly service: GameService) {}
+
+  // ===============================
+  // ROOM AND DISCONNECTION HANDLING
+  // ===============================
 
   @SubscribeMessage('create-room')
   @UseFilters(WsRoomFilter)
@@ -53,6 +59,7 @@ export class GameGateway implements OnGatewayDisconnect {
     await client.join(room.id);
 
     client.emit('created-room-success');
+    this.server.emit('room-created', { roomname: `${room.name}` });
     return `Successfully created and joined ${owner.socketId} to room ${room.id}.`;
   }
 
@@ -77,6 +84,9 @@ export class GameGateway implements OnGatewayDisconnect {
     const room: GameRoom = this.service.getRoomOfPlayer(player.socketId)!;
 
     client.emit('joined-room-success');
+    this.server
+      .to(room.id)
+      .emit('player-joined-room', { username: `${player.username}` });
     return `Succesfully joined ${player.socketId} to room ${room.id}.`;
   }
 
@@ -130,4 +140,28 @@ export class GameGateway implements OnGatewayDisconnect {
       });
     }
   }
+
+  @SubscribeMessage('start-game')
+  @UseFilters(WsRoomFilter)
+  public startGame(
+    @MessageBody() data: StartGameDto,
+    @ConnectedSocket() client: Socket,
+  ): string {
+    const { roomToStartId }: StartGameDto = data;
+    const room: GameRoom = this.service.getRoom(roomToStartId);
+    const player: Player = this.service.getPlayerOfRoom(
+      roomToStartId,
+      client.id,
+    )!;
+
+    this.service.startGame(room, player);
+
+    this.server.to(room.id).emit('game-started', { status: 'Started' });
+    this.server.emit('room-started', { roomId: `${room.id}` });
+    return `Successfully started game`;
+  }
+
+  // ===================
+  // GAME LOGIC HANDLING
+  // ===================
 }
