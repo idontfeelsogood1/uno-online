@@ -229,6 +229,16 @@ export class GameService {
       );
     }
 
+    if (room.hasStarted()) {
+      throw new RoomHasStarted(
+        `
+        roomId: ${room.id}
+        started: ${room.hasStarted()}
+        `,
+        {},
+      );
+    }
+
     const currentPlayers: Player[] = room.getCurrentPlayers();
     if (currentPlayers.length <= 1) {
       throw new PlayersCountMustBeGreaterThanOne(
