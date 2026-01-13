@@ -3,9 +3,11 @@ import {
   WebSocketGateway,
   MessageBody,
   ConnectedSocket,
+  WebSocketServer,
+  OnGatewayDisconnect,
 } from '@nestjs/websockets';
-import { Socket } from 'socket.io';
-import { GameService } from './game.service';
+import { Socket, Server } from 'socket.io';
+import { GameService, RemovedOrTransfered } from './game.service';
 import { Player } from './class/player/Player';
 import { GameRoom } from './class/game-room/GameRoom';
 import { randomUUID } from 'crypto';
@@ -16,12 +18,16 @@ import { WsValidationFilter } from './filter/ws-validation.filter';
 import { WsRoomFilter } from './filter/ws-room.filter';
 
 @WebSocketGateway()
-@UseFilters(WsValidationFilter, WsRoomFilter)
-export class GameGateway {
+@UsePipes(new ValidationPipe({ transform: true }))
+@UseFilters(WsValidationFilter)
+export class GameGateway implements OnGatewayDisconnect {
+  @WebSocketServer()
+  server: Server;
+
   constructor(private readonly service: GameService) {}
 
   @SubscribeMessage('create-room')
-  @UsePipes(new ValidationPipe({ transform: true }))
+  @UseFilters(WsRoomFilter)
   public async createRoom(
     @MessageBody() data: CreateRoomDto,
     @ConnectedSocket() client: Socket,
@@ -46,14 +52,12 @@ export class GameGateway {
 
     await client.join(room.id);
 
-    console.log(room.id);
-
     client.emit('created-room-success');
-    return `Successfully created and joined player to room ${room.name}.`;
+    return `Successfully created and joined ${owner.socketId} to room ${room.id}.`;
   }
 
   @SubscribeMessage('join-room')
-  @UsePipes(new ValidationPipe({ transform: true }))
+  @UseFilters(WsRoomFilter)
   public async joinRoom(
     @MessageBody() data: JoinRoomDto,
     @ConnectedSocket() client: Socket,
@@ -73,6 +77,57 @@ export class GameGateway {
     const room: GameRoom = this.service.getRoomOfPlayer(player.socketId)!;
 
     client.emit('joined-room-success');
-    return `Succesfully joined player to room ${room.name}.`;
+    return `Succesfully joined ${player.socketId} to room ${room.id}.`;
+  }
+
+  @SubscribeMessage('leave-room')
+  @UseFilters(WsRoomFilter)
+  public async leaveRoom(@ConnectedSocket() client: Socket): Promise<string> {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
+
+    await this.handleLeaveRoom(client);
+
+    client.emit('leave-room-success');
+    return `Succesfully removed ${player.socketId} from room ${room.id}.`;
+  }
+
+  // THIS RUNS AUTOMATICALLY WHEN CLIENT DISCONNECTS
+  public async handleDisconnect(client: Socket): Promise<void> {
+    try {
+      await this.handleLeaveRoom(client);
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+      // PREVENT SERVER CRASH WHEN PLAYER DISCONNECTS BUT NOT IN A ROOM
+      return;
+    }
+  }
+
+  private async handleLeaveRoom(client: Socket): Promise<void> {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
+
+    this.service.removePlayerFromRoom(room.id, client.id);
+    this.service.removePlayerFromRoomPlayerOrder(room.id, client.id);
+
+    const result: RemovedOrTransfered =
+      this.service.transferOwnerOrRemoveRoomOnEmpty(room.id)!;
+    this.service.removeRoomOfPlayer(client.id);
+
+    await client.leave(room.id);
+
+    if (result.removedRoom) {
+      this.server.emit('room-removed', { roomId: result.removedRoom.id });
+    } else {
+      this.server
+        .to(room.id)
+        .emit('player-left-room', { username: player.username });
+    }
+
+    if (!result.removedRoom && result.transferedOwner) {
+      this.server.to(room.id).emit('transfered-owner', {
+        username: result.transferedOwner.username,
+      });
+    }
   }
 }
