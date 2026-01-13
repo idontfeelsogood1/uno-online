@@ -7,6 +7,8 @@ import {
   RoomIsFull,
   RoomHasStarted,
   PlayerNotInAnyRoom,
+  NotRoomOwner,
+  PlayersCountMustBeGreaterThanOne,
 } from '../game.service';
 import { PlayerNotFound } from '../class/game-room/GameRoom';
 
@@ -17,6 +19,8 @@ import { PlayerNotFound } from '../class/game-room/GameRoom';
   RoomHasStarted,
   PlayerNotFound,
   PlayerNotInAnyRoom,
+  NotRoomOwner,
+  PlayersCountMustBeGreaterThanOne,
 )
 export class WsRoomFilter extends BaseWsExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -41,7 +45,7 @@ export class WsRoomFilter extends BaseWsExceptionFilter {
     }
     if (exception instanceof RoomHasStarted) {
       eventName = 'room-has-started';
-      message = 'Room has already started.';
+      message = 'Room has already started game.';
     }
     if (exception instanceof PlayerNotInAnyRoom) {
       eventName = 'player-not-in-any-room';
@@ -50,6 +54,14 @@ export class WsRoomFilter extends BaseWsExceptionFilter {
     if (exception instanceof PlayerNotFound) {
       eventName = 'player-not-found';
       message = 'Player not found.';
+    }
+    if (exception instanceof NotRoomOwner) {
+      eventName = 'not-room-owner';
+      message = 'Not room owner.';
+    }
+    if (exception instanceof PlayersCountMustBeGreaterThanOne) {
+      eventName = 'player-count-must-be-greater-than-one';
+      message = 'Player count must be greater than one.';
     }
 
     // Emit the specific event to the frontend
