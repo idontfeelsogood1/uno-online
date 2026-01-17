@@ -17,7 +17,6 @@ import { JoinRoomDto } from './dto/join-room.dto';
 import { WsValidationFilter } from './filter/ws-validation.filter';
 import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
-import { StartGameDto } from './dto/start-game.dto';
 
 @WebSocketGateway()
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -114,8 +113,15 @@ export class GameGateway implements OnGatewayDisconnect {
   }
 
   private async handleLeaveRoom(client: Socket): Promise<void> {
+    // EDGE CASEs:
+    // HANDLE currentPlayerIndex (player's turn transfer) DEPENDING ON DIRECTION WHEN PLAYER DISCONNECTS
+    // HANDLE PUSHING PLAYER'S HAND BACK TO DRAWPILE WHEN THEY DISCONNECT OR LEAVE
+
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
+
+    this.service.setNewCurrentPlayerIndex(room.id, player.id);
+    this.service.pushCardBackToDrawPile(room.id, player.id);
 
     this.service.removePlayerFromRoom(room.id, client.id);
     this.service.removePlayerFromRoomPlayerOrder(room.id, client.id);
@@ -141,18 +147,11 @@ export class GameGateway implements OnGatewayDisconnect {
     }
   }
 
-  @SubscribeMessage('start-game')
+  @SubscribeMessage('start-room')
   @UseFilters(WsRoomFilter)
-  public startGame(
-    @MessageBody() data: StartGameDto,
-    @ConnectedSocket() client: Socket,
-  ): string {
-    const { roomToStartId }: StartGameDto = data;
-    const room: GameRoom = this.service.getRoom(roomToStartId);
-    const player: Player = this.service.getPlayerOfRoom(
-      roomToStartId,
-      client.id,
-    )!;
+  public startRoom(@ConnectedSocket() client: Socket): string {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
 
     this.service.startGame(room, player);
 
@@ -164,4 +163,26 @@ export class GameGateway implements OnGatewayDisconnect {
   // ===================
   // GAME LOGIC HANDLING
   // ===================
+
+  @SubscribeMessage('draw-card')
+  @UseFilters(WsRoomFilter, WsGameFilter)
+  public drawCard(@ConnectedSocket() client: Socket) {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
+
+    console.log(room.hasStarted());
+    this.service.hasRoomNotStarted(room);
+    this.service.isPlayerTurn(room, player);
+    // SHOULD RETURN ActionResult OBJECT LATER
+    this.service.drawCards(room, player, 1); // CURRENT THROWS AmountGreaterThanDrawPile IF DRAW PILE IS 0
+    player.setIsUno(false);
+
+    // SHOULD EMIT ActionResult LATER
+    client.emit('draw-card-success');
+    this.server.to(room.id).emit('player-drew-a-card', {
+      username: `${player.username}`,
+      playerHandLength: `${player.getHand().length}`,
+    });
+    return `Drew 1 card to ${player.username}'s hand`;
+  }
 }
