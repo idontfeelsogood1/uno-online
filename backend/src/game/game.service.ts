@@ -159,9 +159,9 @@ export class GameService {
           {},
         );
       }
-      if (room.hasStarted()) {
-        throw new RoomHasStarted(``, {});
-      }
+
+      this.hasRoomStarted(room);
+
       room.addCurrentPlayer(player);
     } catch (err) {
       if (err instanceof RoomNotFound) throw err;
@@ -219,52 +219,50 @@ export class GameService {
   }
 
   public startGame(room: GameRoom, player: Player) {
-    if (player.socketId !== room.getOwnerId()) {
-      throw new NotRoomOwner(
-        `
-        ownerId: ${room.getOwnerId()}
-        playerId: ${player.socketId}
-        `,
-        {},
-      );
+    try {
+      this.hasRoomStarted(room);
+
+      if (player.socketId !== room.getOwnerId()) {
+        throw new NotRoomOwner(
+          `
+          ownerId: ${room.getOwnerId()}
+          playerId: ${player.socketId}
+          `,
+          {},
+        );
+      }
+
+      const currentPlayers: Player[] = room.getCurrentPlayers();
+      if (currentPlayers.length <= 1) {
+        throw new PlayersCountMustBeGreaterThanOne(
+          `
+          roomPlayerCount: ${currentPlayers.length}
+          `,
+          {},
+        );
+      }
+
+      room.setHasStarted(true);
+      room.setPlayerOrder(currentPlayers);
+
+      const game: GameBoard = room.getGameBoard();
+      const cards: Card[] = game.generateUnoDeck();
+
+      game.pushToDrawPile(cards);
+      game.shuffleDrawPile();
+
+      const playerOrder: Player[] = room.getPlayerOrder();
+      playerOrder.forEach((player) => {
+        player.pushToHand(game.popFromDrawPile(7));
+      });
+
+      game.startDiscardPile();
+      game.setCurrentTopCard(game.getDiscardPile()[0]);
+    } catch (err) {
+      if (err instanceof RoomHasStarted) throw err;
+      if (err instanceof NotRoomOwner) throw err;
+      if (err instanceof PlayersCountMustBeGreaterThanOne) throw err;
     }
-
-    if (room.hasStarted()) {
-      throw new RoomHasStarted(
-        `
-        roomId: ${room.id}
-        started: ${room.hasStarted()}
-        `,
-        {},
-      );
-    }
-
-    const currentPlayers: Player[] = room.getCurrentPlayers();
-    if (currentPlayers.length <= 1) {
-      throw new PlayersCountMustBeGreaterThanOne(
-        `
-        roomPlayerCount: ${currentPlayers.length}
-        `,
-        {},
-      );
-    }
-
-    room.setHasStarted(true);
-    room.setPlayerOrder(currentPlayers);
-
-    const game: GameBoard = room.getGameBoard();
-    const cards: Card[] = game.generateUnoDeck();
-
-    game.pushToDrawPile(cards);
-    game.shuffleDrawPile();
-
-    const playerOrder: Player[] = room.getPlayerOrder();
-    playerOrder.forEach((player) => {
-      player.pushToHand(game.popFromDrawPile(7));
-    });
-
-    game.startDiscardPile();
-    game.setCurrentTopCard(game.getDiscardPile()[0]);
   }
 
   public isPlayerTurn(room: GameRoom, player: Player): boolean {
@@ -281,6 +279,30 @@ export class GameService {
     }
 
     return true;
+  }
+
+  public hasRoomStarted(room: GameRoom): void {
+    if (room.hasStarted()) {
+      throw new RoomHasStarted(
+        `
+        roomId: ${room.id}
+        roomName: ${room.name}
+        `,
+        {},
+      );
+    }
+  }
+
+  public hasRoomNotStarted(room: GameRoom): void {
+    if (!room.hasStarted()) {
+      throw new RoomHasNotStarted(
+        `
+        roomId: ${room.id}
+        roomName: ${room.name}
+        `,
+        {},
+      );
+    }
   }
 
   public drawCards(room: GameRoom, player: Player, amount: number): void {
@@ -456,6 +478,13 @@ export class GameService {
     } catch (err) {
       if (err instanceof AmountGreaterThanDrawPile) throw err;
     }
+  }
+}
+
+export class RoomHasNotStarted extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'RoomHasNotStarted';
   }
 }
 
