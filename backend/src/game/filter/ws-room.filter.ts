@@ -9,6 +9,7 @@ import {
   PlayerNotInAnyRoom,
   NotRoomOwner,
   PlayersCountMustBeGreaterThanOne,
+  RoomHasNotStarted,
 } from '../game.service';
 import { PlayerNotFound } from '../class/game-room/GameRoom';
 
@@ -21,6 +22,7 @@ import { PlayerNotFound } from '../class/game-room/GameRoom';
   PlayerNotInAnyRoom,
   NotRoomOwner,
   PlayersCountMustBeGreaterThanOne,
+  RoomHasNotStarted,
 )
 export class WsRoomFilter extends BaseWsExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -46,6 +48,10 @@ export class WsRoomFilter extends BaseWsExceptionFilter {
     if (exception instanceof RoomHasStarted) {
       eventName = 'room-has-started';
       message = 'Room has already started game.';
+    }
+    if (exception instanceof RoomHasNotStarted) {
+      eventName = 'room-has-not-started';
+      message = 'Room has not started game.';
     }
     if (exception instanceof PlayerNotInAnyRoom) {
       eventName = 'player-not-in-any-room';
