@@ -68,8 +68,9 @@ export class GameBoard {
 
     if (amount > this.drawPile.length) {
       throw new AmountGreaterThanDrawPile(
-        `Amount: ${amount} 
-         Draw Pile: ${this.drawPile.length}
+        `
+        Amount: ${amount} 
+        Draw Pile: ${this.drawPile.length}
         `,
         {},
       );
