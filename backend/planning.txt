@@ -206,6 +206,7 @@ class GameService {
         If player.hand === 0 AND player.uno === true:   
             Announce winner
             Throw an error
+    Set player.uno to false
 
     // NEXT PLAYER'S TURN
     processNextTurn(room: GameRoom): void
