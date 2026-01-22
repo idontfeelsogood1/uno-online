@@ -1115,5 +1115,67 @@ describe('GameService', () => {
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
     });
+
+    it('should adjust index when the current player in order leaves (direction = 1, left to right)', () => {
+      // Setup: P2 (index 1) is current player
+      room.setCurrentPlayerIndex(1);
+
+      // P2 (index 1) leaves. He is "before" P3.
+      // Index should stay 1 because direction is 1.
+      room.setPlayerOrder([p1, p3]); // Simulate removal
+
+      service.setNewCurrentPlayerIndex(room, true);
+
+      // New current player is P3
+      expect(room.getCurrentPlayerIndex()).toBe(1);
+      expect(room.getPlayerFromOrder()).toBe(p3);
+    });
+
+    it('should wrap index back to 0 when the current player at last position in order leaves (direction = 1, left to right)', () => {
+      // Setup: P3 (index 2) is current player
+      room.setCurrentPlayerIndex(2);
+
+      // P3 (index 2) leaves. He is "after" P2.
+      // Index should wrap back to 0 because direction is 1.
+      room.setPlayerOrder([p1, p2]); // Simulate removal
+
+      service.setNewCurrentPlayerIndex(room, true);
+
+      // New current player is P3
+      expect(room.getCurrentPlayerIndex()).toBe(0);
+      expect(room.getPlayerFromOrder()).toBe(p1);
+    });
+
+    it('should decrement index when the current player in order leaves (direction = -1, right to left)', () => {
+      // Setup: P2 (index 1) is current player
+      room.setCurrentPlayerIndex(1);
+
+      // P2 (index 1) leaves. He is "before" P3.
+      // Index should decrement to 0 because direction is -1.
+      room.setDirection(-1);
+      room.setPlayerOrder([p1, p3]); // Simulate removal
+
+      service.setNewCurrentPlayerIndex(room, true);
+
+      // New current player is P3
+      expect(room.getCurrentPlayerIndex()).toBe(0);
+      expect(room.getPlayerFromOrder()).toBe(p1);
+    });
+
+    it('should wrap index to maxIndex when the current player at starting position in order leaves (direction = -1, right to left)', () => {
+      // Setup: P1 (index 0) is current player
+      room.setCurrentPlayerIndex(0);
+
+      // P1 (index 0) leaves.
+      // Index should wrap to 1 because direction is -1.
+      room.setDirection(-1);
+      room.setPlayerOrder([p2, p3]); // Simulate removal
+
+      service.setNewCurrentPlayerIndex(room, true);
+
+      // New current player is P3
+      expect(room.getCurrentPlayerIndex()).toBe(1);
+      expect(room.getPlayerFromOrder()).toBe(p3);
+    });
   });
 });
