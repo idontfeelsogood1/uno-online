@@ -32,15 +32,14 @@ export class GameService {
   }
 
   public transferOwnerOrRemoveRoomOnEmpty(
-    roomId: string,
+    room: GameRoom,
   ): RemovedOrTransfered | void {
     try {
-      const room: GameRoom = this.getRoom(roomId);
       let transferedOwner: Player | null = null;
       let removedRoom: GameRoom | null = null;
 
       if (room.isEmpty()) {
-        removedRoom = this.removeRoom(roomId);
+        removedRoom = this.removeRoom(room.id);
       }
       if (!room.isEmpty() && !room.isOwnerExists()) {
         transferedOwner = room.transferOwner();
@@ -184,24 +183,21 @@ export class GameService {
   }
 
   public removePlayerFromRoom(
-    roomId: string,
+    room: GameRoom,
     playerSocketId: string,
   ): Player | void {
     try {
-      const room: GameRoom = this.getRoom(roomId);
       return room.removeCurrentPlayer(playerSocketId);
     } catch (err) {
-      if (err instanceof RoomNotFound) throw err;
       if (err instanceof PlayerNotFound) throw err;
     }
   }
 
   public removePlayerFromRoomPlayerOrder(
-    roomId: string,
+    room: GameRoom,
     playerSocketId: string,
   ): Player | void {
     try {
-      const room: GameRoom = this.getRoom(roomId);
       room.removeFromPlayerOrder(playerSocketId);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
@@ -303,6 +299,39 @@ export class GameService {
         {},
       );
     }
+  }
+
+  // ONLY WORKS WHEN PREVIOUS PLAYER IS REMOVED FIRST AND ITS THEIR TURN
+  public setNewCurrentPlayerIndex(
+    room: GameRoom,
+    isRemovedPlayerTurn: boolean,
+  ): void {
+    const direction: number = room.getDirection();
+    const maxIndex: number = room.getPlayerOrder().length - 1;
+    let currentIndex: number = room.getCurrentPlayerIndex();
+
+    if (isRemovedPlayerTurn) {
+      // KEEP currentIndex WHEN ARRAY SPLICE AND INDEX IS NOT OUT OF BOUND
+      // RESET TO 0 IF OUT OF BOUND
+      if (direction === 1 && currentIndex > maxIndex) {
+        currentIndex = 0;
+      }
+
+      // DECREMENT currentIndex BY DEFAULT WHEN ARRAY SPLICE
+      // SET currentIndex = maxIndex WHEN ITS OUT OF BOUND
+      if (direction === -1 && currentIndex <= 0) {
+        currentIndex = maxIndex;
+      } else currentIndex--;
+    } else if (currentIndex > maxIndex) {
+      currentIndex--;
+    }
+
+    room.setCurrentPlayerIndex(currentIndex);
+  }
+
+  public pushCardBackToDrawPile(room: GameRoom, player: Player): void {
+    const game: GameBoard = room.getGameBoard();
+    game.pushToDrawPile(player.getHand());
   }
 
   public drawCards(room: GameRoom, player: Player, amount: number): void {
