@@ -321,7 +321,7 @@ export class GameService {
       // SET currentIndex = maxIndex WHEN ITS OUT OF BOUND
       if (direction === -1 && currentIndex <= 0) {
         currentIndex = maxIndex;
-      } else currentIndex--;
+      } else if (direction === -1) currentIndex--;
     } else if (currentIndex > maxIndex) {
       currentIndex--;
     }
