@@ -304,13 +304,13 @@ export class GameService {
   // ONLY WORKS WHEN PREVIOUS PLAYER IS REMOVED FIRST AND ITS THEIR TURN
   public setNewCurrentPlayerIndex(
     room: GameRoom,
-    isRemovedPlayerTurn: boolean,
+    removedPlayerIndex: number,
   ): void {
     const direction: number = room.getDirection();
     const maxIndex: number = room.getPlayerOrder().length - 1;
     let currentIndex: number = room.getCurrentPlayerIndex();
 
-    if (isRemovedPlayerTurn) {
+    if (removedPlayerIndex === currentIndex) {
       // KEEP currentIndex WHEN ARRAY SPLICE AND INDEX IS NOT OUT OF BOUND
       // RESET TO 0 IF OUT OF BOUND
       if (direction === 1 && currentIndex > maxIndex) {
@@ -322,7 +322,9 @@ export class GameService {
       if (direction === -1 && currentIndex <= 0) {
         currentIndex = maxIndex;
       } else if (direction === -1) currentIndex--;
-    } else if (currentIndex > maxIndex) {
+
+      // SHIFT THE INDEX IF THE REMOVED PLAYER IS BEHIND THE CURRENT PLAYER
+    } else if (removedPlayerIndex < currentIndex) {
       currentIndex--;
     }
 
