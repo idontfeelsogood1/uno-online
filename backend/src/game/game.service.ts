@@ -301,14 +301,26 @@ export class GameService {
     }
   }
 
-  // ONLY WORKS WHEN PREVIOUS PLAYER IS REMOVED FIRST AND ITS THEIR TURN
+  public getIndexFromOrder(room: GameRoom, player: Player): number | null {
+    const playerOrder: Player[] = room.getPlayerOrder();
+    for (let i = 0; i < playerOrder.length - 1; i++) {
+      if (player.socketId === playerOrder[i].socketId) {
+        return i;
+      }
+    }
+    return null;
+  }
+
+  // ONLY WORKS WHEN PLAYER IS REMOVED FIRST
   public setNewCurrentPlayerIndex(
     room: GameRoom,
-    removedPlayerIndex: number,
+    removedPlayerIndex: number | null,
   ): void {
     const direction: number = room.getDirection();
     const maxIndex: number = room.getPlayerOrder().length - 1;
     let currentIndex: number = room.getCurrentPlayerIndex();
+
+    if (!removedPlayerIndex) return;
 
     if (removedPlayerIndex === currentIndex) {
       // KEEP currentIndex WHEN ARRAY SPLICE AND INDEX IS NOT OUT OF BOUND
