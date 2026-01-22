@@ -1087,7 +1087,7 @@ describe('GameService', () => {
       service.startGame(room, p1); // Order: [p1, p2, p3]
     });
 
-    it('should adjust index when the last player in order leaves (non-active turn)', () => {
+    it('should keep index when the player infront of current player in order leaves (non-active turn)', () => {
       // Setup: P2 (index 1) is current player
       room.setCurrentPlayerIndex(1);
 
@@ -1096,21 +1096,58 @@ describe('GameService', () => {
       // So index should stay 1 (P2).
       room.setPlayerOrder([p1, p2]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, false);
+      service.setNewCurrentPlayerIndex(room, 2);
 
       // Still P2
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p2);
     });
 
-    it('should decrement index when the current player index is out of bounds', () => {
-      // P3 (index 2) is current.
+    it('should adjust index when a player in order behind current player leaves (non-active turn)', () => {
+      // Setup: P2 (index 1) is current player
+      room.setCurrentPlayerIndex(1);
+
+      // P1 (index 0) leaves.
+      // Index should be 0.
+      room.setPlayerOrder([p2, p3]); // Simulate removal
+
+      service.setNewCurrentPlayerIndex(room, 0);
+
+      // Still P2
+      expect(room.getCurrentPlayerIndex()).toBe(0);
+      expect(room.getPlayerFromOrder()).toBe(p2);
+    });
+
+    it('should adjust index when a player in order behind current player leaves in longer order (non-active turn)', () => {
+      const p4 = new Player('player-4', 'Player 4');
+      const p5 = new Player('player-5', 'Player 5');
+      room.addCurrentPlayer(p4);
+      room.addCurrentPlayer(p5);
+      room.setPlayerOrder([p1, p2, p3, p4, p5]);
+
+      // Setup: P3 (index 2) is current player
       room.setCurrentPlayerIndex(2);
+
+      // P1 (index 0) leaves.
+      // Index should be 1.
+      room.setPlayerOrder([p2, p3, p4, p5]); // Simulate removal
+
+      service.setNewCurrentPlayerIndex(room, 0);
+
+      // Still P3
+      expect(room.getCurrentPlayerIndex()).toBe(1);
+      expect(room.getPlayerFromOrder()).toBe(p3);
+    });
+
+    it('should decrement index when the current player index is out of bounds (non-active turn)', () => {
+      // P3 (index 2) is current player.
+      room.setCurrentPlayerIndex(2);
+
       // P2 (index 1) leaves. Order [P1, P3]. Length 2. MaxIndex 1.
       // P3 was at index 2. 2 > 1.
       room.setPlayerOrder([p1, p3]);
 
-      service.setNewCurrentPlayerIndex(room, false);
+      service.setNewCurrentPlayerIndex(room, 1);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
@@ -1124,9 +1161,8 @@ describe('GameService', () => {
       // Index should stay 1 because direction is 1.
       room.setPlayerOrder([p1, p3]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, true);
+      service.setNewCurrentPlayerIndex(room, 1);
 
-      // New current player is P3
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
     });
@@ -1139,9 +1175,8 @@ describe('GameService', () => {
       // Index should wrap back to 0 because direction is 1.
       room.setPlayerOrder([p1, p2]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, true);
+      service.setNewCurrentPlayerIndex(room, 2);
 
-      // New current player is P3
       expect(room.getCurrentPlayerIndex()).toBe(0);
       expect(room.getPlayerFromOrder()).toBe(p1);
     });
@@ -1155,9 +1190,8 @@ describe('GameService', () => {
       room.setDirection(-1);
       room.setPlayerOrder([p1, p3]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, true);
+      service.setNewCurrentPlayerIndex(room, 1);
 
-      // New current player is P3
       expect(room.getCurrentPlayerIndex()).toBe(0);
       expect(room.getPlayerFromOrder()).toBe(p1);
     });
@@ -1171,9 +1205,8 @@ describe('GameService', () => {
       room.setDirection(-1);
       room.setPlayerOrder([p2, p3]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, true);
+      service.setNewCurrentPlayerIndex(room, 0);
 
-      // New current player is P3
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
     });
