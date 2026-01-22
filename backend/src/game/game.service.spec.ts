@@ -12,7 +12,8 @@ import {
   RoomHasStarted,
   PlayerNotInAnyRoom,
   PlayerIsInARoom,
-  RemovedOrTransfered, // <--- Imported Class
+  RemovedOrTransfered,
+  RoomHasNotStarted, // <--- Added Import
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -171,14 +172,14 @@ describe('GameService', () => {
     it('should remove a player from a room', () => {
       service.addPlayerToRoom(roomId, player);
 
-      const removed = service.removePlayerFromRoom(roomId, playerSocketId);
+      const removed = service.removePlayerFromRoom(room, playerSocketId);
       expect(removed).toBe(player);
       expect(service.getAllPlayersFromRoom(roomId)).toHaveLength(0);
     });
 
     it('should throw PlayerNotFound when removing non-existent player', () => {
       expect(() => {
-        service.removePlayerFromRoom(roomId, 'invalid-socket');
+        service.removePlayerFromRoom(room, 'invalid-socket');
       }).toThrow(PlayerNotFound);
     });
   });
@@ -241,9 +242,9 @@ describe('GameService', () => {
 
     it('should remove the room if it becomes empty', () => {
       // Setup: Remove the only player (owner)
-      service.removePlayerFromRoom(room.id, owner.socketId);
+      service.removePlayerFromRoom(room, owner.socketId);
 
-      const result = service.transferOwnerOrRemoveRoomOnEmpty(room.id);
+      const result = service.transferOwnerOrRemoveRoomOnEmpty(room);
 
       expect(result).toBeDefined();
       expect(result).toBeInstanceOf(RemovedOrTransfered);
@@ -262,10 +263,10 @@ describe('GameService', () => {
       service.addPlayerToRoom(room.id, player2);
 
       // Remove owner
-      service.removePlayerFromRoom(room.id, owner.socketId);
+      service.removePlayerFromRoom(room, owner.socketId);
 
       // Call transfer logic
-      const result = service.transferOwnerOrRemoveRoomOnEmpty(room.id);
+      const result = service.transferOwnerOrRemoveRoomOnEmpty(room);
 
       expect(result).toBeDefined();
       expect(result?.removedRoom).toBeNull();
@@ -283,9 +284,9 @@ describe('GameService', () => {
       service.addPlayerToRoom(room.id, player2);
 
       // Remove player 2 (not owner)
-      service.removePlayerFromRoom(room.id, player2.socketId);
+      service.removePlayerFromRoom(room, player2.socketId);
 
-      const result = service.transferOwnerOrRemoveRoomOnEmpty(room.id);
+      const result = service.transferOwnerOrRemoveRoomOnEmpty(room);
 
       expect(result?.removedRoom).toBeNull();
       expect(result?.transferedOwner).toBeNull();
@@ -352,7 +353,7 @@ describe('GameService', () => {
 
     it('should throw PlayersCountMustBeGreaterThanOne if only 1 player is in room', () => {
       // Remove player 2 to simulate solo lobby
-      service.removePlayerFromRoom(room.id, player2.socketId);
+      service.removePlayerFromRoom(room, player2.socketId);
 
       expect(() => {
         service.startGame(room, owner);
@@ -1024,6 +1025,95 @@ describe('GameService', () => {
       service.processNextTurn(room);
 
       expect(nextPlayer.getHand()).toHaveLength(initialHand + 4); // 2 * 2 = 4
+    });
+  });
+
+  // ==========================================
+  // HELPER METHODS (NEW)
+  // ==========================================
+  describe('Helper Methods', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player1: Player;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner', 'Owner');
+      player1 = service.createPlayer('player-1', 'Player 1');
+      room = service.createRoom('room-1', 'Test', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, player1);
+    });
+
+    it('should throw RoomHasNotStarted if checking status on unstarted room', () => {
+      expect(room.hasStarted()).toBe(false);
+      expect(() => {
+        service.hasRoomNotStarted(room);
+      }).toThrow(RoomHasNotStarted);
+    });
+
+    it('should allow pushing cards back to draw pile', () => {
+      // Start the game
+      service.startGame(room, owner);
+      const gameBoard = room.getGameBoard();
+      const initialDrawSize = gameBoard.getDrawPile().length;
+
+      // Players start with 7 cards by default
+      service.pushCardBackToDrawPile(room, owner);
+
+      expect(gameBoard.getDrawPile().length).toBe(initialDrawSize + 7);
+    });
+  });
+
+  // ==========================================
+  // TURN ORDER ADJUSTMENT (DISCONNECT LOGIC)
+  // ==========================================
+  describe('Turn Order Adjustment (Disconnect Logic)', () => {
+    let room: GameRoom;
+    let p1: Player, p2: Player, p3: Player;
+
+    beforeEach(() => {
+      p1 = service.createPlayer('p1', 'P1');
+      p2 = service.createPlayer('p2', 'P2');
+      p3 = service.createPlayer('p3', 'P3');
+
+      room = service.createRoom('room-1', 'Test', p1.socketId, 3);
+      service.addRoom(room);
+
+      service.addPlayerToRoom(room.id, p1);
+      service.addPlayerToRoom(room.id, p2);
+      service.addPlayerToRoom(room.id, p3);
+
+      service.startGame(room, p1); // Order: [p1, p2, p3]
+    });
+
+    it('should adjust index when the last player in order leaves (non-active turn)', () => {
+      // Setup: P2 (index 1) is current player
+      room.setCurrentPlayerIndex(1);
+
+      // P3 (index 2) leaves. He is "after" P2.
+      // Logic: currentIndex (1) is NOT > maxIndex (newly 1).
+      // So index should stay 1 (P2).
+      room.setPlayerOrder([p1, p2]); // Simulate removal
+
+      service.setNewCurrentPlayerIndex(room, false);
+
+      // Still P2
+      expect(room.getCurrentPlayerIndex()).toBe(1);
+      expect(room.getPlayerFromOrder()).toBe(p2);
+    });
+
+    it('should decrement index when the current player index is out of bounds', () => {
+      // P3 (index 2) is current.
+      room.setCurrentPlayerIndex(2);
+      // P2 (index 1) leaves. Order [P1, P3]. Length 2. MaxIndex 1.
+      // P3 was at index 2. 2 > 1.
+      room.setPlayerOrder([p1, p3]);
+
+      service.setNewCurrentPlayerIndex(room, false);
+
+      expect(room.getCurrentPlayerIndex()).toBe(1);
+      expect(room.getPlayerFromOrder()).toBe(p3);
     });
   });
 });
