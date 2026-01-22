@@ -57,6 +57,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
     await client.join(room.id);
 
+    // SHOULD SEND ActionResult
     client.emit('created-room-success');
     this.server.emit('room-created', { roomname: `${room.name}` });
     return `Successfully created and joined ${owner.socketId} to room ${room.id}.`;
@@ -82,6 +83,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
     const room: GameRoom = this.service.getRoomOfPlayer(player.socketId)!;
 
+    // SHOULD SEND ActionResult
     client.emit('joined-room-success');
     this.server
       .to(room.id)
@@ -97,7 +99,6 @@ export class GameGateway implements OnGatewayDisconnect {
 
     await this.handleLeaveRoom(client);
 
-    client.emit('leave-room-success');
     return `Succesfully removed ${player.socketId} from room ${room.id}.`;
   }
 
@@ -107,31 +108,30 @@ export class GameGateway implements OnGatewayDisconnect {
       await this.handleLeaveRoom(client);
       // eslint-disable-next-line @typescript-eslint/no-unused-vars
     } catch (err) {
-      // PREVENT SERVER CRASH WHEN PLAYER DISCONNECTS BUT NOT IN A ROOM
+      // PREVENT SERVER CRASH WHEN PLAYER DISCONNECTS BUT NOT IN A ROOM AND EMITTING TO THEM (NULL CLIENT)
       return;
     }
   }
 
   private async handleLeaveRoom(client: Socket): Promise<void> {
-    // EDGE CASEs:
-    // HANDLE currentPlayerIndex (player's turn transfer) DEPENDING ON DIRECTION WHEN PLAYER DISCONNECTS
-    // HANDLE PUSHING PLAYER'S HAND BACK TO DRAWPILE WHEN THEY DISCONNECT OR LEAVE
-
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
+    const isPlayerTurn: boolean = this.service.isPlayerTurn(room, player);
 
-    this.service.setNewCurrentPlayerIndex(room.id, player.id);
-    this.service.pushCardBackToDrawPile(room.id, player.id);
+    this.service.pushCardBackToDrawPile(room, player);
+    this.service.removePlayerFromRoom(room, player.socketId);
+    this.service.removePlayerFromRoomPlayerOrder(room, player.socketId);
 
-    this.service.removePlayerFromRoom(room.id, client.id);
-    this.service.removePlayerFromRoomPlayerOrder(room.id, client.id);
+    // ONLY WORKS WHEN PREVIOUS PLAYER IS REMOVED FIRST AND ITS THEIR TURN
+    this.service.setNewCurrentPlayerIndex(room, isPlayerTurn);
 
     const result: RemovedOrTransfered =
-      this.service.transferOwnerOrRemoveRoomOnEmpty(room.id)!;
-    this.service.removeRoomOfPlayer(client.id);
+      this.service.transferOwnerOrRemoveRoomOnEmpty(room)!;
+    this.service.removeRoomOfPlayer(player.socketId);
 
     await client.leave(room.id);
 
+    // SHOULD SEND ActionResult
     if (result.removedRoom) {
       this.server.emit('room-removed', { roomId: result.removedRoom.id });
     } else {
@@ -139,12 +139,12 @@ export class GameGateway implements OnGatewayDisconnect {
         .to(room.id)
         .emit('player-left-room', { username: player.username });
     }
-
     if (!result.removedRoom && result.transferedOwner) {
       this.server.to(room.id).emit('transfered-owner', {
         username: result.transferedOwner.username,
       });
     }
+    client.emit('leave-room-success');
   }
 
   @SubscribeMessage('start-room')
@@ -155,6 +155,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
     this.service.startGame(room, player);
 
+    // SHOULD SEND ActionResult
     this.server.to(room.id).emit('game-started', { status: 'Started' });
     this.server.emit('room-started', { roomId: `${room.id}` });
     return `Successfully started game`;
@@ -177,7 +178,7 @@ export class GameGateway implements OnGatewayDisconnect {
     this.service.drawCards(room, player, 1); // CURRENT THROWS AmountGreaterThanDrawPile IF DRAW PILE IS 0
     player.setIsUno(false);
 
-    // SHOULD EMIT ActionResult LATER
+    // SHOULD SEND ActionResult
     client.emit('draw-card-success');
     this.server.to(room.id).emit('player-drew-a-card', {
       username: `${player.username}`,
