@@ -320,7 +320,7 @@ export class GameService {
     const maxIndex: number = room.getPlayerOrder().length - 1;
     let currentIndex: number = room.getCurrentPlayerIndex();
 
-    if (!removedPlayerIndex) return;
+    if (removedPlayerIndex === null) return;
 
     if (removedPlayerIndex === currentIndex) {
       // KEEP currentIndex WHEN ARRAY SPLICE AND INDEX IS NOT OUT OF BOUND
