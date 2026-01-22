@@ -116,14 +116,17 @@ export class GameGateway implements OnGatewayDisconnect {
   private async handleLeaveRoom(client: Socket): Promise<void> {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
-    const isPlayerTurn: boolean = this.service.isPlayerTurn(room, player);
+    const playerIndex: number | null = this.service.getIndexFromOrder(
+      room,
+      player,
+    );
 
     this.service.pushCardBackToDrawPile(room, player);
     this.service.removePlayerFromRoom(room, player.socketId);
     this.service.removePlayerFromRoomPlayerOrder(room, player.socketId);
 
-    // ONLY WORKS WHEN PREVIOUS PLAYER IS REMOVED FIRST AND ITS THEIR TURN
-    this.service.setNewCurrentPlayerIndex(room, isPlayerTurn);
+    // ONLY WORKS WHEN PREVIOUS PLAYER IS REMOVED FIRST
+    this.service.setNewCurrentPlayerIndex(room, playerIndex);
 
     const result: RemovedOrTransfered =
       this.service.transferOwnerOrRemoveRoomOnEmpty(room)!;
