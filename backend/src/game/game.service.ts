@@ -366,6 +366,16 @@ export class GameService {
   // COMPARE THE OFFSET OF THE PLAYER'S REAL HAND AND THE CARDS THEY WANT TO PLAY
   public uno(player: Player, cardToPlayIds: string[]): void {
     try {
+      if (cardToPlayIds.length <= 0) {
+        throw new CardsSentMustNotBeEmpty(
+          `
+          Location: uno
+          Cards length: ${cardToPlayIds.length}
+          `,
+          {},
+        );
+      }
+
       const hand: Card[] = player.getHand();
       const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
       const oneOrZeroCardRemaining: boolean =
@@ -386,6 +396,7 @@ export class GameService {
         );
       }
     } catch (err) {
+      if (err instanceof CardsSentMustNotBeEmpty) throw err;
       if (err instanceof CannotUno) throw err;
     }
   }
@@ -399,10 +410,21 @@ export class GameService {
     try {
       const game: GameBoard = room.getGameBoard();
 
+      if (cardToPlayIds.length <= 0) {
+        throw new CardsSentMustNotBeEmpty(
+          `
+          Location: playCards
+          Cards length: ${cardToPlayIds.length}
+          `,
+          {},
+        );
+      }
+
       const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
       const cardsToPlayTopCardType: string = game.getCardType(
         cardsToPlay[cardsToPlay.length - 1],
       );
+
       if (cardsToPlayTopCardType === 'WILD' && wildColor) {
         game.setEnforcedColor(wildColor);
       }
@@ -424,6 +446,7 @@ export class GameService {
       game.setTurnEvents(removedCards);
       game.setCurrentTopCard(removedCards[removedCards.length - 1]);
     } catch (err) {
+      if (err instanceof CardsSentMustNotBeEmpty) throw err;
       if (err instanceof HaveNotChoosenColor) throw err;
       if (err instanceof EnforcedColorMismatch) throw err;
       if (err instanceof CardTypeMismatch) throw err;
@@ -521,6 +544,13 @@ export class GameService {
     } catch (err) {
       if (err instanceof AmountGreaterThanDrawPile) throw err;
     }
+  }
+}
+
+export class CardsSentMustNotBeEmpty extends Error {
+  constructor(message: string, options: object) {
+    super(message, options);
+    this.name = 'CardsSentMustNotBeEmpty';
   }
 }
 
