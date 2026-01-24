@@ -169,6 +169,9 @@ class GameService {
     - get room, player, from ids
     - check if its player's turn
     uno(player: Player, cardToPlayIds: string[]): void
+        If cardsToPlayIds is empty:
+            throw an error
+            
         Get player's hand:
         If player's cards - cardsToPlay === 0 or 1:
             Set player.uno = true
@@ -177,10 +180,13 @@ class GameService {
 
     // THE PLAYER PLAYS A HAND, THEN PROCESS THE TURN EVENTS 
     - "play-cards" event
-    - expects: networkRoomId, playerSocketId, cardToPlayIds, wildColor? from the client
+    - expects: networkRoomId, playerSocketId, cardsToPlayIds, wildColor? from the client
     - get room, player from ids
     - check if its player's turn
-    playCards(room: GameRoom, player: Player, cardToPlayIds: string[], wildColor?: CardColor): void
+    playCards(room: GameRoom, player: Player, cardsToPlayIds: string[], wildColor?: CardColor): void
+        If cardsToPlayIds is empty:
+            throw an error
+         
         If cardsToPlay top card is 'WILD' && wildColor: 
             Set enforcedColor = wildColor
         If cardsToPlay top card is 'WILD' && !wildColor:  
