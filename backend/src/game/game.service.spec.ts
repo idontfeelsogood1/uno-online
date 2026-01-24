@@ -13,7 +13,8 @@ import {
   PlayerNotInAnyRoom,
   PlayerIsInARoom,
   RemovedOrTransfered,
-  RoomHasNotStarted, // <--- Added Import
+  RoomHasNotStarted,
+  CardsSentMustNotBeEmpty,
 } from './game.service';
 import {
   AmountGreaterThanDrawPile,
@@ -519,6 +520,13 @@ describe('GameService', () => {
       expect(currentPlayer.isUno()).toBe(true);
     });
 
+    it('should throw CardsSentMustNotBeEmpty when sending an empty hand', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      expect(() => {
+        service.uno(currentPlayer, []);
+      }).toThrow(CardsSentMustNotBeEmpty);
+    });
+
     it('should throw CannotUno if calculating the move leaves > 1 card', () => {
       const currentPlayer = room.getPlayerFromOrder();
       // StartGame gives 7 cards. Playing 1 leaves 6. 6 > 1.
@@ -572,6 +580,13 @@ describe('GameService', () => {
       expect(currentPlayer.getHand()).toHaveLength(initialHandSize - 1);
       expect(gameBoard.getCurrentTopCard().id).toBe(validCard.id);
       expect(gameBoard.getDiscardPile()).toContain(validCard);
+    });
+
+    it('should throw CardsSentMustNotBeEmpty when sending an empty hand', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      expect(() => {
+        service.playCards(room, currentPlayer, []);
+      }).toThrow(CardsSentMustNotBeEmpty);
     });
 
     it('should propagate CardPatternMismatch from GameBoard if move is invalid', () => {
