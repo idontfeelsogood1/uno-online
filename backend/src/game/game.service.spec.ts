@@ -1186,7 +1186,6 @@ describe('GameService', () => {
       // room.setPlayerOrder([p1, p2]); // Simulate removal
 
       const index: number = service.getIndexFromOrder(room, p3)!;
-      console.log('index: ' + index);
       service.removePlayerFromRoomPlayerOrder(room, p3.socketId);
       service.setNewCurrentPlayerIndex(room, index);
 
