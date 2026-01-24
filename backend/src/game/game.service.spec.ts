@@ -1094,9 +1094,11 @@ describe('GameService', () => {
       // P3 (index 2) leaves. He is "after" P2.
       // Logic: currentIndex (1) is NOT > maxIndex (newly 1).
       // So index should stay 1 (P2).
-      room.setPlayerOrder([p1, p2]); // Simulate removal
+      // room.setPlayerOrder([p1, p2]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, 2);
+      const index: number = service.getIndexFromOrder(room, p3)!;
+      service.removePlayerFromRoomPlayerOrder(room, p3.socketId);
+      service.setNewCurrentPlayerIndex(room, index);
 
       // Still P2
       expect(room.getCurrentPlayerIndex()).toBe(1);
@@ -1109,9 +1111,11 @@ describe('GameService', () => {
 
       // P1 (index 0) leaves.
       // Index should be 0.
-      room.setPlayerOrder([p2, p3]); // Simulate removal
+      // room.setPlayerOrder([p2, p3]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, 0);
+      const index: number = service.getIndexFromOrder(room, p1)!;
+      service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
+      service.setNewCurrentPlayerIndex(room, index);
 
       // Still P2
       expect(room.getCurrentPlayerIndex()).toBe(0);
@@ -1130,9 +1134,11 @@ describe('GameService', () => {
 
       // P1 (index 0) leaves.
       // Index should be 1.
-      room.setPlayerOrder([p2, p3, p4, p5]); // Simulate removal
+      // room.setPlayerOrder([p2, p3, p4, p5]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, 0);
+      const index: number = service.getIndexFromOrder(room, p1)!;
+      service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
+      service.setNewCurrentPlayerIndex(room, index);
 
       // Still P3
       expect(room.getCurrentPlayerIndex()).toBe(1);
@@ -1145,9 +1151,11 @@ describe('GameService', () => {
 
       // P2 (index 1) leaves. Order [P1, P3]. Length 2. MaxIndex 1.
       // P3 was at index 2. 2 > 1.
-      room.setPlayerOrder([p1, p3]);
+      // room.setPlayerOrder([p1, p3]);
 
-      service.setNewCurrentPlayerIndex(room, 1);
+      const index: number = service.getIndexFromOrder(room, p2)!;
+      service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
+      service.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
@@ -1159,9 +1167,11 @@ describe('GameService', () => {
 
       // P2 (index 1) leaves. He is "before" P3.
       // Index should stay 1 because direction is 1.
-      room.setPlayerOrder([p1, p3]); // Simulate removal
+      // room.setPlayerOrder([p1, p3]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, 1);
+      const index: number = service.getIndexFromOrder(room, p2)!;
+      service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
+      service.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
@@ -1173,9 +1183,12 @@ describe('GameService', () => {
 
       // P3 (index 2) leaves. He is "after" P2.
       // Index should wrap back to 0 because direction is 1.
-      room.setPlayerOrder([p1, p2]); // Simulate removal
+      // room.setPlayerOrder([p1, p2]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, 2);
+      const index: number = service.getIndexFromOrder(room, p3)!;
+      console.log('index: ' + index);
+      service.removePlayerFromRoomPlayerOrder(room, p3.socketId);
+      service.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(0);
       expect(room.getPlayerFromOrder()).toBe(p1);
@@ -1188,9 +1201,11 @@ describe('GameService', () => {
       // P2 (index 1) leaves. He is "before" P3.
       // Index should decrement to 0 because direction is -1.
       room.setDirection(-1);
-      room.setPlayerOrder([p1, p3]); // Simulate removal
+      // room.setPlayerOrder([p1, p3]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, 1);
+      const index: number = service.getIndexFromOrder(room, p2)!;
+      service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
+      service.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(0);
       expect(room.getPlayerFromOrder()).toBe(p1);
@@ -1203,9 +1218,11 @@ describe('GameService', () => {
       // P1 (index 0) leaves.
       // Index should wrap to 1 because direction is -1.
       room.setDirection(-1);
-      room.setPlayerOrder([p2, p3]); // Simulate removal
+      // room.setPlayerOrder([p2, p3]); // Simulate removal
 
-      service.setNewCurrentPlayerIndex(room, 0);
+      const index: number = service.getIndexFromOrder(room, p1)!;
+      service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
+      service.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
