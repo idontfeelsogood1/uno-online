@@ -303,7 +303,7 @@ export class GameService {
 
   public getIndexFromOrder(room: GameRoom, player: Player): number | null {
     const playerOrder: Player[] = room.getPlayerOrder();
-    for (let i = 0; i < playerOrder.length - 1; i++) {
+    for (let i = 0; i < playerOrder.length; i++) {
       if (player.socketId === playerOrder[i].socketId) {
         return i;
       }
