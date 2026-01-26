@@ -18,6 +18,7 @@ import { CardsToPlayIdsDto } from './dto/cards-to-play-ids.dto';
 import { WsValidationFilter } from './filter/ws-validation.filter';
 import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
+import { PlayCardsDto } from './dto/play-cards-dto';
 
 @WebSocketGateway()
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -215,5 +216,34 @@ export class GameGateway implements OnGatewayDisconnect {
       unoStatus: `${player.isUno()}`,
     });
     return `Succesfully uno for ${player.username}`;
+  }
+
+  @SubscribeMessage('play-cards')
+  @UseFilters(WsRoomFilter, WsGameFilter)
+  public playCards(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: PlayCardsDto,
+  ) {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
+    const { cardsToPlayIds, wildColor }: PlayCardsDto = data;
+
+    this.service.hasRoomNotStarted(room);
+    this.service.isPlayerTurn(room, player);
+
+    try {
+      this.service.playCards(room, player, cardsToPlayIds, wildColor);
+    } catch (err) {
+      player.setIsUno(false);
+      throw err; // CATCH ERRORS IN WsGameFilter
+    }
+
+    // SHOULD SEND ActionResult
+    client.emit('play-cards-success');
+    this.server.to(room.id).emit('player-played-cards', {
+      username: `${player.username}`,
+      cardIds: `${cardsToPlayIds.toString()}`,
+    });
+    return `Succesfully play cards for ${player.username}`;
   }
 }
