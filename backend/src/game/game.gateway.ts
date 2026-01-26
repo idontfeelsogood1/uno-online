@@ -218,6 +218,7 @@ export class GameGateway implements OnGatewayDisconnect {
     return `Succesfully uno for ${player.username}`;
   }
 
+  // THIS ROUTE SHOULD STOP THE GAME WHEN A PLAYER HAS WON AND HANDLE CLEANUP OPERATIONS
   @SubscribeMessage('play-cards')
   @UseFilters(WsRoomFilter, WsGameFilter)
   public playCards(
@@ -237,6 +238,10 @@ export class GameGateway implements OnGatewayDisconnect {
       player.setIsUno(false);
       throw err; // CATCH ERRORS IN WsGameFilter
     }
+
+    this.service.processCurrentTurn(room); // CURRENTLY THROWS AmountGreaterThanDrawPile AND PlayerWon
+    player.setIsUno(false);
+    this.service.processNextTurn(room);
 
     // SHOULD SEND ActionResult
     client.emit('play-cards-success');
