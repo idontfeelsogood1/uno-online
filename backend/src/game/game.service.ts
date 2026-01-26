@@ -425,6 +425,8 @@ export class GameService {
         cardsToPlay[cardsToPlay.length - 1],
       );
 
+      game.processPattern(cardsToPlay);
+
       if (cardsToPlayTopCardType === 'WILD' && wildColor) {
         game.setEnforcedColor(wildColor);
       }
@@ -437,8 +439,6 @@ export class GameService {
           {},
         );
       }
-
-      game.processPattern(cardsToPlay);
 
       const removedCards: Card[] = player.removeCards(cardToPlayIds);
       game.pushToDiscardPile(removedCards);
@@ -545,6 +545,41 @@ export class GameService {
       if (err instanceof AmountGreaterThanDrawPile) throw err;
     }
   }
+
+  public generateRoomState(): PublicRoomState {}
+
+  public generateGameState(): PublicGameState {}
+}
+
+class PublicRoomState {
+  readonly roomId: string;
+  readonly roomName: string;
+  readonly maxPlayers: number;
+  readonly hasRoomStarted: boolean;
+
+  readonly ownerSocketId: string;
+  readonly ownerUsername: string;
+
+  readonly currentPlayers: PublicRoomPlayer[];
+}
+
+class PublicGameState {
+  readonly currentPlayerIndex: number;
+  readonly playerOrder: PublicGamePlayer[];
+  readonly direction: number;
+  readonly topCard: Card;
+}
+
+class PublicRoomPlayer {
+  readonly socketId: string;
+  readonly username: string;
+}
+
+class PublicGamePlayer {
+  readonly socketId: string;
+  readonly username: string;
+  readonly hand: Card[];
+  readonly uno: boolean;
 }
 
 export class CardsSentMustNotBeEmpty extends Error {
