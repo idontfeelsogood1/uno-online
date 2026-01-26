@@ -5,10 +5,24 @@ import {
   NotPlayerTurn,
   CardsSentMustNotBeEmpty,
   CannotUno,
+  HaveNotChoosenColor,
 } from '../game.service';
+import {
+  EnforcedColorMismatch,
+  CardTypeMismatch,
+  CardPatternMismatch,
+} from '../class/game-board/GameBoard';
 
 // UNCAUGHT: AmountGreaterThanDrawPile, PlayerWon
-@Catch(NotPlayerTurn, CardsSentMustNotBeEmpty, CannotUno)
+@Catch(
+  NotPlayerTurn,
+  CardsSentMustNotBeEmpty,
+  CannotUno,
+  HaveNotChoosenColor,
+  EnforcedColorMismatch,
+  CardTypeMismatch,
+  CardPatternMismatch,
+)
 export class WsGameFilter extends BaseWsExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
     const client = host.switchToWs().getClient<Socket>();
@@ -29,6 +43,22 @@ export class WsGameFilter extends BaseWsExceptionFilter {
     if (exception instanceof CannotUno) {
       eventName = 'cannot-uno';
       message = 'Cannot uno.';
+    }
+    if (exception instanceof HaveNotChoosenColor) {
+      eventName = 'have-not-choosen-color';
+      message = 'Must choose a color if wild card is played on top of gabd.';
+    }
+    if (exception instanceof EnforcedColorMismatch) {
+      eventName = 'enforced-color-mismatch';
+      message = 'Enforced color mismatch.';
+    }
+    if (exception instanceof CardTypeMismatch) {
+      eventName = 'card-type-mismatch';
+      message = 'Can only play 1 type per hand.';
+    }
+    if (exception instanceof CardPatternMismatch) {
+      eventName = 'card-pattern-mismatch';
+      message = 'Card pattern mismatch.';
     }
 
     // Emit the specific event to the frontend
