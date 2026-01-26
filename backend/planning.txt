@@ -199,7 +199,7 @@ class GameService {
             Set currentTopCard
         Else: 
             Throw an error
-    Set player.uno to false when playCards throw an error
+    Set player.uno to false
 
     // PROCESS THE EVENTS FOR THE CURRENT PLAYER 
     processCurrentTurn(room: GameRoom): void 
@@ -227,6 +227,10 @@ class GameService {
         If wild_draw_four:
             Pop cards from drawPile
             Push cards to player's hand  
-    Set player.uno to false
+
+    ALL ROUTES SHOULD RESPONSE WITH A CENTRAL STATE OBJECT WHEN THE ROUTE SUCCEED
+    GAME SERVICE SHOULD GENERATE THE STATE ON THE FLY
+    ERRORS SHOULD BE REPONSED INDIVIDUALLY
+    FRONTEND WILL PLAY ANIMATIONS BASED ON THE PREVIOUS STATE AND THE CURRENT STATE RECEIVED
 }   
 
