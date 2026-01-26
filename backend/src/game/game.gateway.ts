@@ -14,6 +14,7 @@ import { randomUUID } from 'crypto';
 import { ValidationPipe, UseFilters, UsePipes } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
+import { CardsToPlayIdsDto } from './dto/cards-to-play-ids.dto';
 import { WsValidationFilter } from './filter/ws-validation.filter';
 import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
@@ -174,7 +175,6 @@ export class GameGateway implements OnGatewayDisconnect {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
 
-    console.log(room.hasStarted());
     this.service.hasRoomNotStarted(room);
     this.service.isPlayerTurn(room, player);
     // SHOULD RETURN ActionResult OBJECT LATER
@@ -188,5 +188,32 @@ export class GameGateway implements OnGatewayDisconnect {
       playerHandLength: `${player.getHand().length}`,
     });
     return `Drew 1 card to ${player.username}'s hand`;
+  }
+
+  // =====================================================================
+  // STARTING FROM HERE REQUIRES A FRONTEND TO TEST, POSTMAN DOESNT CUT IT
+  // =====================================================================
+
+  @SubscribeMessage('uno')
+  @UseFilters(WsRoomFilter, WsGameFilter)
+  public uno(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: CardsToPlayIdsDto,
+  ) {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
+    const { cardsToPlayIds }: CardsToPlayIdsDto = data;
+
+    this.service.hasRoomNotStarted(room);
+    this.service.isPlayerTurn(room, player);
+    this.service.uno(player, cardsToPlayIds); // CATCH ERRORS IN WsGameFilter
+
+    // SHOULD SEND ActionResult
+    client.emit('uno-success');
+    this.server.to(room.id).emit('player-unoed', {
+      username: `${player.username}`,
+      unoStatus: `${player.isUno()}`,
+    });
+    return `Succesfully uno for ${player.username}`;
   }
 }
