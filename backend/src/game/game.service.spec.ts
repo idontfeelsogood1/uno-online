@@ -1107,10 +1107,6 @@ describe('GameService', () => {
       room.setCurrentPlayerIndex(1);
 
       // P3 (index 2) leaves. He is "after" P2.
-      // Logic: currentIndex (1) is NOT > maxIndex (newly 1).
-      // So index should stay 1 (P2).
-      // room.setPlayerOrder([p1, p2]); // Simulate removal
-
       const index: number = service.getIndexFromOrder(room, p3)!;
       service.removePlayerFromRoomPlayerOrder(room, p3.socketId);
       service.setNewCurrentPlayerIndex(room, index);
@@ -1125,14 +1121,11 @@ describe('GameService', () => {
       room.setCurrentPlayerIndex(1);
 
       // P1 (index 0) leaves.
-      // Index should be 0.
-      // room.setPlayerOrder([p2, p3]); // Simulate removal
-
       const index: number = service.getIndexFromOrder(room, p1)!;
       service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
       service.setNewCurrentPlayerIndex(room, index);
 
-      // Still P2
+      // Still P2 (which is now index 0)
       expect(room.getCurrentPlayerIndex()).toBe(0);
       expect(room.getPlayerFromOrder()).toBe(p2);
     });
@@ -1148,14 +1141,11 @@ describe('GameService', () => {
       room.setCurrentPlayerIndex(2);
 
       // P1 (index 0) leaves.
-      // Index should be 1.
-      // room.setPlayerOrder([p2, p3, p4, p5]); // Simulate removal
-
       const index: number = service.getIndexFromOrder(room, p1)!;
       service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
       service.setNewCurrentPlayerIndex(room, index);
 
-      // Still P3
+      // Still P3 (which is now index 1)
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
     });
@@ -1165,9 +1155,6 @@ describe('GameService', () => {
       room.setCurrentPlayerIndex(2);
 
       // P2 (index 1) leaves. Order [P1, P3]. Length 2. MaxIndex 1.
-      // P3 was at index 2. 2 > 1.
-      // room.setPlayerOrder([p1, p3]);
-
       const index: number = service.getIndexFromOrder(room, p2)!;
       service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
       service.setNewCurrentPlayerIndex(room, index);
@@ -1180,10 +1167,7 @@ describe('GameService', () => {
       // Setup: P2 (index 1) is current player
       room.setCurrentPlayerIndex(1);
 
-      // P2 (index 1) leaves. He is "before" P3.
-      // Index should stay 1 because direction is 1.
-      // room.setPlayerOrder([p1, p3]); // Simulate removal
-
+      // P2 (index 1) leaves.
       const index: number = service.getIndexFromOrder(room, p2)!;
       service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
       service.setNewCurrentPlayerIndex(room, index);
@@ -1196,10 +1180,7 @@ describe('GameService', () => {
       // Setup: P3 (index 2) is current player
       room.setCurrentPlayerIndex(2);
 
-      // P3 (index 2) leaves. He is "after" P2.
-      // Index should wrap back to 0 because direction is 1.
-      // room.setPlayerOrder([p1, p2]); // Simulate removal
-
+      // P3 (index 2) leaves.
       const index: number = service.getIndexFromOrder(room, p3)!;
       service.removePlayerFromRoomPlayerOrder(room, p3.socketId);
       service.setNewCurrentPlayerIndex(room, index);
@@ -1211,12 +1192,9 @@ describe('GameService', () => {
     it('should decrement index when the current player in order leaves (direction = -1, right to left)', () => {
       // Setup: P2 (index 1) is current player
       room.setCurrentPlayerIndex(1);
-
-      // P2 (index 1) leaves. He is "before" P3.
-      // Index should decrement to 0 because direction is -1.
       room.setDirection(-1);
-      // room.setPlayerOrder([p1, p3]); // Simulate removal
 
+      // P2 (index 1) leaves.
       const index: number = service.getIndexFromOrder(room, p2)!;
       service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
       service.setNewCurrentPlayerIndex(room, index);
@@ -1228,18 +1206,83 @@ describe('GameService', () => {
     it('should wrap index to maxIndex when the current player at starting position in order leaves (direction = -1, right to left)', () => {
       // Setup: P1 (index 0) is current player
       room.setCurrentPlayerIndex(0);
+      room.setDirection(-1);
 
       // P1 (index 0) leaves.
-      // Index should wrap to 1 because direction is -1.
-      room.setDirection(-1);
-      // room.setPlayerOrder([p2, p3]); // Simulate removal
-
       const index: number = service.getIndexFromOrder(room, p1)!;
       service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
       service.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
+    });
+  });
+
+  // ==========================================
+  // STATE GENERATION LOGIC (NEW)
+  // ==========================================
+  describe('State Generation Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner-1', 'Owner');
+      player2 = service.createPlayer('player-2', 'Player 2');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.addPlayerToRoom(room.id, player2);
+    });
+
+    it('should generate correct Room State (Lobby)', () => {
+      const state = service.generateRoomState(room);
+
+      expect(state).toBeDefined();
+      expect(state.roomId).toBe(room.id);
+      expect(state.roomName).toBe(room.name);
+      expect(state.maxPlayers).toBe(room.maxPlayers);
+      expect(state.hasRoomStarted).toBe(false);
+      expect(state.ownerSocketId).toBe(owner.socketId);
+      expect(state.ownerUsername).toBe(owner.username);
+      expect(state.currentPlayers).toHaveLength(2);
+      expect(state.currentPlayers[0].username).toBe(owner.username);
+      expect(state.currentPlayers[1].username).toBe(player2.username);
+    });
+
+    it('should generate correct Lobby State (List of Rooms)', () => {
+      const room2 = service.createRoom('room-2', 'Room 2', player2.socketId, 2);
+      room2.addCurrentPlayer(player2);
+      service.addRoom(room2);
+
+      const lobbyState = service.generateLobbyState();
+
+      expect(lobbyState).toHaveLength(2);
+      expect(lobbyState[0].roomId).toBe(room.id);
+      expect(lobbyState[1].roomId).toBe(room2.id);
+    });
+
+    it('should generate correct Game State', () => {
+      service.startGame(room, owner);
+
+      const gameState = service.generateGameState(room);
+
+      expect(gameState).toBeDefined();
+      expect(gameState.currentPlayerIndex).toBe(room.getCurrentPlayerIndex());
+      expect(gameState.direction).toBe(room.getDirection());
+      expect(gameState.topCard).toBeDefined();
+      expect(gameState.topCard.id).toBe(
+        room.getGameBoard().getCurrentTopCard().id,
+      );
+
+      expect(gameState.playerOrder).toHaveLength(2);
+      // Check if hands are being sent
+      expect(
+        gameState.playerOrder[room.getCurrentPlayerIndex()].hand,
+      ).toHaveLength(7);
+      expect(gameState.playerOrder[room.getCurrentPlayerIndex()].username).toBe(
+        owner.username,
+      );
     });
   });
 });
