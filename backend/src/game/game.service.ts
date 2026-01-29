@@ -546,12 +546,79 @@ export class GameService {
     }
   }
 
-  public generateRoomState(): PublicRoomState {}
+  public generateLobbyState(): PublicRoomState[] {
+    const res: PublicRoomState[] = [];
+    for (const room of this.getAllRoom()) {
+      res.push(this.generateRoomState(room));
+    }
+    return res;
+  }
 
-  public generateGameState(): PublicGameState {}
+  public generateRoomState(room: GameRoom): PublicRoomState {
+    const currentPlayers: Player[] = room.getCurrentPlayers();
+    const publicRoomPlayers: PublicRoomPlayer[] = [];
+
+    for (const player of currentPlayers) {
+      publicRoomPlayers.push(
+        new PublicRoomPlayer(player.socketId, player.username),
+      );
+    }
+
+    return new PublicRoomState(
+      room.id,
+      room.name,
+      room.maxPlayers,
+      room.hasStarted(),
+      room.getOwnerId(),
+      room.getCurrentPlayer(room.getOwnerId()).username,
+      publicRoomPlayers,
+    );
+  }
+
+  public generateGameState(room: GameRoom): PublicGameState {
+    const playerOrder: Player[] = room.getPlayerOrder();
+    const publicGamePlayers: PublicGamePlayer[] = [];
+
+    for (const player of playerOrder) {
+      publicGamePlayers.push(
+        new PublicGamePlayer(
+          player.socketId,
+          player.username,
+          player.getHand(),
+          player.isUno(),
+        ),
+      );
+    }
+
+    return new PublicGameState(
+      room.getCurrentPlayerIndex(),
+      publicGamePlayers,
+      room.getDirection(),
+      room.getGameBoard().getCurrentTopCard(),
+      room.getGameBoard().getEnforcedColor(),
+    );
+  }
 }
 
 class PublicRoomState {
+  constructor(
+    roomId: string,
+    roomName: string,
+    maxPlayers: number,
+    hasRoomStarted: boolean,
+    ownerSocketId: string,
+    ownerUsername: string,
+    currentPlayers: PublicRoomPlayer[],
+  ) {
+    this.roomId = roomId;
+    this.roomName = roomName;
+    this.maxPlayers = maxPlayers;
+    this.hasRoomStarted = hasRoomStarted;
+    this.ownerSocketId = ownerSocketId;
+    this.ownerUsername = ownerUsername;
+    this.currentPlayers = currentPlayers;
+  }
+
   readonly roomId: string;
   readonly roomName: string;
   readonly maxPlayers: number;
@@ -563,16 +630,36 @@ class PublicRoomState {
   readonly currentPlayers: PublicRoomPlayer[];
 }
 
+class PublicRoomPlayer {
+  constructor(socketId: string, username: string) {
+    this.socketId = socketId;
+    this.username = username;
+  }
+
+  readonly socketId: string;
+  readonly username: string;
+}
+
 class PublicGameState {
   readonly currentPlayerIndex: number;
   readonly playerOrder: PublicGamePlayer[];
   readonly direction: number;
   readonly topCard: Card;
-}
+  readonly enforcedColor: CardColor;
 
-class PublicRoomPlayer {
-  readonly socketId: string;
-  readonly username: string;
+  constructor(
+    currentPlayerIndex: number,
+    playerOrder: PublicGamePlayer[],
+    direction: number,
+    topCard: Card,
+    enforcedColor: CardColor,
+  ) {
+    this.currentPlayerIndex = currentPlayerIndex;
+    this.playerOrder = playerOrder;
+    this.direction = direction;
+    this.topCard = topCard;
+    this.enforcedColor = enforcedColor;
+  }
 }
 
 class PublicGamePlayer {
@@ -580,6 +667,13 @@ class PublicGamePlayer {
   readonly username: string;
   readonly hand: Card[];
   readonly uno: boolean;
+
+  constructor(socketId: string, username: string, hand: Card[], uno: boolean) {
+    this.socketId = socketId;
+    this.username = username;
+    this.hand = hand;
+    this.uno = uno;
+  }
 }
 
 export class CardsSentMustNotBeEmpty extends Error {
