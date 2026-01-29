@@ -33,7 +33,7 @@ describe('GameRoom', () => {
     it('should initialize with correct default values', () => {
       expect(gameRoom.id).toBe(roomId);
       expect(gameRoom.name).toBe(roomName);
-      expect(gameRoom.ownerId).toBe(ownerId);
+      expect(gameRoom.getOwnerId()).toBe(ownerId);
       expect(gameRoom.maxPlayers).toBe(maxPlayers);
       expect(gameRoom.getGameBoard()).toBe(mockGameBoard);
       expect(gameRoom.hasStarted()).toBe(false);
