@@ -7,7 +7,12 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { GameService, RemovedOrTransfered } from './game.service';
+import {
+  GameService,
+  RemovedOrTransfered,
+  PublicRoomState,
+  PublicGameState,
+} from './game.service';
 import { Player } from './class/player/Player';
 import { GameRoom } from './class/game-room/GameRoom';
 import { randomUUID } from 'crypto';
@@ -19,6 +24,8 @@ import { WsValidationFilter } from './filter/ws-validation.filter';
 import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
 import { PlayCardsDto } from './dto/play-cards-dto';
+
+// ADD ABILITY TO REFRESH THE LOBBY AFTER A FEW SECONDS OR ONCLICK
 
 @WebSocketGateway()
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -38,7 +45,7 @@ export class GameGateway implements OnGatewayDisconnect {
   public async createRoom(
     @MessageBody() data: CreateRoomDto,
     @ConnectedSocket() client: Socket,
-  ): Promise<string> {
+  ): Promise<PublicRoomState> {
     const { username, roomname, maxPlayers }: CreateRoomDto = data;
 
     this.service.isPlayerInAnyRoom(client.id);
@@ -59,10 +66,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
     await client.join(room.id);
 
-    // SHOULD SEND ActionResult
-    client.emit('created-room-success');
-    this.server.emit('room-created', { roomname: `${room.name}` });
-    return `Successfully created and joined ${owner.socketId} to room ${room.id}.`;
+    return this.service.generateRoomState(room);
   }
 
   @SubscribeMessage('join-room')
@@ -70,8 +74,7 @@ export class GameGateway implements OnGatewayDisconnect {
   public async joinRoom(
     @MessageBody() data: JoinRoomDto,
     @ConnectedSocket() client: Socket,
-  ): Promise<string> {
-    // CREATE A NEW PLAYER AND JOIN THEM TO THE ROOM
+  ): Promise<PublicRoomState> {
     const { roomToJoinId, username }: JoinRoomDto = data;
 
     this.service.isPlayerInAnyRoom(client.id);
@@ -85,23 +88,20 @@ export class GameGateway implements OnGatewayDisconnect {
 
     const room: GameRoom = this.service.getRoomOfPlayer(player.socketId)!;
 
-    // SHOULD SEND ActionResult
-    client.emit('joined-room-success');
-    this.server
-      .to(room.id)
-      .emit('player-joined-room', { username: `${player.username}` });
-    return `Succesfully joined ${player.socketId} to room ${room.id}.`;
+    this.server.to(room.id).emit('player-joined-room', {
+      socketId: player.socketId,
+      username: player.username,
+      roomState: this.service.generateRoomState(room),
+    });
+    return this.service.generateRoomState(room);
   }
 
   @SubscribeMessage('leave-room')
   @UseFilters(WsRoomFilter)
-  public async leaveRoom(@ConnectedSocket() client: Socket): Promise<string> {
-    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
-    const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
-
-    await this.handleLeaveRoom(client);
-
-    return `Succesfully removed ${player.socketId} from room ${room.id}.`;
+  public async leaveRoom(
+    @ConnectedSocket() client: Socket,
+  ): Promise<PublicRoomState[]> {
+    return await this.handleLeaveRoom(client);
   }
 
   // THIS RUNS AUTOMATICALLY WHEN CLIENT DISCONNECTS
@@ -115,7 +115,7 @@ export class GameGateway implements OnGatewayDisconnect {
     }
   }
 
-  private async handleLeaveRoom(client: Socket): Promise<void> {
+  private async handleLeaveRoom(client: Socket): Promise<PublicRoomState[]> {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
     const playerIndex: number | null = this.service.getIndexFromOrder(
@@ -136,34 +136,38 @@ export class GameGateway implements OnGatewayDisconnect {
 
     await client.leave(room.id);
 
-    // SHOULD SEND ActionResult
-    if (result.removedRoom) {
-      this.server.emit('room-removed', { roomId: result.removedRoom.id });
-    } else {
-      this.server
-        .to(room.id)
-        .emit('player-left-room', { username: player.username });
-    }
-    if (!result.removedRoom && result.transferedOwner) {
-      this.server.to(room.id).emit('transfered-owner', {
-        username: result.transferedOwner.username,
+    if (!result.removedRoom) {
+      this.server.to(room.id).emit('player-left-room', {
+        socketId: player.socketId,
+        username: player.username,
+        roomState: this.service.generateRoomState(room),
       });
     }
-    client.emit('leave-room-success');
+
+    if (!result.removedRoom && result.transferedOwner) {
+      this.server.to(room.id).emit('transfered-owner', {
+        newOwnerSocketId: result.transferedOwner.socketId,
+        newOwnerUsername: result.transferedOwner.username,
+        roomState: this.service.generateRoomState(room),
+      });
+    }
+
+    return this.service.generateLobbyState();
   }
 
   @SubscribeMessage('start-room')
   @UseFilters(WsRoomFilter)
-  public startRoom(@ConnectedSocket() client: Socket): string {
+  public startRoom(@ConnectedSocket() client: Socket): PublicGameState {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
 
     this.service.startGame(room, player);
 
-    // SHOULD SEND ActionResult
-    this.server.to(room.id).emit('game-started', { status: 'Started' });
-    this.server.emit('room-started', { roomId: `${room.id}` });
-    return `Successfully started game`;
+    this.server.to(room.id).emit('game-started', {
+      gameState: this.service.generateGameState(room),
+    });
+
+    return this.service.generateGameState(room);
   }
 
   // ===================
