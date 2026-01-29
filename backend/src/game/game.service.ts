@@ -600,7 +600,7 @@ export class GameService {
   }
 }
 
-class PublicRoomState {
+export class PublicRoomState {
   constructor(
     roomId: string,
     roomName: string,
@@ -630,7 +630,7 @@ class PublicRoomState {
   readonly currentPlayers: PublicRoomPlayer[];
 }
 
-class PublicRoomPlayer {
+export class PublicRoomPlayer {
   constructor(socketId: string, username: string) {
     this.socketId = socketId;
     this.username = username;
@@ -640,7 +640,7 @@ class PublicRoomPlayer {
   readonly username: string;
 }
 
-class PublicGameState {
+export class PublicGameState {
   readonly currentPlayerIndex: number;
   readonly playerOrder: PublicGamePlayer[];
   readonly direction: number;
@@ -662,7 +662,7 @@ class PublicGameState {
   }
 }
 
-class PublicGamePlayer {
+export class PublicGamePlayer {
   readonly socketId: string;
   readonly username: string;
   readonly hand: Card[];
