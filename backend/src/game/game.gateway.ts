@@ -106,13 +106,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
   // THIS RUNS AUTOMATICALLY WHEN CLIENT DISCONNECTS
   public async handleDisconnect(client: Socket): Promise<void> {
-    try {
-      await this.handleLeaveRoom(client);
-      // eslint-disable-next-line @typescript-eslint/no-unused-vars
-    } catch (err) {
-      // PREVENT SERVER CRASH WHEN PLAYER DISCONNECTS BUT NOT IN A ROOM AND EMITTING TO THEM (NULL CLIENT)
-      return;
-    }
+    await this.handleLeaveRoom(client);
   }
 
   private async handleLeaveRoom(client: Socket): Promise<PublicRoomState[]> {
