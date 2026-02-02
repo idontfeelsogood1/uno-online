@@ -19,14 +19,12 @@ import { randomUUID } from 'crypto';
 import { ValidationPipe, UseFilters, UsePipes } from '@nestjs/common';
 import { CreateRoomDto } from './dto/create-room.dto';
 import { JoinRoomDto } from './dto/join-room.dto';
-import { CardsToPlayIdsDto } from './dto/cards-to-play-ids.dto';
 import { WsValidationFilter } from './filter/ws-validation.filter';
 import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
 import { PlayCardsDto } from './dto/play-cards-dto';
 
 // ADD ROUTE TO SEND BACK LOBBY STATE
-// ADD ROUTE TO CHECK FOR cardToPlay WITHDRAWAL, SET isUno TO FALSE
 
 @WebSocketGateway()
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -152,7 +150,7 @@ export class GameGateway implements OnGatewayDisconnect {
       this.server.to(room.id).emit('player-left-room', {
         socketId: player.socketId,
         username: player.username,
-        roomState: this.service.generateRoomState(room),
+        roomState: roomState,
       });
     }
 
@@ -160,7 +158,7 @@ export class GameGateway implements OnGatewayDisconnect {
       this.server.to(room.id).emit('transfered-owner', {
         newOwnerSocketId: result.transferedOwner.socketId,
         newOwnerUsername: result.transferedOwner.username,
-        roomState: this.service.generateRoomState(room),
+        roomState: roomState,
       });
     }
   }
@@ -208,21 +206,17 @@ export class GameGateway implements OnGatewayDisconnect {
   @UseFilters(WsRoomFilter, WsGameFilter)
   public uno(
     @ConnectedSocket() client: Socket,
-    @MessageBody() data: CardsToPlayIdsDto,
+    @MessageBody() data: PlayCardsDto,
   ): void {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
-    const { cardsToPlayIds }: CardsToPlayIdsDto = data;
+    const { cardsToPlayIds }: PlayCardsDto = data;
 
     this.service.hasRoomNotStarted(room);
     this.service.isPlayerTurn(room, player);
     this.service.uno(player, cardsToPlayIds);
 
-    this.server.to(room.id).emit('player-unoed', {
-      socketId: player.socketId,
-      username: player.username,
-      gameState: this.service.generateGameState(room),
-    });
+    this.playCards(client, data);
   }
 
   // THIS ROUTE SHOULD STOP THE GAME WHEN A PLAYER HAS WON AND HANDLE CLEANUP OPERATIONS
@@ -251,6 +245,7 @@ export class GameGateway implements OnGatewayDisconnect {
     player.setIsUno(false);
     this.service.processNextTurn(room);
 
+    const roomState: PublicRoomState = this.service.generateRoomState(room);
     const gameState: PublicGameState = this.service.generateGameState(room);
 
     if (this.service.hasGameEnded(room)) {
@@ -258,7 +253,7 @@ export class GameGateway implements OnGatewayDisconnect {
       this.server.to(room.id).emit('game-ended', {
         loserSocketId: room.getPlayerFromOrder().socketId,
         loserUsername: room.getPlayerFromOrder().username,
-        roomState: this.service.generateRoomState(room),
+        roomState: roomState,
         gameState: gameState,
       });
     }
