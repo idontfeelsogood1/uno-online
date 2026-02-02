@@ -70,6 +70,13 @@ export class GameGateway implements OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage('get-lobby')
+  public getLobby(@ConnectedSocket() client: Socket): void {
+    client.emit('get-lobby-success', {
+      lobbyState: this.service.generateLobbyState(),
+    });
+  }
+
   @SubscribeMessage('join-room')
   @UseFilters(WsRoomFilter)
   public async joinRoom(
