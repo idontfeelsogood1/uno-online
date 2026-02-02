@@ -46,7 +46,7 @@ export class GameGateway implements OnGatewayDisconnect {
   public async createRoom(
     @MessageBody() data: CreateRoomDto,
     @ConnectedSocket() client: Socket,
-  ): Promise<PublicRoomState> {
+  ): Promise<void> {
     const { username, roomname, maxPlayers }: CreateRoomDto = data;
 
     this.service.isPlayerInAnyRoom(client.id);
@@ -67,7 +67,9 @@ export class GameGateway implements OnGatewayDisconnect {
 
     await client.join(room.id);
 
-    return this.service.generateRoomState(room);
+    client.emit('create-room-success', {
+      roomState: this.service.generateRoomState(room),
+    });
   }
 
   @SubscribeMessage('join-room')
@@ -75,7 +77,7 @@ export class GameGateway implements OnGatewayDisconnect {
   public async joinRoom(
     @MessageBody() data: JoinRoomDto,
     @ConnectedSocket() client: Socket,
-  ): Promise<PublicRoomState> {
+  ): Promise<void> {
     const { roomToJoinId, username }: JoinRoomDto = data;
 
     this.service.isPlayerInAnyRoom(client.id);
@@ -94,15 +96,12 @@ export class GameGateway implements OnGatewayDisconnect {
       username: player.username,
       roomState: this.service.generateRoomState(room),
     });
-    return this.service.generateRoomState(room);
   }
 
   @SubscribeMessage('leave-room')
   @UseFilters(WsRoomFilter)
-  public async leaveRoom(
-    @ConnectedSocket() client: Socket,
-  ): Promise<PublicRoomState[]> {
-    return await this.handleLeaveRoom(client);
+  public async leaveRoom(@ConnectedSocket() client: Socket): Promise<void> {
+    await this.handleLeaveRoom(client);
   }
 
   // THIS RUNS AUTOMATICALLY WHEN CLIENT DISCONNECTS
@@ -110,7 +109,7 @@ export class GameGateway implements OnGatewayDisconnect {
     await this.handleLeaveRoom(client);
   }
 
-  private async handleLeaveRoom(client: Socket): Promise<PublicRoomState[]> {
+  private async handleLeaveRoom(client: Socket): Promise<void> {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
     const playerIndex: number | null = this.service.getIndexFromOrder(
@@ -131,6 +130,24 @@ export class GameGateway implements OnGatewayDisconnect {
 
     await client.leave(room.id);
 
+    const lobbyState: PublicRoomState[] = this.service.generateLobbyState();
+    const roomState: PublicRoomState = this.service.generateRoomState(room);
+    const gameState: PublicGameState = this.service.generateGameState(room);
+
+    client.emit('leave-room-success', {
+      lobbyState: lobbyState,
+    });
+
+    if (room.hasStarted() && this.service.hasGameEnded(room)) {
+      this.service.resetRoom(room);
+      this.server.to(room.id).emit('game-ended', {
+        loserSocketId: room.getPlayerFromOrder().socketId,
+        loserUsername: room.getPlayerFromOrder().username,
+        roomState: roomState,
+        gameState: gameState,
+      });
+    }
+
     if (!result.removedRoom) {
       this.server.to(room.id).emit('player-left-room', {
         socketId: player.socketId,
@@ -146,13 +163,11 @@ export class GameGateway implements OnGatewayDisconnect {
         roomState: this.service.generateRoomState(room),
       });
     }
-
-    return this.service.generateLobbyState();
   }
 
   @SubscribeMessage('start-room')
   @UseFilters(WsRoomFilter)
-  public startRoom(@ConnectedSocket() client: Socket): PublicGameState {
+  public startRoom(@ConnectedSocket() client: Socket): void {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
 
@@ -161,8 +176,6 @@ export class GameGateway implements OnGatewayDisconnect {
     this.server.to(room.id).emit('game-started', {
       gameState: this.service.generateGameState(room),
     });
-
-    return this.service.generateGameState(room);
   }
 
   // ===================
@@ -171,7 +184,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('draw-card')
   @UseFilters(WsRoomFilter, WsGameFilter)
-  public drawCard(@ConnectedSocket() client: Socket): PublicGameState {
+  public drawCard(@ConnectedSocket() client: Socket): void {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
 
@@ -185,7 +198,6 @@ export class GameGateway implements OnGatewayDisconnect {
       username: player.username,
       gameState: this.service.generateGameState(room),
     });
-    return this.service.generateGameState(room);
   }
 
   // =====================================================================
@@ -197,21 +209,20 @@ export class GameGateway implements OnGatewayDisconnect {
   public uno(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: CardsToPlayIdsDto,
-  ) {
+  ): void {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
     const { cardsToPlayIds }: CardsToPlayIdsDto = data;
 
     this.service.hasRoomNotStarted(room);
     this.service.isPlayerTurn(room, player);
-    this.service.uno(player, cardsToPlayIds); // CATCH ERRORS IN WsGameFilter
+    this.service.uno(player, cardsToPlayIds);
 
     this.server.to(room.id).emit('player-unoed', {
       socketId: player.socketId,
       username: player.username,
       gameState: this.service.generateGameState(room),
     });
-    return this.service.generateGameState(room);
   }
 
   // THIS ROUTE SHOULD STOP THE GAME WHEN A PLAYER HAS WON AND HANDLE CLEANUP OPERATIONS
@@ -220,7 +231,7 @@ export class GameGateway implements OnGatewayDisconnect {
   public playCards(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: PlayCardsDto,
-  ): PublicGameState {
+  ): void {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
     const { cardsToPlayIds, wildColor }: PlayCardsDto = data;
@@ -250,7 +261,6 @@ export class GameGateway implements OnGatewayDisconnect {
         roomState: this.service.generateRoomState(room),
         gameState: gameState,
       });
-      return gameState;
     }
     if (hasPlayerWon) {
       this.server.to(room.id).emit('player-won', {
@@ -258,14 +268,12 @@ export class GameGateway implements OnGatewayDisconnect {
         username: player.username,
         gameState: gameState,
       });
-      return gameState;
     } else {
       this.server.to(room.id).emit('player-played-cards', {
         socketId: player.socketId,
         username: player.username,
         gameState: gameState,
       });
-      return gameState;
     }
   }
 }
