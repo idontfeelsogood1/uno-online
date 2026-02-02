@@ -358,7 +358,6 @@ export class GameService {
         const clearedCards: Card[] = game.clearDiscardPile();
         game.pushToDrawPile(clearedCards);
         game.shuffleDrawPile();
-        throw err;
       }
     }
   }
@@ -458,27 +457,48 @@ export class GameService {
   // CALL THESE AFTER playCards
   // **************************
 
-  public processCurrentTurn(room: GameRoom): void {
-    try {
-      const currentPlayer: Player = room.getPlayerFromOrder();
-      const hand: Card[] = currentPlayer.getHand();
-      const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
+  public processCurrentTurn(room: GameRoom): boolean {
+    const currentPlayer: Player = room.getPlayerFromOrder();
+    const hand: Card[] = currentPlayer.getHand();
+    const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
 
-      if (zeroOrOneCardLeftOnHand && currentPlayer.isUno() === false) {
-        this.drawCards(room, currentPlayer, 2);
-      }
-      if (hand.length === 0 && currentPlayer.isUno() === true) {
-        throw new PlayerWon(
-          `
-          playerSocketId: ${currentPlayer.socketId}
-          username: ${currentPlayer.username}
-          `,
-          {},
-        );
-      }
-    } catch (err) {
-      if (err instanceof AmountGreaterThanDrawPile) throw err;
-      if (err instanceof PlayerWon) throw err;
+    if (zeroOrOneCardLeftOnHand && currentPlayer.isUno() === false) {
+      this.drawCards(room, currentPlayer, 2);
+    }
+    if (hand.length === 0 && currentPlayer.isUno() === true) {
+      const currentIndex: number = room.getCurrentPlayerIndex();
+      room.removeFromPlayerOrder(currentPlayer.socketId);
+      this.setNewCurrentPlayerIndex(room, currentIndex);
+      return true;
+    }
+
+    return false;
+  }
+
+  public hasGameEnded(room: GameRoom): boolean {
+    return room.getPlayerOrder().length <= 1;
+  }
+
+  public resetRoom(room: GameRoom): void {
+    const prevRoomCurrentPlayer: Player[] = room.getCurrentPlayers();
+
+    for (const player of prevRoomCurrentPlayer) {
+      this.removeRoomOfPlayer(player.socketId);
+    }
+    this.removeRoom(room.id);
+
+    const newRoom: GameRoom = this.createRoom(
+      room.id,
+      room.name,
+      room.getOwnerId(),
+      room.maxPlayers,
+    );
+
+    this.addRoom(newRoom);
+
+    for (const player of prevRoomCurrentPlayer) {
+      this.addPlayerToRoom(newRoom.id, player);
+      this.setPlayerOfRoom(player.socketId, newRoom.id);
     }
   }
 
@@ -534,15 +554,11 @@ export class GameService {
     const { draw_two_amount, wild_draw_four_amount }: TurnEvents =
       game.getTurnEvents();
 
-    try {
-      if (draw_two_amount) {
-        this.drawCards(room, nextPlayer, draw_two_amount * 2);
-      }
-      if (wild_draw_four_amount) {
-        this.drawCards(room, nextPlayer, wild_draw_four_amount * 4);
-      }
-    } catch (err) {
-      if (err instanceof AmountGreaterThanDrawPile) throw err;
+    if (draw_two_amount) {
+      this.drawCards(room, nextPlayer, draw_two_amount * 2);
+    }
+    if (wild_draw_four_amount) {
+      this.drawCards(room, nextPlayer, wild_draw_four_amount * 4);
     }
   }
 
@@ -555,15 +571,6 @@ export class GameService {
   }
 
   public generateRoomState(room: GameRoom): PublicRoomState {
-    const currentPlayers: Player[] = room.getCurrentPlayers();
-    const publicRoomPlayers: PublicRoomPlayer[] = [];
-
-    for (const player of currentPlayers) {
-      publicRoomPlayers.push(
-        new PublicRoomPlayer(player.socketId, player.username),
-      );
-    }
-
     return new PublicRoomState(
       room.id,
       room.name,
@@ -571,11 +578,21 @@ export class GameService {
       room.hasStarted(),
       room.getOwnerId(),
       room.getCurrentPlayer(room.getOwnerId()).username,
-      publicRoomPlayers,
+      this.generatePublicRoomPlayers(room),
     );
   }
 
   public generateGameState(room: GameRoom): PublicGameState {
+    return new PublicGameState(
+      room.getCurrentPlayerIndex(),
+      this.generatePublicGamePlayers(room),
+      room.getDirection(),
+      room.getGameBoard().getCurrentTopCard(),
+      room.getGameBoard().getEnforcedColor(),
+    );
+  }
+
+  public generatePublicGamePlayers(room: GameRoom): PublicGamePlayer[] {
     const playerOrder: Player[] = room.getPlayerOrder();
     const publicGamePlayers: PublicGamePlayer[] = [];
 
@@ -590,13 +607,20 @@ export class GameService {
       );
     }
 
-    return new PublicGameState(
-      room.getCurrentPlayerIndex(),
-      publicGamePlayers,
-      room.getDirection(),
-      room.getGameBoard().getCurrentTopCard(),
-      room.getGameBoard().getEnforcedColor(),
-    );
+    return publicGamePlayers;
+  }
+
+  public generatePublicRoomPlayers(room: GameRoom): PublicRoomPlayer[] {
+    const currentPlayers: Player[] = room.getCurrentPlayers();
+    const publicRoomPlayers: PublicRoomPlayer[] = [];
+
+    for (const player of currentPlayers) {
+      publicRoomPlayers.push(
+        new PublicRoomPlayer(player.socketId, player.username),
+      );
+    }
+
+    return publicRoomPlayers;
   }
 }
 
