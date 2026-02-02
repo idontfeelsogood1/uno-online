@@ -25,7 +25,8 @@ import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
 import { PlayCardsDto } from './dto/play-cards-dto';
 
-// ADD ABILITY TO REFRESH THE LOBBY AFTER A FEW SECONDS OR ONCLICK
+// ADD ROUTE TO SEND BACK LOBBY STATE
+// ADD ROUTE TO CHECK FOR cardToPlay WITHDRAWAL, SET isUno TO FALSE
 
 @WebSocketGateway()
 @UsePipes(new ValidationPipe({ transform: true }))
@@ -170,23 +171,21 @@ export class GameGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('draw-card')
   @UseFilters(WsRoomFilter, WsGameFilter)
-  public drawCard(@ConnectedSocket() client: Socket) {
+  public drawCard(@ConnectedSocket() client: Socket): PublicGameState {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
 
     this.service.hasRoomNotStarted(room);
     this.service.isPlayerTurn(room, player);
-    // SHOULD RETURN ActionResult OBJECT LATER
-    this.service.drawCards(room, player, 1); // CURRENT THROWS AmountGreaterThanDrawPile IF DRAW PILE IS 0
+    this.service.drawCards(room, player, 1); // TRIGGERS CLEARING THE discardPile, KEEPING THE TOP CARD, PUSHING AND SHUFFLING CARDS TO drawPile WHEN drawPile is 0
     player.setIsUno(false);
 
-    // SHOULD SEND ActionResult
-    client.emit('draw-card-success');
     this.server.to(room.id).emit('player-drew-a-card', {
-      username: `${player.username}`,
-      playerHandLength: `${player.getHand().length}`,
+      socketId: player.socketId,
+      username: player.username,
+      gameState: this.service.generateGameState(room),
     });
-    return `Drew 1 card to ${player.username}'s hand`;
+    return this.service.generateGameState(room);
   }
 
   // =====================================================================
@@ -207,13 +206,12 @@ export class GameGateway implements OnGatewayDisconnect {
     this.service.isPlayerTurn(room, player);
     this.service.uno(player, cardsToPlayIds); // CATCH ERRORS IN WsGameFilter
 
-    // SHOULD SEND ActionResult
-    client.emit('uno-success');
     this.server.to(room.id).emit('player-unoed', {
-      username: `${player.username}`,
-      unoStatus: `${player.isUno()}`,
+      socketId: player.socketId,
+      username: player.username,
+      gameState: this.service.generateGameState(room),
     });
-    return `Succesfully uno for ${player.username}`;
+    return this.service.generateGameState(room);
   }
 
   // THIS ROUTE SHOULD STOP THE GAME WHEN A PLAYER HAS WON AND HANDLE CLEANUP OPERATIONS
@@ -222,7 +220,7 @@ export class GameGateway implements OnGatewayDisconnect {
   public playCards(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: PlayCardsDto,
-  ) {
+  ): PublicGameState {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
     const { cardsToPlayIds, wildColor }: PlayCardsDto = data;
@@ -234,19 +232,40 @@ export class GameGateway implements OnGatewayDisconnect {
       this.service.playCards(room, player, cardsToPlayIds, wildColor);
     } catch (err) {
       player.setIsUno(false);
-      throw err; // CATCH ERRORS IN WsGameFilter
+      throw err;
     }
 
-    this.service.processCurrentTurn(room); // CURRENTLY THROWS AmountGreaterThanDrawPile AND PlayerWon
+    // UPON PLAYER WON, THIS REMOVE THEM FROM ORDER AND SET NEW PLAYER INDEX
+    const hasPlayerWon = this.service.processCurrentTurn(room);
     player.setIsUno(false);
     this.service.processNextTurn(room);
 
-    // SHOULD SEND ActionResult
-    client.emit('play-cards-success');
-    this.server.to(room.id).emit('player-played-cards', {
-      username: `${player.username}`,
-      cardIds: `${cardsToPlayIds.toString()}`,
-    });
-    return `Succesfully play cards for ${player.username}`;
+    const gameState: PublicGameState = this.service.generateGameState(room);
+
+    if (this.service.hasGameEnded(room)) {
+      this.service.resetRoom(room);
+      this.server.to(room.id).emit('game-ended', {
+        loserSocketId: room.getPlayerFromOrder().socketId,
+        loserUsername: room.getPlayerFromOrder().username,
+        roomState: this.service.generateRoomState(room),
+        gameState: gameState,
+      });
+      return gameState;
+    }
+    if (hasPlayerWon) {
+      this.server.to(room.id).emit('player-won', {
+        socketId: player.socketId,
+        username: player.username,
+        gameState: gameState,
+      });
+      return gameState;
+    } else {
+      this.server.to(room.id).emit('player-played-cards', {
+        socketId: player.socketId,
+        username: player.username,
+        gameState: gameState,
+      });
+      return gameState;
+    }
   }
 }
