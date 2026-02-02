@@ -24,8 +24,6 @@ import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
 import { PlayCardsDto } from './dto/play-cards-dto';
 
-// ADD ROUTE TO SEND BACK LOBBY STATE
-
 @WebSocketGateway()
 @UsePipes(new ValidationPipe({ transform: true }))
 @UseFilters(WsValidationFilter)
