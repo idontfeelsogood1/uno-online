@@ -1,3 +1,4 @@
+import 'dotenv/config';
 import {
   SubscribeMessage,
   WebSocketGateway,
@@ -12,6 +13,7 @@ import {
   RemovedOrTransfered,
   PublicRoomState,
   PublicGameState,
+  PlayerNotInAnyRoom,
 } from './game.service';
 import { Player } from './class/player/Player';
 import { GameRoom } from './class/game-room/GameRoom';
@@ -24,7 +26,9 @@ import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
 import { PlayCardsDto } from './dto/play-cards-dto';
 
-@WebSocketGateway()
+@WebSocketGateway(parseInt(process.env.GAME_GATEWAY_PORT!) || 3001, {
+  namespace: process.env.GAME_GATEWAY_NAMESPACE,
+})
 @UsePipes(new ValidationPipe({ transform: true }))
 @UseFilters(WsValidationFilter)
 export class GameGateway implements OnGatewayDisconnect {
@@ -108,8 +112,17 @@ export class GameGateway implements OnGatewayDisconnect {
   }
 
   // THIS RUNS AUTOMATICALLY WHEN CLIENT DISCONNECTS
-  public async handleDisconnect(client: Socket): Promise<void> {
-    await this.handleLeaveRoom(client);
+  public async handleDisconnect(
+    @ConnectedSocket() client: Socket,
+  ): Promise<void> {
+    try {
+      await this.handleLeaveRoom(client);
+      // PREVENTS SERVER CRASH WHEN PLAYER IS NOT IN ANY ROOM
+    } catch (err) {
+      if (err instanceof PlayerNotInAnyRoom) {
+        console.log(`${client.id} disconnected.`);
+      }
+    }
   }
 
   private async handleLeaveRoom(client: Socket): Promise<void> {
