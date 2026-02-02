@@ -7,7 +7,6 @@ import {
   NotPlayerTurn,
   CannotUno,
   HaveNotChoosenColor,
-  PlayerWon,
   RoomIsFull,
   RoomHasStarted,
   PlayerNotInAnyRoom,
@@ -16,11 +15,7 @@ import {
   RoomHasNotStarted,
   CardsSentMustNotBeEmpty,
 } from './game.service';
-import {
-  AmountGreaterThanDrawPile,
-  CardPatternMismatch,
-  TurnEvents,
-} from './class/game-board/GameBoard';
+import { CardPatternMismatch, TurnEvents } from './class/game-board/GameBoard';
 import { GameRoom, PlayerNotFound } from './class/game-room/GameRoom';
 import { Player } from './class/player/Player';
 import { GameBoard } from './class/game-board/GameBoard';
@@ -454,9 +449,7 @@ describe('GameService', () => {
       const shuffleSpy = jest.spyOn(gameBoard, 'shuffleDrawPile');
 
       // 3. Attempt to draw (Logic: tries pop -> fails -> catch -> reshuffle)
-      expect(() => {
-        service.drawCards(room, currentPlayer, 1);
-      }).toThrow(AmountGreaterThanDrawPile);
+      service.drawCards(room, currentPlayer, 1);
       expect(clearDiscardSpy).toHaveBeenCalled();
       expect(pushDrawSpy).toHaveBeenCalled();
       expect(shuffleSpy).toHaveBeenCalled();
@@ -700,19 +693,6 @@ describe('GameService', () => {
       service.processCurrentTurn(room);
 
       expect(drawSpy).toHaveBeenCalledWith(room, currentPlayer, 2);
-    });
-
-    it('should throw PlayerWon if player has 0 cards and called Uno', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-
-      // Setup: 0 cards, isUno = true
-      const hand = currentPlayer.getHand();
-      while (hand.length > 0) hand.pop();
-      currentPlayer.setIsUno(true);
-
-      expect(() => {
-        service.processCurrentTurn(room);
-      }).toThrow(PlayerWon);
     });
 
     it('should do nothing if player has > 1 cards', () => {
@@ -1282,6 +1262,67 @@ describe('GameService', () => {
       ).toHaveLength(7);
       expect(gameState.playerOrder[room.getCurrentPlayerIndex()].username).toBe(
         owner.username,
+      );
+    });
+  });
+
+  // ==========================================
+  // GAME END & RESET LOGIC (NEW)
+  // ==========================================
+  describe('Game End & Reset Logic', () => {
+    let room: GameRoom;
+    let owner: Player;
+    let player2: Player;
+
+    beforeEach(() => {
+      owner = service.createPlayer('owner-1', 'Owner');
+      player2 = service.createPlayer('player-2', 'Player 2');
+      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
+      service.addRoom(room);
+      service.addPlayerToRoom(room.id, owner);
+      service.setPlayerOfRoom(owner.socketId, room.id);
+      service.addPlayerToRoom(room.id, player2);
+      service.setPlayerOfRoom(player2.socketId, room.id);
+    });
+
+    it('should identify when game has ended (1 player left)', () => {
+      service.startGame(room, owner);
+
+      // Simulate player2 leaving during game
+      service.removePlayerFromRoomPlayerOrder(room, player2.socketId);
+
+      expect(service.hasGameEnded(room)).toBe(true);
+    });
+
+    it('should identify when game has NOT ended (>1 player left)', () => {
+      service.startGame(room, owner);
+      expect(service.hasGameEnded(room)).toBe(false);
+    });
+
+    it('should reset the room correctly', () => {
+      service.startGame(room, owner);
+      const originalRoomId = room.id;
+
+      service.resetRoom(room);
+
+      const newRoom = service.getRoom(originalRoomId);
+
+      // Should be a new instance
+      expect(newRoom).not.toBe(room);
+      // Should have same properties
+      expect(newRoom.id).toBe(originalRoomId);
+      expect(newRoom.getOwnerId()).toBe(owner.socketId);
+      // Should be reset
+      expect(newRoom.hasStarted()).toBe(false);
+      expect(newRoom.getGameBoard()).toBeDefined();
+
+      // Players should be re-added
+      expect(newRoom.getCurrentPlayers()).toHaveLength(2);
+      expect(service.getRoomOfPlayer(owner.socketId)).toBe(newRoom);
+      expect(service.getRoomOfPlayer(player2.socketId)).toBe(newRoom);
+      expect(service.getPlayerOfRoom(newRoom.id, owner.socketId)).toBe(owner);
+      expect(service.getPlayerOfRoom(newRoom.id, player2.socketId)).toBe(
+        player2,
       );
     });
   });
