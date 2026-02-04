@@ -26,7 +26,7 @@ import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
 import { PlayCardsDto } from './dto/play-cards-dto';
 
-@WebSocketGateway(parseInt(process.env.GAME_GATEWAY_PORT!) || 3001, {
+@WebSocketGateway({
   namespace: process.env.GAME_GATEWAY_NAMESPACE,
 })
 @UsePipes(new ValidationPipe({ transform: true }))
