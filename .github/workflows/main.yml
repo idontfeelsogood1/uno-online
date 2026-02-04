@@ -27,6 +27,9 @@ jobs:
       - name: Run Unit Tests
         run: npm run test src/game/game.service.spec.ts
 
+      - name: Build Test
+        run: npm run build
+
   test-frontend:
     runs-on: ubuntu-latest
     defaults:
