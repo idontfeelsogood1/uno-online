@@ -30,6 +30,9 @@ jobs:
       - name: Build Test
         run: npm run build
 
+      - name: Start Test
+        run: npm run start:prod
+
   test-frontend:
     runs-on: ubuntu-latest
     defaults:
