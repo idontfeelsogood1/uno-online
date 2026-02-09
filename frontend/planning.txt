@@ -1,0 +1,38 @@
+Root COMPONENT:
+- Contains other components
+
+Home COMPONENT:
+- Button to select player vs bot
+    - Redirect to PlayerVsBot
+
+- Button to select player vs player
+    - Redirect to PlayerVsPlayer
+
+PlayerVsPlayer COMPONENT:
+- Establish websocket connection to /game
+- Contains PlayerLobby, Room, Game components
+- Listen to error events and respond with a pop up dialogue at the top
+
+PlayerLobby COMPONENT:
+- Show a dialogue for the user to enter a name
+- Show a dialogue containing a list of rooms
+    - Add options:
+        - Clicking a room request join-room in the backend and render room state
+        - Add refresh room button
+        - Add create room button
+        - Add exit button
+- Upon player joining a room, render room component
+
+Room COMPONENT:
+- Show a dialogue containing list of current players
+- Show current owner
+- Only show start game button to the owner
+- Display waiting for owner to start game for other people
+- Add exit button
+
+Game COMPONENT:
+// DO THIS LATER
+
+PlayerVsBot COMPONENT:
+
+// TO BE IMPLEMENTED
