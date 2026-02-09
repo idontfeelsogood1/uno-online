@@ -3,10 +3,9 @@ Root COMPONENT:
 
 Home COMPONENT:
 - Button to select player vs bot
-    - Redirect to PlayerVsBot
-
+    - Render PlayerVsBot
 - Button to select player vs player
-    - Redirect to PlayerVsPlayer
+    - Render to PlayerVsPlayer
 
 PlayerVsPlayer COMPONENT:
 - Establish websocket connection to /game
