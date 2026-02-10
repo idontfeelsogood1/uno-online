@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { socket } from "../../api/socket";
-import type { PlayerLobbyProps } from "../../types/commonTypes";
-import type { RoomData } from "../../types/commonTypes";
+import type { PlayerLobbyProps, RoomData } from "../../types/commonTypes";
+import type { LobbyDto } from "../../types/dtos/commonDtos";
 
 export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
   const [usernameInputValue, setUsernameInputValue] = useState<string>("");
@@ -31,8 +31,8 @@ export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
   }
 
   useEffect(() => {
-    socket.on("get-lobby-success", (lobbyState: RoomData[]) => {
-      setLobbyState(lobbyState);
+    socket.on("get-lobby-success", (data: LobbyDto) => {
+      setLobbyState(data.lobbyState);
     });
     updateLobbyState();
     return () => {
