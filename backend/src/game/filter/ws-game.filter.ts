@@ -28,36 +28,29 @@ export class WsGameFilter extends BaseWsExceptionFilter {
     const client = host.switchToWs().getClient<Socket>();
 
     // Default fallback
-    let eventName = 'error';
+    const eventName = 'game-exception';
     let message = 'Unknown error';
 
     // Map Error Class -> Event Name & Message
     if (exception instanceof NotPlayerTurn) {
-      eventName = 'not-player-turn';
       message = 'Not Player Turn.';
     }
     if (exception instanceof CardsSentMustNotBeEmpty) {
-      eventName = 'cards-sent-must-not-be-empty';
       message = 'Cards send must not be empty.';
     }
     if (exception instanceof CannotUno) {
-      eventName = 'cannot-uno';
       message = 'Cannot uno.';
     }
     if (exception instanceof HaveNotChoosenColor) {
-      eventName = 'have-not-choosen-color';
       message = 'Must choose a color if wild card is played on top of gabd.';
     }
     if (exception instanceof EnforcedColorMismatch) {
-      eventName = 'enforced-color-mismatch';
       message = 'Enforced color mismatch.';
     }
     if (exception instanceof CardTypeMismatch) {
-      eventName = 'card-type-mismatch';
       message = 'Can only play 1 type per hand.';
     }
     if (exception instanceof CardPatternMismatch) {
-      eventName = 'card-pattern-mismatch';
       message = 'Card pattern mismatch.';
     }
 

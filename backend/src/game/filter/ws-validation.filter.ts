@@ -31,7 +31,7 @@ export class WsValidationFilter extends BaseWsExceptionFilter {
       errorMessage = response;
     }
 
-    client.emit('validation-error', {
+    client.emit('validation-exception', {
       message: errorMessage,
     });
   }
