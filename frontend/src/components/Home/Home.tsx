@@ -1,9 +1,10 @@
 import PlayerVsBot from "../PlayerVsBot/PlayerVsBot";
 import PlayerVsPlayer from "../PlayerVsPlayer/PlayerVsPlayer";
 import { useState } from "react";
+import type { HomeViewState } from "../../types/commonTypes";
 
 export default function Home() {
-  const [view, setView] = useState<string | null>(null);
+  const [view, setView] = useState<HomeViewState>(null);
 
   if (view === "BOT") {
     return <PlayerVsBot setHomeView={setView} />;
