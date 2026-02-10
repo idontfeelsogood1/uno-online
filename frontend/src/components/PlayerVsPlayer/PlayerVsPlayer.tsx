@@ -5,16 +5,16 @@ import { useState, useEffect } from "react";
 import type {
   PlayerVsPlayerProps,
   WrapperViewState,
-  RoomData,
-  GameData,
+  // RoomData,
+  // GameData,
 } from "../../types/commonTypes";
 import { socket } from "../../api/socket";
 
 export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [view, setView] = useState<WrapperViewState>("LOBBY");
-  const [errMsg, setErrMsg] = useState<string | null>(null);
-  const [roomState, setRoomState] = useState<RoomData | null>(null);
-  const [gameState, setGameState] = useState<GameData | null>(null);
+  // const [errMsg, setErrMsg] = useState<string | null>(null);
+  // const [roomState, setRoomState] = useState<RoomData | null>(null);
+  // const [gameState, setGameState] = useState<GameData | null>(null);
 
   useEffect(() => {
     socket.connect();
@@ -38,6 +38,7 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
     });
     socket.on("game-exception", (data) => {
       console.log(data);
+      setView("LOBBY");
     });
 
     return () => {
