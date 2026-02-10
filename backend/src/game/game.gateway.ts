@@ -26,8 +26,19 @@ import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
 import { PlayCardsDto } from './dto/play-cards-dto';
 
+let originUrl: string;
+if (process.env.NODE_ENV === 'dev') {
+  originUrl = '*';
+} else {
+  originUrl = process.env.FRONTEND_URL!;
+}
+
 @WebSocketGateway({
   namespace: process.env.GAME_GATEWAY_NAMESPACE,
+  cors: {
+    origin: originUrl,
+    credentials: true,
+  },
 })
 @UsePipes(new ValidationPipe({ transform: true }))
 @UseFilters(WsValidationFilter)
