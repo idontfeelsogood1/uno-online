@@ -1,4 +1,5 @@
 export interface PlayerLobbyProps {
+  lobbyState: RoomData[];
   setHomeView: (view: HomeViewState) => void;
 }
 
