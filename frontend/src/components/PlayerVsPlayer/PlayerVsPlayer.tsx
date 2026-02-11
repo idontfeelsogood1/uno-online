@@ -12,12 +12,14 @@ import type {
   PlayerJoinedRoomDto,
   PlayerLeftRoomDto,
   RoomDto,
+  LobbyDto,
 } from "../../types/dtos/commonDtos";
 import { socket } from "../../api/socket";
 
 export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [view, setView] = useState<WrapperViewState>("LOBBY");
   // const [errMsg, setErrMsg] = useState<string | null>(null);
+  const [lobbyState, setLobbyState] = useState<RoomData[]>([]);
   const [roomState, setRoomState] = useState<RoomData | null>(null);
   // const [gameState, setGameState] = useState<GameData | null>(null);
 
@@ -26,6 +28,9 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
 
   useEffect(() => {
     socket.connect();
+    socket.on("get-lobby-success", (data: LobbyDto) => {
+      setLobbyState(data.lobbyState);
+    });
     socket.on("create-room-success", (data: RoomDto) => {
       setRoomState(data.roomState);
       setView("ROOM");
@@ -59,6 +64,7 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
 
     return () => {
       socket.disconnect();
+      socket.off("get-lobby-success");
       socket.off("create-room-success");
       socket.off("join-room-success");
       socket.off("leave-room-success");
@@ -72,7 +78,7 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   }, []);
 
   if (view === "LOBBY") {
-    return <PlayerLobby setHomeView={setHomeView} />;
+    return <PlayerLobby lobbyState={lobbyState} setHomeView={setHomeView} />;
   }
   if (view === "ROOM") {
     return <Room roomState={roomState!} />;
