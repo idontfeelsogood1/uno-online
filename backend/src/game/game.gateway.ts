@@ -162,8 +162,12 @@ export class GameGateway implements OnGatewayDisconnect {
     await client.leave(room.id);
 
     const lobbyState: PublicRoomState[] = this.service.generateLobbyState();
-    const roomState: PublicRoomState = this.service.generateRoomState(room);
-    const gameState: PublicGameState = this.service.generateGameState(room);
+    const roomState: PublicRoomState | null = !result.removedRoom
+      ? this.service.generateRoomState(room)
+      : null;
+    const gameState: PublicGameState | null = !result.removedRoom
+      ? this.service.generateGameState(room)
+      : null;
 
     client.emit('leave-room-success', {
       lobbyState: lobbyState,
