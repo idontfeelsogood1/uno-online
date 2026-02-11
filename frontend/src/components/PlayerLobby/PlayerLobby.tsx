@@ -1,14 +1,15 @@
 import { useState, useEffect } from "react";
 import { socket } from "../../api/socket";
-import type { PlayerLobbyProps, RoomData } from "../../types/commonTypes";
-import type { LobbyDto } from "../../types/dtos/commonDtos";
+import type { PlayerLobbyProps } from "../../types/commonTypes";
 
-export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
+export default function PlayerLobby({
+  lobbyState,
+  setHomeView,
+}: PlayerLobbyProps) {
   const [usernameInputValue, setUsernameInputValue] = useState<string>("");
   const [username, setUsername] = useState<string | null>(null);
   const [roomNameInputValue, setRoomNameInputValue] = useState<string>("");
   const [selectedRoomSize, setSelectedRoomSize] = useState<number>(3);
-  const [lobbyState, setLobbyState] = useState<RoomData[]>([]);
   const [isCreatingRoom, setIsCreatingRoom] = useState<boolean>(false);
 
   function updateLobbyState() {
@@ -31,13 +32,7 @@ export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
   }
 
   useEffect(() => {
-    socket.on("get-lobby-success", (data: LobbyDto) => {
-      setLobbyState(data.lobbyState);
-    });
     updateLobbyState();
-    return () => {
-      socket.off("get-lobby-success");
-    };
   }, []);
 
   if (!username) {
