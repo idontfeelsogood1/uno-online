@@ -73,3 +73,7 @@ export const CardColor = {
 
 export type WrapperViewState = "LOBBY" | "ROOM" | "GAME";
 export type HomeViewState = "BOT" | "PVP" | null;
+
+export interface RoomProps {
+  roomState: RoomData;
+}
