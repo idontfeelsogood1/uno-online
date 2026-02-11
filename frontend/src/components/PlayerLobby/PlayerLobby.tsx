@@ -43,7 +43,7 @@ export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
   if (!username) {
     return (
       <dialog open>
-        <div>Enter Username</div>
+        <h1>Enter Username</h1>
         <input
           type="text"
           value={usernameInputValue}
@@ -72,7 +72,7 @@ export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
   if (isCreatingRoom) {
     return (
       <dialog open>
-        <div>Create room</div>
+        <h1>Create room</h1>
         <input
           type="text"
           value={roomNameInputValue}
@@ -84,6 +84,7 @@ export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
         <div>
           <input
             type="radio"
+            name="roomSize"
             value={2}
             onChange={(e) => {
               setSelectedRoomSize(parseInt(e.target.value));
@@ -92,6 +93,7 @@ export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
           <span>2</span>
           <input
             type="radio"
+            name="roomSize"
             value={3}
             onChange={(e) => {
               setSelectedRoomSize(parseInt(e.target.value));
@@ -101,6 +103,7 @@ export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
           <span>3</span>
           <input
             type="radio"
+            name="roomSize"
             value={4}
             onChange={(e) => {
               setSelectedRoomSize(parseInt(e.target.value));
@@ -128,7 +131,7 @@ export default function PlayerLobby({ setHomeView }: PlayerLobbyProps) {
 
   return (
     <dialog open>
-      <div>Room list</div>
+      <h1>Room list</h1>
       <ul>
         {lobbyState.map((room) => {
           return (
