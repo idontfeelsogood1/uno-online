@@ -90,6 +90,14 @@ export class GameGateway implements OnGatewayDisconnect {
     });
   }
 
+  @SubscribeMessage('get-room-state')
+  public getRoomState(@ConnectedSocket() client: Socket): object {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    return {
+      roomState: this.service.generateRoomState(room),
+    };
+  }
+
   @SubscribeMessage('join-room')
   @UseFilters(WsRoomFilter)
   public async joinRoom(
@@ -217,6 +225,14 @@ export class GameGateway implements OnGatewayDisconnect {
   // GAME LOGIC HANDLING
   // ===================
 
+  @SubscribeMessage('get-game-state')
+  public getGameState(@ConnectedSocket() client: Socket): object {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    return {
+      gameState: this.service.generateGameState(room),
+    };
+  }
+
   @SubscribeMessage('draw-card')
   @UseFilters(WsRoomFilter, WsGameFilter)
   public drawCard(@ConnectedSocket() client: Socket): void {
@@ -228,16 +244,13 @@ export class GameGateway implements OnGatewayDisconnect {
     this.service.drawCards(room, player, 1); // TRIGGERS CLEARING THE discardPile, KEEPING THE TOP CARD, PUSHING AND SHUFFLING CARDS TO drawPile WHEN drawPile is 0
     player.setIsUno(false);
 
-    this.server.to(room.id).emit('player-drew-a-card', {
+    this.server.to(room.id).emit('game-state-update', {
+      ActionType: 'draw-cards',
       socketId: player.socketId,
       username: player.username,
       gameState: this.service.generateGameState(room),
     });
   }
-
-  // =====================================================================
-  // STARTING FROM HERE REQUIRES A FRONTEND TO TEST, POSTMAN DOESNT CUT IT
-  // =====================================================================
 
   @SubscribeMessage('uno')
   @UseFilters(WsRoomFilter, WsGameFilter)
@@ -287,7 +300,8 @@ export class GameGateway implements OnGatewayDisconnect {
 
     if (this.service.hasGameEnded(room)) {
       this.service.resetRoom(room);
-      this.server.to(room.id).emit('game-ended', {
+      this.server.to(room.id).emit('game-state-update', {
+        ActionType: 'game-ended',
         loserSocketId: room.getPlayerFromOrder().socketId,
         loserUsername: room.getPlayerFromOrder().username,
         roomState: roomState,
@@ -295,13 +309,15 @@ export class GameGateway implements OnGatewayDisconnect {
       });
     }
     if (hasPlayerWon) {
-      this.server.to(room.id).emit('player-won', {
+      this.server.to(room.id).emit('game-state-update', {
+        ActionType: 'player-won',
         socketId: player.socketId,
         username: player.username,
         gameState: gameState,
       });
     } else {
-      this.server.to(room.id).emit('player-played-cards', {
+      this.server.to(room.id).emit('game-state-update', {
+        ActionType: 'played-cards',
         socketId: player.socketId,
         username: player.username,
         gameState: gameState,
