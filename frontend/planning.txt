@@ -11,41 +11,45 @@ PlayerVsPlayer COMPONENT:
 - Establish websocket connection to /game
 - Contains PlayerLobby, Room, Game components
 - Listen to error events and respond with a pop up dialogue at the top
+    - PlayerLobby COMPONENT:
+        - Show a dialogue for the user to enter a name
+        - Show a dialogue containing a list of rooms
+            - Add options:
+                - Clicking a room request join-room in the backend and render room state
+                - Add refresh room button
+                - Add create room button
+                - Add exit button
+        - Upon player joining a room, render room component
 
-PlayerLobby COMPONENT:
-- Show a dialogue for the user to enter a name
-- Show a dialogue containing a list of rooms
-    - Add options:
-        - Clicking a room request join-room in the backend and render room state
-        - Add refresh room button
-        - Add create room button
+    - Room COMPONENT:
+        - Show a dialogue containing list of current players
+        - Show current owner
+        - Only show start game button to the owner
+        - Display waiting for owner to start game for other people
         - Add exit button
-- Upon player joining a room, render room component
 
-Room COMPONENT:
-- Show a dialogue containing list of current players
-- Show current owner
-- Only show start game button to the owner
-- Display waiting for owner to start game for other people
-- Add exit button
-
-Game COMPONENT:
-- Gameboard COMPONENT:
-    - Show current top card
-    - Show button to draw card
-    - Show current color
-- CurrentPlayer COMPONENT:
-    - Show username
-    - Hand COMPONENT:
-        - Show player's current hand
-    - PlayHand COMPONENT:
-        - Show player's card they want to play
-        - Show play cards button
-        - Show UNO button (act as play cards but with uno called this is intentional)
-- OtherPlayer COMPONENT:
-    - Show username
-    - OtherHand COMPONENT:
-        - Show other's current hand but hidden
+    - Game COMPONENT:
+        - Gameboard COMPONENT:
+            - Show current top card
+            - Show button to draw card
+            - Show current color
+        - CurrentPlayer COMPONENT:
+            - Show username
+            - Hand COMPONENT:
+                - Show player's current hand
+            - PlayHand COMPONENT:
+                - Show player's card they want to play
+                - Show play cards button
+                - Show UNO button (act as play cards but with uno called this is intentional)
+        - OtherPlayer COMPONENT:
+            - Show username
+            - OtherHand COMPONENT:
+                - Show other's current hand but hidden
+        - GameEnd COMPONENT:
+            - Show game finished dialogue
+            - Show player currently in room (with their scores to be implemented later)
+            - Show button to go back to Home
+            - Show button to continue the Game (only owner can see this button, other player sees a waiting message)
 
 PlayerVsBot COMPONENT:
 // TO BE IMPLEMENTED
