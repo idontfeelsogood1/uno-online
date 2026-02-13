@@ -181,11 +181,21 @@ export class GameGateway implements OnGatewayDisconnect {
       lobbyState: lobbyState,
     });
 
+    if (room.hasStarted()) {
+      this.server.to(room.id).emit('game-state-update', {
+        ActionType: 'player-left',
+        socketId: player.socketId,
+        username: player.username,
+        gameState: gameState,
+      });
+    }
+
     if (room.hasStarted() && this.service.hasGameEnded(room)) {
       this.service.resetRoom(room);
-      this.server.to(room.id).emit('game-ended', {
-        loserSocketId: room.getPlayerFromOrder().socketId,
-        loserUsername: room.getPlayerFromOrder().username,
+      this.server.to(room.id).emit('game-state-update', {
+        ActionType: 'game-ended',
+        WinnerSocketId: room.getPlayerFromOrder().socketId,
+        WinnerUsername: room.getPlayerFromOrder().username,
         roomState: roomState,
         gameState: gameState,
       });
