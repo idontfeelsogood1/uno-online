@@ -194,9 +194,6 @@ export class GameGateway implements OnGatewayDisconnect {
       this.service.resetRoom(room);
       this.server.to(room.id).emit('game-state-update', {
         ActionType: 'game-ended',
-        winnerSocketId: room.getPlayerFromOrder().socketId,
-        winnerUsername: room.getPlayerFromOrder().username,
-        roomState: roomState,
         gameState: gameState,
       });
     }
@@ -305,16 +302,12 @@ export class GameGateway implements OnGatewayDisconnect {
     player.setIsUno(false);
     this.service.processNextTurn(room);
 
-    const roomState: PublicRoomState = this.service.generateRoomState(room);
     const gameState: PublicGameState = this.service.generateGameState(room);
 
     if (this.service.hasGameEnded(room)) {
       this.service.resetRoom(room);
       this.server.to(room.id).emit('game-state-update', {
         ActionType: 'game-ended',
-        loserSocketId: room.getPlayerFromOrder().socketId,
-        loserUsername: room.getPlayerFromOrder().username,
-        roomState: roomState,
         gameState: gameState,
       });
     }
