@@ -33,6 +33,7 @@ PlayerVsPlayer COMPONENT:
             - Show current top card
             - Show button to draw card
             - Show current color
+            - If current color is black then show additional enforced color
         - CurrentPlayer COMPONENT:
             - Show username
             - Hand COMPONENT:
