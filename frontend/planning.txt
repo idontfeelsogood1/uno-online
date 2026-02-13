@@ -30,8 +30,22 @@ Room COMPONENT:
 - Add exit button
 
 Game COMPONENT:
-// DO THIS LATER
+- Gameboard COMPONENT:
+    - Show current top card
+    - Show button to draw card
+    - Show current color
+- CurrentPlayer COMPONENT:
+    - Show username
+    - Hand COMPONENT:
+        - Show player's current hand
+    - PlayHand COMPONENT:
+        - Show player's card they want to play
+        - Show play cards button
+        - Show UNO button (act as play cards but with uno called this is intentional)
+- OtherPlayer COMPONENT:
+    - Show username
+    - OtherHand COMPONENT:
+        - Show other's current hand but hidden
 
 PlayerVsBot COMPONENT:
-
 // TO BE IMPLEMENTED
