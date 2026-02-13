@@ -194,8 +194,8 @@ export class GameGateway implements OnGatewayDisconnect {
       this.service.resetRoom(room);
       this.server.to(room.id).emit('game-state-update', {
         ActionType: 'game-ended',
-        WinnerSocketId: room.getPlayerFromOrder().socketId,
-        WinnerUsername: room.getPlayerFromOrder().username,
+        winnerSocketId: room.getPlayerFromOrder().socketId,
+        winnerUsername: room.getPlayerFromOrder().username,
         roomState: roomState,
         gameState: gameState,
       });
