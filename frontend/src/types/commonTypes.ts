@@ -7,6 +7,14 @@ export interface PlayerVsPlayerProps {
   setHomeView: (view: HomeViewState) => void;
 }
 
+export interface RoomProps {
+  roomState: RoomData;
+}
+
+export interface GameProps {
+  gameState: GameData;
+}
+
 export interface RoomData {
   readonly roomId: string;
   readonly roomName: string;
@@ -74,7 +82,9 @@ export const CardColor = {
 
 export type WrapperViewState = "LOBBY" | "ROOM" | "GAME";
 export type HomeViewState = "BOT" | "PVP" | null;
-
-export interface RoomProps {
-  roomState: RoomData;
-}
+export type GameStateActionType =
+  | "draw-cards"
+  | "played-cards"
+  | "player-won"
+  | "player-left"
+  | "game-ended";
