@@ -1,30 +1,27 @@
-import PlayerLobby from "../PlayerLobby/PlayerLobby";
-import Room from "../Room/Room";
-import Game from "../Game/Game";
+import PlayerLobby from "./PlayerLobby/PlayerLobby";
+import Room from "./Room/Room";
+import Game from "./Game/Game";
 import { useState, useEffect } from "react";
 import type {
   PlayerVsPlayerProps,
   WrapperViewState,
   RoomData,
-  // GameData,
-} from "../../types/commonTypes";
+  GameData,
+} from "../../../types/commonTypes";
 import type {
-  PlayerJoinedRoomDto,
-  PlayerLeftRoomDto,
+  RoomStateUpdateDto,
+  GameStateUpdateDto,
   RoomDto,
   LobbyDto,
-} from "../../types/dtos/commonDtos";
-import { socket } from "../../api/socket";
+} from "../../../types/dtos/commonDtos";
+import { socket } from "../../../api/socket";
 
 export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [view, setView] = useState<WrapperViewState>("LOBBY");
   // const [errMsg, setErrMsg] = useState<string | null>(null);
   const [lobbyState, setLobbyState] = useState<RoomData[]>([]);
   const [roomState, setRoomState] = useState<RoomData | null>(null);
-  // const [gameState, setGameState] = useState<GameData | null>(null);
-
-  // ADD CONNECTING DIALOGUE TO WHEN THE USER ENTER USERNAME
-  // AND CREATING ROOM, JOINING ROOM, STARTING GAME
+  const [gameState, setGameState] = useState<GameData | null>(null);
 
   useEffect(() => {
     socket.connect();
@@ -43,14 +40,24 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
       setRoomState(null);
       setView("LOBBY");
     });
-    socket.on("player-joined-room", (data: PlayerJoinedRoomDto) => {
+    socket.on("player-joined-room", (data: RoomStateUpdateDto) => {
       setRoomState(data.roomState);
     });
-    socket.on("player-left-room", (data: PlayerLeftRoomDto) => {
+    socket.on("player-left-room", (data: RoomStateUpdateDto) => {
       setRoomState(data.roomState);
     });
-    socket.on("game-started", (data) => {
-      console.log(data);
+    socket.on("game-started", (data: GameStateUpdateDto) => {
+      setView("GAME");
+      socket.emit("get-room-state", (ack: RoomDto) => {
+        setRoomState(ack.roomState);
+      });
+      setGameState(data.gameState);
+    });
+    socket.on("game-state-update", (data: GameStateUpdateDto) => {
+      socket.emit("get-room-state", (ack: RoomDto) => {
+        setRoomState(ack.roomState);
+      });
+      setGameState(data.gameState);
     });
     socket.on("validation-exception", (data) => {
       console.log(data);
@@ -71,6 +78,7 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
       socket.off("player-joined-room");
       socket.off("player-left-room");
       socket.off("game-started");
+      socket.off("game-state-update");
       socket.off("validation-exception");
       socket.off("room-exception");
       socket.off("game-exception");
@@ -84,6 +92,6 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
     return <Room roomState={roomState!} />;
   }
   if (view === "GAME") {
-    return <Game />;
+    return <Game gameState={gameState!} />;
   }
 }

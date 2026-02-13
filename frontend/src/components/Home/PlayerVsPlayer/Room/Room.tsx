@@ -1,9 +1,13 @@
-import type { RoomProps } from "../../types/commonTypes";
-import { socket } from "../../api/socket";
+import type { RoomProps } from "../../../../types/commonTypes";
+import { socket } from "../../../../api/socket";
 
 export default function Room({ roomState }: RoomProps) {
   function leaveRoom() {
     socket.emit("leave-room");
+  }
+
+  function startGame() {
+    socket.emit("start-room");
   }
 
   return (
@@ -22,7 +26,9 @@ export default function Room({ roomState }: RoomProps) {
         })}
       </ul>
       <span>This room can contain max {roomState.maxPlayers} players</span>
-      {socket.id === roomState.ownerSocketId && <button>START GAME</button>}
+      {socket.id === roomState.ownerSocketId && (
+        <button onClick={startGame}>START GAME</button>
+      )}
       <button onClick={leaveRoom}>BACK</button>
     </dialog>
   );

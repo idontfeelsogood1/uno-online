@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
-import { socket } from "../../api/socket";
-import type { PlayerLobbyProps } from "../../types/commonTypes";
+import { socket } from "../../../../api/socket";
+import type { PlayerLobbyProps } from "../../../../types/commonTypes";
 
 export default function PlayerLobby({
   lobbyState,
