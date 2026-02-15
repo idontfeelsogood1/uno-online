@@ -78,14 +78,16 @@ export class GameGateway implements OnGatewayDisconnect {
 
     await client.join(room.id);
 
-    client.emit('create-room-success', {
+    client.emit('room-state-update', {
+      actionType: 'create-room',
       roomState: this.service.generateRoomState(room),
     });
   }
 
   @SubscribeMessage('get-lobby')
   public getLobby(@ConnectedSocket() client: Socket): void {
-    client.emit('get-lobby-success', {
+    client.emit('lobby-state-update', {
+      actionType: 'get-lobby',
       lobbyState: this.service.generateLobbyState(),
     });
   }
@@ -117,11 +119,13 @@ export class GameGateway implements OnGatewayDisconnect {
 
     const room: GameRoom = this.service.getRoomOfPlayer(player.socketId)!;
 
-    client.emit('join-room-success', {
+    client.emit('room-state-update', {
+      actionType: 'join-room',
       roomState: this.service.generateRoomState(room),
     });
 
-    this.server.to(room.id).emit('player-joined-room', {
+    this.server.to(room.id).emit('room-state-update', {
+      actionType: 'player-joined-room',
       socketId: player.socketId,
       username: player.username,
       roomState: this.service.generateRoomState(room),
@@ -177,13 +181,32 @@ export class GameGateway implements OnGatewayDisconnect {
       ? this.service.generateGameState(room)
       : null;
 
-    client.emit('leave-room-success', {
+    client.emit('room-state-update', {
+      actionType: 'leave-room',
       lobbyState: lobbyState,
     });
 
+    if (!result.removedRoom) {
+      this.server.to(room.id).emit('room-state-update', {
+        actionType: 'player-left-room',
+        socketId: player.socketId,
+        username: player.username,
+        roomState: roomState,
+      });
+    }
+
+    if (!result.removedRoom && result.transferedOwner) {
+      this.server.to(room.id).emit('room-state-update', {
+        actionType: 'transfered-owner',
+        socketId: result.transferedOwner.socketId,
+        username: result.transferedOwner.username,
+        roomState: roomState,
+      });
+    }
+
     if (room.hasStarted()) {
       this.server.to(room.id).emit('game-state-update', {
-        ActionType: 'player-left',
+        actionType: 'player-left',
         socketId: player.socketId,
         username: player.username,
         gameState: gameState,
@@ -193,24 +216,10 @@ export class GameGateway implements OnGatewayDisconnect {
     if (room.hasStarted() && this.service.hasGameEnded(room)) {
       this.service.resetRoom(room);
       this.server.to(room.id).emit('game-state-update', {
-        ActionType: 'game-ended',
-        gameState: gameState,
-      });
-    }
-
-    if (!result.removedRoom) {
-      this.server.to(room.id).emit('player-left-room', {
+        actionType: 'game-ended',
         socketId: player.socketId,
         username: player.username,
-        roomState: roomState,
-      });
-    }
-
-    if (!result.removedRoom && result.transferedOwner) {
-      this.server.to(room.id).emit('transfered-owner', {
-        newOwnerSocketId: result.transferedOwner.socketId,
-        newOwnerUsername: result.transferedOwner.username,
-        roomState: roomState,
+        gameState: gameState,
       });
     }
   }
@@ -223,7 +232,8 @@ export class GameGateway implements OnGatewayDisconnect {
 
     this.service.startGame(room, player);
 
-    this.server.to(room.id).emit('game-started', {
+    this.server.to(room.id).emit('game-state-update', {
+      actionType: 'game-started',
       gameState: this.service.generateGameState(room),
     });
   }
@@ -252,7 +262,7 @@ export class GameGateway implements OnGatewayDisconnect {
     player.setIsUno(false);
 
     this.server.to(room.id).emit('game-state-update', {
-      ActionType: 'draw-cards',
+      actionType: 'draw-cards',
       socketId: player.socketId,
       username: player.username,
       gameState: this.service.generateGameState(room),
@@ -307,20 +317,22 @@ export class GameGateway implements OnGatewayDisconnect {
     if (this.service.hasGameEnded(room)) {
       this.service.resetRoom(room);
       this.server.to(room.id).emit('game-state-update', {
-        ActionType: 'game-ended',
+        actionType: 'game-ended',
+        socketId: player.socketId,
+        username: player.username,
         gameState: gameState,
       });
     }
     if (hasPlayerWon) {
       this.server.to(room.id).emit('game-state-update', {
-        ActionType: 'player-won',
+        actionType: 'player-won',
         socketId: player.socketId,
         username: player.username,
         gameState: gameState,
       });
     } else {
       this.server.to(room.id).emit('game-state-update', {
-        ActionType: 'played-cards',
+        actionType: 'played-cards',
         socketId: player.socketId,
         username: player.username,
         gameState: gameState,
