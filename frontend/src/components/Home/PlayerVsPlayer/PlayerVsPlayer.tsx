@@ -12,7 +12,7 @@ import type {
   RoomStateUpdateDto,
   GameStateUpdateDto,
   RoomDto,
-  LobbyDto,
+  LobbyStateUpdateDto,
 } from "../../../types/dtos/commonDtos";
 import { socket } from "../../../api/socket";
 
@@ -22,43 +22,58 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [lobbyState, setLobbyState] = useState<RoomData[]>([]);
   const [roomState, setRoomState] = useState<RoomData | null>(null);
   const [gameState, setGameState] = useState<GameData | null>(null);
+  const [actionSocketId, setActionSocketId] = useState<string | null>(null);
 
   useEffect(() => {
     socket.connect();
-    socket.on("get-lobby-success", (data: LobbyDto) => {
-      setLobbyState(data.lobbyState);
+
+    socket.on("lobby-state-update", (data: LobbyStateUpdateDto) => {
+      const { actionType }: LobbyStateUpdateDto = data;
+      if (actionType === "get-lobby") {
+        setLobbyState(data.lobbyState);
+      }
     });
-    socket.on("create-room-success", (data: RoomDto) => {
-      setRoomState(data.roomState);
-      setView("ROOM");
+
+    socket.on("room-state-update", (data: RoomStateUpdateDto) => {
+      const { actionType }: RoomStateUpdateDto = data;
+      if (actionType === "create-room" || actionType === "join-room") {
+        setRoomState(data.roomState);
+        setView("ROOM");
+      }
+      if (actionType === "join-room") {
+        setRoomState(data.roomState);
+        setView("ROOM");
+      }
+      if (actionType === "leave-room") {
+        setRoomState(null);
+        setView("LOBBY");
+      }
+      if (actionType === "player-joined-room") {
+        setRoomState(data.roomState);
+      }
+      if (actionType === "player-left-room") {
+        setRoomState(data.roomState);
+      }
     });
-    socket.on("join-room-success", (data: RoomDto) => {
-      setRoomState(data.roomState);
-      setView("ROOM");
-    });
-    socket.on("leave-room-success", () => {
-      setRoomState(null);
-      setView("LOBBY");
-    });
-    socket.on("player-joined-room", (data: RoomStateUpdateDto) => {
-      setRoomState(data.roomState);
-    });
-    socket.on("player-left-room", (data: RoomStateUpdateDto) => {
-      setRoomState(data.roomState);
-    });
-    socket.on("game-started", (data: GameStateUpdateDto) => {
-      setView("GAME");
-      socket.emit("get-room-state", (ack: RoomDto) => {
-        setRoomState(ack.roomState);
-      });
-      setGameState(data.gameState);
-    });
+
     socket.on("game-state-update", (data: GameStateUpdateDto) => {
-      socket.emit("get-room-state", (ack: RoomDto) => {
-        setRoomState(ack.roomState);
-      });
-      setGameState(data.gameState);
+      const { actionType }: GameStateUpdateDto = data;
+      if (actionType === "game-started") {
+        setView("GAME");
+        socket.emit("get-room-state", (ack: RoomDto) => {
+          setRoomState(ack.roomState);
+        });
+        setGameState(data.gameState);
+        setActionSocketId(socket.id!);
+      } else {
+        socket.emit("get-room-state", (ack: RoomDto) => {
+          setRoomState(ack.roomState);
+        });
+        setGameState(data.gameState);
+        setActionSocketId(data.socketId!);
+      }
     });
+
     socket.on("validation-exception", (data) => {
       console.log(data);
     });
@@ -71,13 +86,8 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
 
     return () => {
       socket.disconnect();
-      socket.off("get-lobby-success");
-      socket.off("create-room-success");
-      socket.off("join-room-success");
-      socket.off("leave-room-success");
-      socket.off("player-joined-room");
-      socket.off("player-left-room");
-      socket.off("game-started");
+      socket.off("lobby-state-update");
+      socket.off("room-state-update");
       socket.off("game-state-update");
       socket.off("validation-exception");
       socket.off("room-exception");
@@ -92,6 +102,6 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
     return <Room roomState={roomState!} />;
   }
   if (view === "GAME") {
-    return <Game gameState={gameState!} />;
+    return <Game gameState={gameState!} actionSocketId={actionSocketId!} />;
   }
 }
