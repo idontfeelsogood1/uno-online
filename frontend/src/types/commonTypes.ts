@@ -13,6 +13,7 @@ export interface RoomProps {
 
 export interface GameProps {
   gameState: GameData;
+  actionSocketId: string;
 }
 
 export interface RoomData {
@@ -82,7 +83,16 @@ export const CardColor = {
 
 export type WrapperViewState = "LOBBY" | "ROOM" | "GAME";
 export type HomeViewState = "BOT" | "PVP" | null;
+export type LobbyStateActionType = "get-lobby";
+export type RoomStateActionType =
+  | "create-room"
+  | "join-room"
+  | "player-joined-room"
+  | "leave-room"
+  | "player-left-room"
+  | "transfered-owner";
 export type GameStateActionType =
+  | "game-started"
   | "draw-cards"
   | "played-cards"
   | "player-won"

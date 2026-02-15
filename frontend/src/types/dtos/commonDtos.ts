@@ -1,25 +1,31 @@
-import type { GameData, GameStateActionType, RoomData } from "../commonTypes";
-
-export interface LobbyDto {
-  lobbyState: RoomData[];
-}
+import type {
+  GameData,
+  RoomData,
+  LobbyStateActionType,
+  RoomStateActionType,
+  GameStateActionType,
+} from "../commonTypes";
 
 export interface RoomDto {
   roomState: RoomData;
 }
 
-export interface GameDto {
-  gameState: GameData;
+export interface LobbyStateUpdateDto {
+  actionType: LobbyStateActionType;
+  socketId?: string;
+  username?: string;
+  lobbyState: RoomData[];
 }
 
 export interface RoomStateUpdateDto {
-  socketId: string;
-  username: string;
+  actionType: RoomStateActionType;
+  socketId?: string;
+  username?: string;
   roomState: RoomData;
 }
 
 export interface GameStateUpdateDto {
-  ActionType: GameStateActionType;
+  actionType: GameStateActionType;
   socketId?: string;
   username?: string;
   gameState: GameData;
