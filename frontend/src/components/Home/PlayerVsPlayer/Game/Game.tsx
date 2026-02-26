@@ -1,6 +1,11 @@
 import type { GameProps } from "../../../../types/commonTypes";
+import GameBoard from "./GameBoard/GameBoard";
 
 export default function Game({ gameState }: GameProps) {
-  console.log(gameState);
-  return <div>Game Component</div>;
+  return (
+    <GameBoard
+      topCard={gameState.topCard}
+      enforcedColor={gameState.enforcedColor}
+    />
+  );
 }
