@@ -16,6 +16,11 @@ export interface GameProps {
   actionSocketId: string;
 }
 
+export interface GameBoardProps {
+  topCard: Card;
+  enforcedColor: CardColor;
+}
+
 export interface RoomData {
   readonly roomId: string;
   readonly roomName: string;
@@ -38,7 +43,7 @@ export interface GameData {
   readonly playerOrder: GamePlayer[];
   readonly direction: number;
   readonly topCard: Card;
-  readonly enforcedColor: typeof CardColor;
+  readonly enforcedColor: CardColor;
 }
 
 export interface GamePlayer {
@@ -51,35 +56,28 @@ export interface GamePlayer {
 export interface Card {
   readonly id: string;
   readonly name: string;
-  readonly color: typeof CardColor;
-  readonly value: typeof CardValue;
+  readonly color: CardColor;
+  readonly value: CardValue;
 }
 
-export const CardValue = {
-  ZERO: "0",
-  ONE: "1",
-  TWO: "2",
-  THREE: "3",
-  FOUR: "4",
-  FIVE: "5",
-  SIX: "6",
-  SEVEN: "7",
-  EIGHT: "8",
-  NINE: "9",
-  SKIP: "SKIP",
-  REVERSE: "REVERSE",
-  DRAW_TWO: "+2",
-  WILD: "WILD",
-  WILD_DRAW_FOUR: "+4",
-} as const;
+export type CardColor = "BLUE" | "GREEN" | "RED" | "YELLOW" | "BLACK";
 
-export const CardColor = {
-  RED: "RED",
-  BLUE: "BLUE",
-  GREEN: "GREEN",
-  YELLOW: "YELLOW",
-  BLACK: "BLACK", // For Wild cards
-} as const;
+export type CardValue =
+  | "0"
+  | "1"
+  | "2"
+  | "3"
+  | "4"
+  | "5"
+  | "6"
+  | "7"
+  | "8"
+  | "9"
+  | "SKIP"
+  | "REVERSE"
+  | "+2"
+  | "WILD"
+  | "+4";
 
 export type WrapperViewState = "LOBBY" | "ROOM" | "GAME";
 export type HomeViewState = "BOT" | "PVP" | null;
