@@ -1,11 +1,26 @@
 import type { GameProps } from "../../../../types/commonTypes";
+import CurrentPlayer from "./CurrentPlayer/CurrentPlayer";
 import GameBoard from "./GameBoard/GameBoard";
+import OtherPlayer from "./OtherPlayer/OtherPlayer";
+import { socket } from "../../../../api/socket";
 
 export default function Game({ gameState }: GameProps) {
   return (
-    <GameBoard
-      topCard={gameState.topCard}
-      enforcedColor={gameState.enforcedColor}
-    />
+    <div>
+      <GameBoard
+        topCard={gameState.topCard}
+        enforcedColor={gameState.enforcedColor}
+      />
+      {gameState.playerOrder.map((player) => {
+        if (player.socketId !== socket.id) {
+          return <OtherPlayer otherPlayer={player} />;
+        }
+      })}
+      {gameState.playerOrder.map((player) => {
+        if (player.socketId === socket.id) {
+          return <CurrentPlayer player={player} />;
+        }
+      })}
+    </div>
   );
 }
