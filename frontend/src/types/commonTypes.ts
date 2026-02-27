@@ -21,6 +21,22 @@ export interface GameBoardProps {
   enforcedColor: CardColor;
 }
 
+export interface OtherPlayerProps {
+  otherPlayer: GamePlayer;
+}
+
+export interface OtherHand {
+  otherHand: Card[];
+}
+
+export interface CurrentPlayerProps {
+  player: GamePlayer;
+}
+
+export interface PlayHand {
+  hand: Card[];
+}
+
 export interface RoomData {
   readonly roomId: string;
   readonly roomName: string;
