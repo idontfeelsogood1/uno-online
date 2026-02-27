@@ -34,18 +34,21 @@ PlayerVsPlayer COMPONENT:
             - Show current top card
             - Show current color
             - If current color is black then show additional enforced color
-        - CurrentPlayer COMPONENT:
-            - Show username
-            - Hand COMPONENT:
-                - Show player's current hand
-            - PlayHand COMPONENT:
-                - Show player's card they want to play
-                - Show play cards button
-                - Show UNO button (act as play cards but with uno called this is intentional)
         - OtherPlayer COMPONENT:
             - Show username
             - OtherHand COMPONENT:
                 - Show other's current hand but hidden
+        - CurrentPlayer COMPONENT:
+            - Show username
+            - Hand COMPONENT:
+                - Show player's current hand
+                - Onclick add to PlayHand component
+            - PlayHand COMPONENT:
+                - Show player's card they want to play
+                - Add functionality to remove the card they want to play
+                - Add functionality to rearrange the hand to matching pattern
+                - Show play cards button
+                - Show UNO button (act as play cards but with uno called this is intentional)
         - GameEnd COMPONENT:
             - Show game finished dialogue
             - Show player currently in room (with their scores to be implemented later)
