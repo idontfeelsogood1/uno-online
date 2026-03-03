@@ -2,7 +2,8 @@ import { getCardImgPath } from "../../../../../../api/helper";
 import type { Card, PlayHandProps } from "../../../../../../types/commonTypes";
 import { socket } from "../../../../../../api/socket";
 import ChooseColor from "../ChooseColor/ChooseColor";
-import { useState } from "react";
+import { useContext, useEffect, useState } from "react";
+import { GameAction } from "../../../../../../api/GameAction";
 
 export default function PlayHand({
   pseudoHand,
@@ -10,9 +11,17 @@ export default function PlayHand({
   setPseudoPlayHand,
   setPseudoHand,
 }: PlayHandProps) {
+  const action = useContext(GameAction);
   const [showChooseColor, setShowChooseColor] = useState<boolean>(false);
   const [showChooseColorActionCb, setShowChooseColorActionCb] =
     useState<CallableFunction | null>(null);
+
+  useEffect(() => {
+    if (action!.actionType === "played-cards") {
+      setPseudoPlayHand([]);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [action]);
 
   function removeCardFromPlayHand(card: Card) {
     setPseudoPlayHand(
