@@ -14,6 +14,7 @@ export interface RoomProps {
 export interface GameProps {
   gameState: GameData;
   actionSocketId: string;
+  actionType: GameStateActionType;
 }
 
 export interface GameBoardProps {
@@ -49,6 +50,11 @@ export interface HandProps {
 
 export interface ChooseColorProps {
   actionCallback: CallableFunction;
+}
+
+export interface GameActionProps {
+  readonly actionType: GameStateActionType;
+  readonly actionSocketId: string;
 }
 
 export interface RoomData {
