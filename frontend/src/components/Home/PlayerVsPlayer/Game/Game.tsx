@@ -4,6 +4,9 @@ import GameBoard from "./GameBoard/GameBoard";
 import OtherPlayer from "./OtherPlayer/OtherPlayer";
 import { socket } from "../../../../api/socket";
 
+// PROVIDE GLOBAL STATE FOR gameState FOR CHILD COMPONENTS
+// RESET playHand AND MAYBE SOME OTHER VIEWS THROUGH actionType
+
 export default function Game({ gameState, actionSocketId }: GameProps) {
   return (
     <div>
