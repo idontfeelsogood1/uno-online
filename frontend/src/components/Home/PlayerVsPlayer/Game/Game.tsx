@@ -4,7 +4,7 @@ import GameBoard from "./GameBoard/GameBoard";
 import OtherPlayer from "./OtherPlayer/OtherPlayer";
 import { socket } from "../../../../api/socket";
 
-export default function Game({ gameState }: GameProps) {
+export default function Game({ gameState, actionSocketId }: GameProps) {
   return (
     <div>
       <GameBoard
@@ -18,6 +18,7 @@ export default function Game({ gameState }: GameProps) {
       })}
       {gameState.playerOrder.map((player) => {
         if (player.socketId === socket.id) {
+          console.log("CurrentPlayer called");
           return <CurrentPlayer player={player} />;
         }
       })}
