@@ -12,6 +12,7 @@ export default function CurrentPlayer({ player }: CurrentPlayerProps) {
 
   // UPDATE pseudoHand ON PROP CHANGE
   useEffect(() => {
+    // IMPLEMENT A WAY TO ONLY SHOW THE CARDS THAT IS NOT IN pseudoPlayHand WHEN THE STATE CHANGES WHILE THE PLAYER HAS CARDS IN THEIR HAND
     setPseudoHand(player.hand);
   }, [player]);
 
