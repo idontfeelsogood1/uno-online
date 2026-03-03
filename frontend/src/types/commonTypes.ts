@@ -25,7 +25,7 @@ export interface OtherPlayerProps {
   otherPlayer: GamePlayer;
 }
 
-export interface OtherHand {
+export interface OtherHandProps {
   otherHand: Card[];
 }
 
@@ -33,8 +33,22 @@ export interface CurrentPlayerProps {
   player: GamePlayer;
 }
 
-export interface PlayHand {
-  hand: Card[];
+export interface PlayHandProps {
+  pseudoHand: Card[];
+  pseudoPlayHand: Card[];
+  setPseudoPlayHand: CallableFunction;
+  setPseudoHand: CallableFunction;
+}
+
+export interface HandProps {
+  pseudoHand: Card[];
+  pseudoPlayHand: Card[];
+  setPseudoPlayHand: CallableFunction;
+  setPseudoHand: CallableFunction;
+}
+
+export interface ChooseColorProps {
+  actionCallback: CallableFunction;
 }
 
 export interface RoomData {
