@@ -40,15 +40,18 @@ PlayerVsPlayer COMPONENT:
                 - Show other's current hand but hidden
         - CurrentPlayer COMPONENT:
             - Show username
+            - Add functionality to rearrange the hand to matching pattern on setState
             - Hand COMPONENT:
                 - Show player's current hand
                 - Onclick add to PlayHand component
+                - Add prev and next button to show overflow cards
             - PlayHand COMPONENT:
                 - Show player's card they want to play
                 - Add functionality to remove the card they want to play
-                - Add functionality to rearrange the hand to matching pattern
                 - Show play cards button
                 - Show UNO button (act as play cards but with uno called this is intentional)
+                - Add check to show choose a color dialogue if last card on playHand is wild
+                - Add prev and next button to show overflow cards
         - GameEnd COMPONENT:
             - Show game finished dialogue
             - Show player currently in room (with their scores to be implemented later)
