@@ -10,10 +10,28 @@ export default function CurrentPlayer({ player }: CurrentPlayerProps) {
   const [pseudoPlayHand, setPseudoPlayHand] = useState<Card[]>([]);
   const [pseudoHand, setPseudoHand] = useState<Card[]>(player.hand);
 
+  function isCardInPseudoPlayHand(card: Card): boolean {
+    let isInHand: boolean = false;
+    pseudoPlayHand.forEach((pseudoCard) => {
+      if (card.id === pseudoCard.id) {
+        isInHand = true;
+      }
+    });
+    return isInHand;
+  }
+
+  function manageHand() {
+    setPseudoHand(
+      player.hand.filter((card) => {
+        return !isCardInPseudoPlayHand(card);
+      }),
+    );
+  }
+
   // UPDATE pseudoHand ON PROP CHANGE
   useEffect(() => {
-    // IMPLEMENT A WAY TO ONLY SHOW THE CARDS THAT IS NOT IN pseudoPlayHand WHEN THE STATE CHANGES WHILE THE PLAYER HAS CARDS IN THEIR HAND
-    setPseudoHand(player.hand);
+    manageHand();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player]);
 
   return (
