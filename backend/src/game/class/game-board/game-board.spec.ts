@@ -475,23 +475,28 @@ describe('GameBoard', () => {
       });
 
       it('should fail if the gap between numbers is too large', () => {
-        // Red 1 -> Red 3 (Gap is 2)
+        // Red 3 -> Red 5 (Gap is 2)
         expect(() => {
-          gameBoard.processPattern([redThree]);
+          gameBoard.processPattern([redThree, redFive]);
         }).toThrow(CardPatternMismatch);
       });
 
       it('should fail if numbers are descending', () => {
         // Red 3 -> Red 2 (Descending)
-        gameBoard.setCurrentTopCard(redThree);
         expect(() => {
-          gameBoard.processPattern([redTwo]);
+          gameBoard.processPattern([redThree, redTwo]);
         }).toThrow(CardPatternMismatch);
       });
 
       it('should fail if switching color without matching value (Bridge Mismatch)', () => {
         // Red 3 -> Blue 4 (Color switch must require Value Match first)
-        gameBoard.setCurrentTopCard(redThree);
+        expect(() => {
+          gameBoard.processPattern([redThree, blueFour]);
+        }).toThrow(CardPatternMismatch);
+      });
+
+      it('should fail if first card in hand doesnt match top card color', () => {
+        // Red 1 -> Blue 4
         expect(() => {
           gameBoard.processPattern([blueFour]);
         }).toThrow(CardPatternMismatch);
@@ -499,18 +504,16 @@ describe('GameBoard', () => {
 
       it('should fail if Action cards do not match value', () => {
         // Red Skip -> Red Reverse
-        gameBoard.setCurrentTopCard(redSkip);
         expect(() => {
-          gameBoard.processPattern([redReverse]);
+          gameBoard.processPattern([redSkip, redReverse]);
         }).toThrow(CardPatternMismatch);
       });
 
       it('should fail if Action cards match color but not value', () => {
         // Red Skip -> Red Reverse
-        gameBoard.setCurrentTopCard(redSkip);
         gameBoard.setEnforcedColor(CardColor.RED);
         expect(() => {
-          gameBoard.processPattern([redReverse]);
+          gameBoard.processPattern([redSkip, redReverse]);
         }).toThrow(CardPatternMismatch);
       });
 
