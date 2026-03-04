@@ -125,14 +125,18 @@ export class GameBoard {
     const firstCardMatchEnforcedColorOrWild: boolean =
       cards[0].color === this.enforcedColor ||
       this.getCardType(cards[0]) === 'WILD';
+    const firstCardMatchTopCardColor: boolean =
+      pseudoTopCard.color === cards[0].color;
 
     // THIS ENSURES ONLY THE FIRST CARD OF HAND THAT MATCHES THE CONSTRAINT IS SET AS pseudoTopCard
     if (
       firstCardIsWild ||
-      (topCardIsWild && firstCardMatchEnforcedColorOrWild)
+      (topCardIsWild && firstCardMatchEnforcedColorOrWild) ||
+      firstCardMatchTopCardColor
     ) {
       pseudoTopCard = cards[0];
-    } else if (topCardIsWild) {
+    }
+    if (topCardIsWild) {
       throw new EnforcedColorMismatch(
         `
         Enforced color: ${this.enforcedColor}
