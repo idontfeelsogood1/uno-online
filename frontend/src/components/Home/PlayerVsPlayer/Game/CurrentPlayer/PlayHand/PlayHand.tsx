@@ -17,7 +17,10 @@ export default function PlayHand({
     useState<CallableFunction | null>(null);
 
   useEffect(() => {
-    if (action!.actionType === "played-cards") {
+    if (
+      action!.actionType === "played-cards" &&
+      socket.id === action!.actionSocketId
+    ) {
       setPseudoPlayHand([]);
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
