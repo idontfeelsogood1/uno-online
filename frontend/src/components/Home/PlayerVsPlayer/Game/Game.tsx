@@ -24,7 +24,6 @@ export default function Game({
         })}
         {gameState.playerOrder.map((player) => {
           if (player.socketId === socket.id) {
-            console.log("CurrentPlayer called");
             return <CurrentPlayer player={player} />;
           }
         })}
