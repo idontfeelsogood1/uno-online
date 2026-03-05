@@ -5,6 +5,11 @@ import ChooseColor from "../ChooseColor/ChooseColor";
 import { useContext, useEffect, useState } from "react";
 import { GameAction } from "../../../../../../api/GameAction";
 
+interface PageProps {
+  start: number;
+  end: number;
+}
+
 export default function PlayHand({
   pseudoHand,
   pseudoPlayHand,
@@ -15,6 +20,10 @@ export default function PlayHand({
   const [showChooseColor, setShowChooseColor] = useState<boolean>(false);
   const [showChooseColorActionCb, setShowChooseColorActionCb] =
     useState<CallableFunction | null>(null);
+  const [page, setPage] = useState<PageProps>({
+    start: 0,
+    end: 6,
+  });
 
   useEffect(() => {
     if (
@@ -25,6 +34,45 @@ export default function PlayHand({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action]);
+
+  function renderHand(): React.ReactElement[] {
+    const htmlList: React.ReactElement[] = [];
+    const offset: number = page.end - (pseudoPlayHand.length - 1);
+
+    for (let i = page.start; i <= page.end - offset; i++) {
+      htmlList.push(
+        <img
+          src={getCardImgPath(pseudoPlayHand[i])}
+          onClick={() => {
+            removeCardFromPlayHand(pseudoPlayHand[i]);
+          }}
+          alt={pseudoPlayHand[i].name}
+        ></img>,
+      );
+    }
+    return htmlList;
+  }
+
+  function switchPage(direction: "left" | "right") {
+    let start: number = page.start;
+    let end: number = page.end;
+    const offset: number = page.end - (pseudoPlayHand.length - 1);
+
+    if (direction === "left" && start > 0) {
+      end = start - 1;
+      start = end - 6;
+    }
+
+    if (direction === "right" && offset === 0) {
+      start = end + 1;
+      end = start + 6;
+    }
+
+    setPage({
+      start: start,
+      end: end,
+    });
+  }
 
   function removeCardFromPlayHand(card: Card) {
     setPseudoPlayHand(
@@ -84,23 +132,27 @@ export default function PlayHand({
   return (
     <>
       <div>
+        <button
+          onClick={() => {
+            switchPage("left");
+          }}
+        >
+          PREV
+        </button>
         <div>
-          {pseudoPlayHand.map((card) => {
-            return (
-              <img
-                src={getCardImgPath(card)}
-                onClick={() => {
-                  removeCardFromPlayHand(card);
-                }}
-                alt={card.name}
-              />
-            );
-          })}
+          <div>{renderHand()}</div>
+          <div>
+            <button onClick={playCards}>PLAY CARDS</button>
+            <button onClick={uno}>UNO (Play cards while yelling uno)</button>
+          </div>
         </div>
-        <div>
-          <button onClick={playCards}>PLAY CARDS</button>
-          <button onClick={uno}>UNO (Play cards while yelling uno)</button>
-        </div>
+        <button
+          onClick={() => {
+            switchPage("right");
+          }}
+        >
+          NEXT
+        </button>
       </div>
       {showChooseColor && (
         <ChooseColor actionCallback={showChooseColorActionCb!} />
