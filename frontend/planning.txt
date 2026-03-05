@@ -38,9 +38,9 @@ PlayerVsPlayer COMPONENT:
             - Show username
             - OtherHand COMPONENT:
                 - Show other's current hand but hidden
+                - Limit of 7
         - CurrentPlayer COMPONENT:
             - Show username
-            - Add functionality to rearrange the hand to matching pattern on setState
             - Hand COMPONENT:
                 - Show player's current hand
                 - Onclick add to PlayHand component
