@@ -1,14 +1,13 @@
 import { getCardImgPath } from "../../../../../../api/helper";
-import type { Card, PlayHandProps } from "../../../../../../types/commonTypes";
+import type {
+  Card,
+  PlayHandProps,
+  PageProps,
+} from "../../../../../../types/commonTypes";
 import { socket } from "../../../../../../api/socket";
 import ChooseColor from "../ChooseColor/ChooseColor";
 import { useContext, useEffect, useState } from "react";
 import { GameAction } from "../../../../../../api/GameAction";
-
-interface PageProps {
-  start: number;
-  end: number;
-}
 
 export default function PlayHand({
   pseudoHand,
@@ -35,6 +34,9 @@ export default function PlayHand({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action]);
 
+  // FIX THE BUG WHERE THE CARD STILL RENDERS
+  // PAST THE LIMIT ON THE SAME PAGE INSTEAD OF THE 2ND PAGE
+  // FIX OFFSET LOGIC
   function renderHand(): React.ReactElement[] {
     const htmlList: React.ReactElement[] = [];
     const offset: number = page.end - (pseudoPlayHand.length - 1);
