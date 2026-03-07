@@ -34,12 +34,13 @@ export default function PlayHand({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action]);
 
-  // FIX THE BUG WHERE THE CARD STILL RENDERS
-  // PAST THE LIMIT ON THE SAME PAGE INSTEAD OF THE 2ND PAGE
-  // FIX OFFSET LOGIC
+  // ALSO IF PLAYER ADD CARD TO A FULL PLAYHAND, SWITCH THEIR PAGE
   function renderHand(): React.ReactElement[] {
     const htmlList: React.ReactElement[] = [];
-    const offset: number = page.end - (pseudoPlayHand.length - 1);
+    let offset: number = page.end - (pseudoPlayHand.length - 1);
+
+    if (offset < 0) offset = 0;
+    // switchPage("right") WORKS BUT GOING BACK TO THE PREVIOUS PAGE DONT
 
     for (let i = page.start; i <= page.end - offset; i++) {
       htmlList.push(
@@ -65,7 +66,7 @@ export default function PlayHand({
       start = end - 6;
     }
 
-    if (direction === "right" && offset === 0) {
+    if (direction === "right" && offset <= 0) {
       start = end + 1;
       end = start + 6;
     }
