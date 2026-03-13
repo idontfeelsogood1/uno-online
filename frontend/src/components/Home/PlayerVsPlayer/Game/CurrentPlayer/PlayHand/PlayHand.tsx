@@ -19,10 +19,15 @@ export default function PlayHand({
   const [showChooseColor, setShowChooseColor] = useState<boolean>(false);
   const [showChooseColorActionCb, setShowChooseColorActionCb] =
     useState<CallableFunction | null>(null);
+  const [hasEditCard, setHasEditCard] = useState<boolean>(false);
   const [page, setPage] = useState<PageProps>({
-    start: 0,
-    end: 6,
+    startIndex: 0,
+    endIndex: 6,
+    currentPage: 1,
   });
+
+  console.log(page);
+  console.log(hasEditCard);
 
   useEffect(() => {
     if (
@@ -34,15 +39,36 @@ export default function PlayHand({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action]);
 
-  // ALSO IF PLAYER ADD CARD TO A FULL PLAYHAND, SWITCH THEIR PAGE
+  useEffect(() => {
+    onPlayHandChange();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pseudoPlayHand]);
+
+  function onPlayHandChange() {
+    const pseudoPlayHandEndIndex: number = pseudoPlayHand.length - 1;
+
+    if (pseudoPlayHandEndIndex - page.startIndex <= -1) {
+      switchPage("left");
+    }
+    if (pseudoPlayHandEndIndex - page.startIndex >= 7 && !hasEditCard) {
+      switchPage("right");
+    }
+
+    setHasEditCard(false);
+  }
+
   function renderHand(): React.ReactElement[] {
     const htmlList: React.ReactElement[] = [];
-    let offset: number = page.end - (pseudoPlayHand.length - 1);
+    let pseudoPlayHandOffset: number =
+      page.endIndex - (pseudoPlayHand.length - 1);
 
-    if (offset < 0) offset = 0;
-    // switchPage("right") WORKS BUT GOING BACK TO THE PREVIOUS PAGE DONT
+    if (pseudoPlayHandOffset <= -1) pseudoPlayHandOffset = 0;
 
-    for (let i = page.start; i <= page.end - offset; i++) {
+    for (
+      let i = page.startIndex;
+      i <= page.endIndex - pseudoPlayHandOffset;
+      i++
+    ) {
       htmlList.push(
         <img
           src={getCardImgPath(pseudoPlayHand[i])}
@@ -57,27 +83,40 @@ export default function PlayHand({
   }
 
   function switchPage(direction: "left" | "right") {
-    let start: number = page.start;
-    let end: number = page.end;
-    const offset: number = page.end - (pseudoPlayHand.length - 1);
+    let start: number = page.startIndex;
+    let end: number = page.endIndex;
+    const offset: number = page.endIndex - (pseudoPlayHand.length - 1);
+    let currentPage: number = page.currentPage;
 
     if (direction === "left" && start > 0) {
       end = start - 1;
       start = end - 6;
+      currentPage--;
     }
 
-    if (direction === "right" && offset <= 0) {
+    if (direction === "right" && offset < 0) {
       start = end + 1;
       end = start + 6;
+      currentPage++;
     }
 
     setPage({
-      start: start,
-      end: end,
+      startIndex: start,
+      endIndex: end,
+      currentPage: currentPage,
     });
   }
 
   function removeCardFromPlayHand(card: Card) {
+    const pseudoPlayHandEndIndex: number = pseudoPlayHand.length - 1;
+
+    if (
+      pseudoPlayHandEndIndex - page.startIndex > 6 &&
+      pseudoPlayHandEndIndex > page.endIndex
+    ) {
+      setHasEditCard(true);
+    }
+
     setPseudoPlayHand(
       pseudoPlayHand.filter((pseudoCard) => {
         return card.id !== pseudoCard.id;
