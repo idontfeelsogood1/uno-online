@@ -26,9 +26,6 @@ export default function PlayHand({
     currentPage: 1,
   });
 
-  console.log(page);
-  console.log(hasEditCard);
-
   useEffect(() => {
     if (
       action!.actionType === "played-cards" &&
