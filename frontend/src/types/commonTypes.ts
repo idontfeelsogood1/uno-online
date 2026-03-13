@@ -58,8 +58,9 @@ export interface GameActionProps {
 }
 
 export interface PageProps {
-  start: number;
-  end: number;
+  startIndex: number;
+  endIndex: number;
+  currentPage: number;
 }
 
 export interface RoomData {
