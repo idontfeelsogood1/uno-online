@@ -63,6 +63,13 @@ export interface PageProps {
   currentPage: number;
 }
 
+export interface GameEndProps {
+  players: RoomPlayer[];
+  ownerSocketId: string;
+  setHomeView: CallableFunction;
+  continueGame: CallableFunction;
+}
+
 export interface RoomData {
   readonly roomId: string;
   readonly roomName: string;
