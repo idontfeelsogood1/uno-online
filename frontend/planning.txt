@@ -29,6 +29,9 @@ PlayerVsPlayer COMPONENT:
         - Add exit button
 
     - Game COMPONENT:
+        - Implement locking mechanism for draw card, 
+        - only allow them to draw until at least 1 card match the top card
+
         - Gameboard COMPONENT:
             - Show button to draw card
             - Show current top card
@@ -52,11 +55,12 @@ PlayerVsPlayer COMPONENT:
                 - Show UNO button (act as play cards but with uno called this is intentional)
                 - Add check to show choose a color dialogue if last card on playHand is wild
                 - Add prev and next button to show overflow cards
-        - GameEnd COMPONENT:
-            - Show game finished dialogue
-            - Show player currently in room (with their scores to be implemented later)
-            - Show button to go back to Home
-            - Show button to continue the Game (only owner can see this button, other player sees a waiting message)
+        
+    - GameEnd COMPONENT:
+        - Show game finished dialogue
+        - Show player currently in room (with their scores to be implemented later)
+        - Show button to go back to Home
+        - Show button to continue the Game (only owner can see this button, other player sees a waiting message)
 
 PlayerVsBot COMPONENT:
 // TO BE IMPLEMENTED
