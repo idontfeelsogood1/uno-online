@@ -1,6 +1,7 @@
 import PlayerLobby from "./PlayerLobby/PlayerLobby";
 import Room from "./Room/Room";
 import Game from "./Game/Game";
+import GameEnd from "./Game/GameEnd/GameEnd";
 import { useState, useEffect } from "react";
 import type {
   PlayerVsPlayerProps,
@@ -101,6 +102,12 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
     };
   }, []);
 
+  function continueGame() {
+    setGameState(gameState);
+    setActionType("game-started");
+    setActionType(null);
+  }
+
   if (view === "LOBBY") {
     return <PlayerLobby lobbyState={lobbyState} setHomeView={setHomeView} />;
   }
@@ -109,11 +116,23 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   }
   if (view === "GAME") {
     return (
-      <Game
-        gameState={gameState!}
-        actionType={actionType!}
-        actionSocketId={actionSocketId!}
-      />
+      <>
+        <Game
+          gameState={gameState!}
+          actionType={actionType!}
+          actionSocketId={actionSocketId!}
+        />
+        {/* CLICKING HOME AND CONTINUE DOES NOTHING */}
+        {/* CONSIDER EDGE CASE WHEN CONTINUING WITH ONLY 1 PLAYER LEFT, EITHER LEAVE ROOM OR DO SOMETHING ELSE */}
+        {actionType === "game-ended" && (
+          <GameEnd
+            players={roomState!.currentPlayers}
+            ownerSocketId={roomState!.ownerSocketId}
+            setHomeView={() => setHomeView(null)}
+            continueGame={continueGame}
+          />
+        )}
+      </>
     );
   }
 }
