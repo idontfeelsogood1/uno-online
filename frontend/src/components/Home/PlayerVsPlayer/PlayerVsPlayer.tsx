@@ -115,6 +115,15 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
     return <Room roomState={roomState!} />;
   }
   if (view === "GAME") {
+    if (actionType === "game-ended") {
+      console.log("Game has ended. GameEnd menu should have shown");
+      // IF THERES ONLY 1 PERSON IN THE ROOM AND GAME HAS ENDED, THE MENU SHOWS
+      // IF THERES MORE THAN 1 IT WONT SHOW
+      // BACKEND CORRECTLY RETURNS actionType === "game-ended"
+      // PROBLEM MIGHT RELATED TO MULTIPLE RE RENDERS
+      // 1 PERSON 6 RENDERS
+      // > ONE 2 RENDERS
+    }
     return (
       <>
         <Game
@@ -122,8 +131,6 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
           actionType={actionType!}
           actionSocketId={actionSocketId!}
         />
-        {/* CLICKING HOME AND CONTINUE DOES NOTHING */}
-        {/* CONSIDER EDGE CASE WHEN CONTINUING WITH ONLY 1 PLAYER LEFT, EITHER LEAVE ROOM OR DO SOMETHING ELSE */}
         {actionType === "game-ended" && (
           <GameEnd
             players={roomState!.currentPlayers}
