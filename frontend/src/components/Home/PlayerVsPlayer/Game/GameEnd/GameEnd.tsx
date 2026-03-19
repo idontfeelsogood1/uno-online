@@ -23,8 +23,10 @@ export default function GameEnd({
         </ul>
       </div>
       <div>
-        <button onClick={() => setHomeView}>HOME</button>
-        <button onClick={() => continueGame}>CONTINUE</button>
+        <button onClick={() => setHomeView()}>HOME</button>
+        {players.length > 1 && (
+          <button onClick={() => continueGame()}>CONTINUE</button>
+        )}
       </div>
     </dialog>
   );
