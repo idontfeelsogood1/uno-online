@@ -322,8 +322,7 @@ export class GameGateway implements OnGatewayDisconnect {
         username: player.username,
         gameState: gameState,
       });
-    }
-    if (hasPlayerWon) {
+    } else if (hasPlayerWon) {
       this.server.to(room.id).emit('game-state-update', {
         actionType: 'player-won',
         socketId: player.socketId,
