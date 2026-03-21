@@ -16,7 +16,7 @@ export default function GameEnd({
             return (
               <li>
                 <span>{player.username}</span>
-                {socket.id === ownerSocketId && <span>(OWNER)</span>}
+                {player.socketId === ownerSocketId && <span>(OWNER)</span>}
               </li>
             );
           })}
@@ -24,7 +24,7 @@ export default function GameEnd({
       </div>
       <div>
         <button onClick={() => setHomeView()}>HOME</button>
-        {players.length > 1 && (
+        {players.length > 1 && socket.id === ownerSocketId && (
           <button onClick={() => continueGame()}>CONTINUE</button>
         )}
       </div>
