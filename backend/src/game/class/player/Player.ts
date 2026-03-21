@@ -24,29 +24,33 @@ export class Player {
   }
 
   public removeCards(cardIds: string[]): Card[] {
-    const idsToRemove: Set<string> = new Set(cardIds);
     const removedItems: Card[] = [];
 
-    for (const card of this.hand) {
-      if (idsToRemove.has(card.id)) {
-        const index: number = this.hand.indexOf(card);
-        const arr: Card[] = this.hand.splice(index, 1);
-        removedItems.push(arr[0]);
+    cardIds.forEach((id) => {
+      for (const card of this.getHand()) {
+        if (card.id === id) {
+          const index: number = this.hand.indexOf(card);
+          const arr: Card[] = this.hand.splice(index, 1);
+          removedItems.push(arr[0]);
+          break;
+        }
       }
-    }
+    });
 
     return removedItems;
   }
 
   public getCardsToPlay(cardIds: string[]): Card[] {
-    const idsToFind: Set<string> = new Set(cardIds);
     const cardsToPlay: Card[] = [];
 
-    for (const card of this.hand) {
-      if (idsToFind.has(card.id)) {
-        cardsToPlay.push(card);
+    cardIds.forEach((id) => {
+      for (const card of this.getHand()) {
+        if (card.id === id) {
+          cardsToPlay.push(card);
+          break;
+        }
       }
-    }
+    });
 
     return cardsToPlay;
   }

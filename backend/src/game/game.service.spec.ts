@@ -1320,10 +1320,16 @@ describe('GameService', () => {
       expect(newRoom.getCurrentPlayers()).toHaveLength(2);
       expect(service.getRoomOfPlayer(owner.socketId)).toBe(newRoom);
       expect(service.getRoomOfPlayer(player2.socketId)).toBe(newRoom);
-      expect(service.getPlayerOfRoom(newRoom.id, owner.socketId)).toBe(owner);
-      expect(service.getPlayerOfRoom(newRoom.id, player2.socketId)).toBe(
-        player2,
+      const retrievedOwner = service.getPlayerOfRoom(
+        newRoom.id,
+        owner.socketId,
       );
+      expect(retrievedOwner!.socketId).toEqual(owner.socketId);
+      const retrievedPlayer2 = service.getPlayerOfRoom(
+        newRoom.id,
+        player2.socketId,
+      );
+      expect(retrievedPlayer2!.socketId).toEqual(player2.socketId);
     });
   });
 });

@@ -116,7 +116,7 @@ export class GameBoard {
     return 'NUMBER';
   }
 
-  // ALLOW STACKING CARD OF 1 TYPE PER HAND
+  // MIGHT NEED FURTHER BUG FIXING
   public processPattern(cards: Card[]): void {
     let pseudoTopCard: Card = this.currentTopCard!;
 
@@ -125,11 +125,14 @@ export class GameBoard {
     const firstCardMatchEnforcedColorOrWild: boolean =
       cards[0].color === this.enforcedColor ||
       this.getCardType(cards[0]) === 'WILD';
+    const firstCardMatchTopCardColor: boolean =
+      pseudoTopCard.color === cards[0].color;
 
     // THIS ENSURES ONLY THE FIRST CARD OF HAND THAT MATCHES THE CONSTRAINT IS SET AS pseudoTopCard
     if (
       firstCardIsWild ||
-      (topCardIsWild && firstCardMatchEnforcedColorOrWild)
+      (topCardIsWild && firstCardMatchEnforcedColorOrWild) ||
+      firstCardMatchTopCardColor
     ) {
       pseudoTopCard = cards[0];
     } else if (topCardIsWild) {

@@ -1,40 +1,73 @@
 export interface PlayerLobbyProps {
-  lobbyState: RoomData[];
-  setHomeView: (view: HomeViewState) => void;
+  readonly lobbyState: RoomData[];
+  readonly setHomeView: (view: HomeViewState) => void;
 }
 
 export interface PlayerVsPlayerProps {
-  setHomeView: (view: HomeViewState) => void;
+  readonly setHomeView: (view: HomeViewState) => void;
 }
 
 export interface RoomProps {
-  roomState: RoomData;
+  readonly roomState: RoomData;
 }
 
 export interface GameProps {
-  gameState: GameData;
-  actionSocketId: string;
+  readonly gameState: GameData;
+  readonly actionSocketId: string;
+  readonly actionType: GameStateActionType;
 }
 
 export interface GameBoardProps {
-  topCard: Card;
-  enforcedColor: CardColor;
+  readonly topCard: Card;
+  readonly enforcedColor: CardColor;
 }
 
 export interface OtherPlayerProps {
-  otherPlayer: GamePlayer;
+  readonly otherPlayer: GamePlayer;
 }
 
-export interface OtherHand {
-  otherHand: Card[];
+export interface OtherHandProps {
+  readonly otherHand: Card[];
 }
 
 export interface CurrentPlayerProps {
-  player: GamePlayer;
+  readonly player: GamePlayer;
 }
 
-export interface PlayHand {
-  hand: Card[];
+export interface PlayHandProps {
+  readonly pseudoHand: Card[];
+  readonly pseudoPlayHand: Card[];
+  readonly setPseudoPlayHand: CallableFunction;
+  readonly setPseudoHand: CallableFunction;
+}
+
+export interface HandProps {
+  readonly pseudoHand: Card[];
+  readonly pseudoPlayHand: Card[];
+  readonly setPseudoPlayHand: CallableFunction;
+  readonly setPseudoHand: CallableFunction;
+}
+
+export interface ChooseColorProps {
+  readonly actionCallback: CallableFunction;
+}
+
+export interface GameActionProps {
+  readonly actionType: GameStateActionType;
+  readonly actionSocketId: string;
+}
+
+export interface PageProps {
+  startIndex: number;
+  endIndex: number;
+  currentPage: number;
+}
+
+export interface GameEndProps {
+  players: RoomPlayer[];
+  ownerSocketId: string;
+  setHomeView: CallableFunction;
+  continueGame: CallableFunction;
 }
 
 export interface RoomData {

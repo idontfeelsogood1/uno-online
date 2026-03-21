@@ -1,12 +1,14 @@
 import PlayerLobby from "./PlayerLobby/PlayerLobby";
 import Room from "./Room/Room";
 import Game from "./Game/Game";
+import GameEnd from "./Game/GameEnd/GameEnd";
 import { useState, useEffect } from "react";
 import type {
   PlayerVsPlayerProps,
   WrapperViewState,
   RoomData,
   GameData,
+  GameStateActionType,
 } from "../../../types/commonTypes";
 import type {
   RoomStateUpdateDto,
@@ -23,6 +25,9 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [roomState, setRoomState] = useState<RoomData | null>(null);
   const [gameState, setGameState] = useState<GameData | null>(null);
   const [actionSocketId, setActionSocketId] = useState<string | null>(null);
+  const [actionType, setActionType] = useState<GameStateActionType | null>(
+    null,
+  );
 
   useEffect(() => {
     socket.connect();
@@ -65,12 +70,14 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
         });
         setGameState(data.gameState);
         setActionSocketId(socket.id!);
+        setActionType(data.actionType);
       } else {
         socket.emit("get-room-state", (ack: RoomDto) => {
           setRoomState(ack.roomState);
         });
         setGameState(data.gameState);
         setActionSocketId(data.socketId!);
+        setActionType(data.actionType);
       }
     });
 
@@ -95,6 +102,10 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
     };
   }, []);
 
+  function continueGame() {
+    socket.emit("start-room");
+  }
+
   if (view === "LOBBY") {
     return <PlayerLobby lobbyState={lobbyState} setHomeView={setHomeView} />;
   }
@@ -102,6 +113,22 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
     return <Room roomState={roomState!} />;
   }
   if (view === "GAME") {
-    return <Game gameState={gameState!} actionSocketId={actionSocketId!} />;
+    return (
+      <>
+        <Game
+          gameState={gameState!}
+          actionType={actionType!}
+          actionSocketId={actionSocketId!}
+        />
+        {actionType === "game-ended" && (
+          <GameEnd
+            players={roomState!.currentPlayers}
+            ownerSocketId={roomState!.ownerSocketId}
+            setHomeView={() => setHomeView(null)}
+            continueGame={continueGame}
+          />
+        )}
+      </>
+    );
   }
 }
