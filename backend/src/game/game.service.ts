@@ -481,9 +481,11 @@ export class GameService {
 
   public resetRoom(room: GameRoom): void {
     const prevRoomCurrentPlayer: Player[] = room.getCurrentPlayers();
+    const newPlayer: Player[] = [];
 
     for (const player of prevRoomCurrentPlayer) {
       this.removeRoomOfPlayer(player.socketId);
+      newPlayer.push(new Player(player.socketId, player.username));
     }
     this.removeRoom(room.id);
 
@@ -496,7 +498,7 @@ export class GameService {
 
     this.addRoom(newRoom);
 
-    for (const player of prevRoomCurrentPlayer) {
+    for (const player of newPlayer) {
       this.addPlayerToRoom(newRoom.id, player);
       this.setPlayerOfRoom(player.socketId, newRoom.id);
     }
