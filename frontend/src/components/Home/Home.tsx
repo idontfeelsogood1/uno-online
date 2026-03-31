@@ -14,7 +14,7 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div className="flex m-auto justify-center items-center gap-7">
       <button
         onClick={() => {
           setView("BOT");
