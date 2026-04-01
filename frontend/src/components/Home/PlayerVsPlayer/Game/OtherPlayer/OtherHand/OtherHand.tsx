@@ -3,7 +3,7 @@ import { getCardCoverImgPath } from "../../../../../../api/helper";
 
 export default function OtherHand({ otherHand }: OtherHandProps) {
   return (
-    <div className="flex flex-warp gap-3 p-3 border">
+    <div className="flex flex-warp gap-3 p-3 border bg-black">
       {otherHand.map(() => {
         return <img src={getCardCoverImgPath()} alt="Card cover" />;
       })}

@@ -175,20 +175,28 @@ export default function PlayHand({
           onClick={() => {
             switchPage("left");
           }}
+          className="border"
         >
           PREV
         </button>
         <div>
-          <div className="flex flex-warp gap-3 p-3 border">{renderHand()}</div>
-          <div>
-            <button onClick={playCards}>PLAY CARDS</button>
-            <button onClick={uno}>UNO (Play cards while yelling uno)</button>
+          <div className="flex flex-warp gap-3 p-3 border bg-black">
+            {renderHand()}
+          </div>
+          <div className="border p-3">
+            <button onClick={playCards} className="border">
+              PLAY CARDS
+            </button>
+            <button onClick={uno} className="border">
+              UNO (Play cards while yelling uno)
+            </button>
           </div>
         </div>
         <button
           onClick={() => {
             switchPage("right");
           }}
+          className="border"
         >
           NEXT
         </button>

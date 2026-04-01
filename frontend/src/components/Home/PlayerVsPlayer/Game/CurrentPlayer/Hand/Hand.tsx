@@ -94,9 +94,15 @@ export default function Hand({
 
   return (
     <div className="border p-3">
-      <button onClick={() => switchPage("left")}>PREV</button>
-      <div className="flex flex-warp gap-3 p-3 border">{renderHand()}</div>
-      <button onClick={() => switchPage("right")}>NEXT</button>
+      <button onClick={() => switchPage("left")} className="border">
+        PREV
+      </button>
+      <div className="flex flex-warp gap-3 p-3 border bg-black">
+        {renderHand()}
+      </div>
+      <button onClick={() => switchPage("right")} className="border">
+        NEXT
+      </button>
     </div>
   );
 }
