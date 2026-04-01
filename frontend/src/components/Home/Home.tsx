@@ -19,6 +19,7 @@ export default function Home() {
         onClick={() => {
           setView("BOT");
         }}
+        className="border"
       >
         Player Vs Bot
       </button>
@@ -26,6 +27,7 @@ export default function Home() {
         onClick={() => {
           setView("PVP");
         }}
+        className="border"
       >
         Multiplayer
       </button>
