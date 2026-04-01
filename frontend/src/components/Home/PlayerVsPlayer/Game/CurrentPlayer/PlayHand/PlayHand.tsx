@@ -170,7 +170,7 @@ export default function PlayHand({
 
   return (
     <>
-      <div>
+      <div className="border p-3">
         <button
           onClick={() => {
             switchPage("left");
@@ -179,7 +179,7 @@ export default function PlayHand({
           PREV
         </button>
         <div>
-          <div>{renderHand()}</div>
+          <div className="flex flex-warp gap-3 p-3 border">{renderHand()}</div>
           <div>
             <button onClick={playCards}>PLAY CARDS</button>
             <button onClick={uno}>UNO (Play cards while yelling uno)</button>

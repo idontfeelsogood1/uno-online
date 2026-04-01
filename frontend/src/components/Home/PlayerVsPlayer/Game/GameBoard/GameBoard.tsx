@@ -4,7 +4,7 @@ import { socket } from "../../../../../api/socket";
 
 export default function GameBoard({ topCard, enforcedColor }: GameBoardProps) {
   return (
-    <div>
+    <div className="flex gap-3 p-3 text-center border">
       <button
         onClick={() => {
           socket.emit("draw-card");
@@ -18,9 +18,9 @@ export default function GameBoard({ topCard, enforcedColor }: GameBoardProps) {
         alt={topCard.color + " " + topCard.value}
       />
 
-      <div>{topCard.color}</div>
+      <div className="border">{topCard.color}</div>
 
-      <div>
+      <div className="border">
         {topCard.color === "BLACK" ? enforcedColor : "No enforced color"}
       </div>
     </div>

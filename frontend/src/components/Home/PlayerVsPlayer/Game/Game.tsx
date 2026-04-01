@@ -12,7 +12,7 @@ export default function Game({
 }: GameProps) {
   return (
     <GameAction.Provider value={{ actionType, actionSocketId }}>
-      <div>
+      <div className="flex flex-col gap-6 p-3">
         <GameBoard
           topCard={gameState.topCard}
           enforcedColor={gameState.enforcedColor}

@@ -35,7 +35,7 @@ export default function CurrentPlayer({ player }: CurrentPlayerProps) {
   }, [player]);
 
   return (
-    <div>
+    <div className="flex flex-col gap-3 p-3 border">
       <div>{player.username}</div>
       <PlayHand
         pseudoHand={pseudoHand}

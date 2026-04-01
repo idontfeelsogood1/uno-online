@@ -3,7 +3,7 @@ import OtherHand from "./OtherHand/OtherHand";
 
 export default function OtherPlayer({ otherPlayer }: OtherPlayerProps) {
   return (
-    <div>
+    <div className="flex flex-col border gap-3 p-3">
       <div>{otherPlayer.username}</div>
       <OtherHand otherHand={otherPlayer.hand} />
     </div>
