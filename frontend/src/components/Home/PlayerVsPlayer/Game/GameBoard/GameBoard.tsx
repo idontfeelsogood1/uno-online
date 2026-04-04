@@ -10,12 +10,17 @@ export default function GameBoard({ topCard, enforcedColor }: GameBoardProps) {
           socket.emit("draw-card");
         }}
       >
-        <img src={getCardCoverImgPath()} alt="Draw cards" />
+        <img
+          src={getCardCoverImgPath()}
+          alt="Draw cards"
+          className="w-50 h-77.5"
+        />
       </button>
 
       <img
         src={getCardImgPath(topCard)}
         alt={topCard.color + " " + topCard.value}
+        className="w-50 h-77.5"
       />
 
       <div className="border">{topCard.color}</div>

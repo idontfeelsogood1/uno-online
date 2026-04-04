@@ -12,7 +12,10 @@ export default function Game({
 }: GameProps) {
   return (
     <GameAction.Provider value={{ actionType, actionSocketId }}>
-      <div className="flex flex-col gap-6 p-3">
+      {/* FIGURE OUT THE COL SPAN AND ROW SPAN FOR OTHER PLAYERS, 
+      GAMEBOARD AND MAIN PLAYER */}
+
+      <div className="grid grid-cols-4 grid-rows-4 gap-6 p-3">
         <GameBoard
           topCard={gameState.topCard}
           enforcedColor={gameState.enforcedColor}

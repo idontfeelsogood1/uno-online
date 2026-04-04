@@ -73,6 +73,7 @@ export default function PlayHand({
             removeCardFromPlayHand(pseudoPlayHand[i]);
           }}
           alt={pseudoPlayHand[i].name}
+          className="w-50 h-77.5"
         ></img>,
       );
     }

@@ -86,6 +86,7 @@ export default function Hand({
             addCardToPlayHand(pseudoHand[i]);
           }}
           alt={pseudoHand[i].name}
+          className="w-50 h-77.5"
         ></img>,
       );
     }
