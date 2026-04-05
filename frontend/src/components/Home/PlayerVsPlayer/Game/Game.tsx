@@ -1,4 +1,4 @@
-import type { GameProps } from "../../../../types/commonTypes";
+import type { GamePlayer, GameProps } from "../../../../types/commonTypes";
 import CurrentPlayer from "./CurrentPlayer/CurrentPlayer";
 import GameBoard from "./GameBoard/GameBoard";
 import OtherPlayer from "./OtherPlayer/OtherPlayer";
@@ -10,26 +10,62 @@ export default function Game({
   actionType,
   actionSocketId,
 }: GameProps) {
+  const leftPlacement: string = "col-start-1 row-start-2 row-span-2";
+  const rightPlacement: string = "col-start-4 row-start-2 row-span-2";
+  const topPlacement: string = "col-start-2 row-start-1 col-span-2";
+  const bottomPlacement: string = "col-start-2 row-start-4 col-span-2";
+  const middlePlacement: string =
+    "col-start-2 col-span-2 row-start-2 row-span-2";
+
+  const otherPlayersPlacement: string[] = [
+    topPlacement,
+    leftPlacement,
+    rightPlacement,
+  ];
+
+  function renderPlayer(): React.ReactElement[] {
+    const players: GamePlayer[] = [];
+
+    gameState.playerOrder.forEach((player) => {
+      if (player.socketId !== socket.id) {
+        players.push(player);
+      }
+    });
+    gameState.playerOrder.forEach((player) => {
+      if (player.socketId === socket.id) {
+        players.push(player);
+      }
+    });
+
+    const playersHtmlList: React.ReactElement[] = [];
+
+    for (let i = 0; i < gameState.playerOrder.length; i++) {
+      if (i < gameState.playerOrder.length - 1) {
+        playersHtmlList.push(
+          <OtherPlayer
+            otherPlayer={players[i]}
+            gridPosition={otherPlayersPlacement[i]}
+          />,
+        );
+      } else {
+        playersHtmlList.push(
+          <CurrentPlayer player={players[i]} gridPosition={bottomPlacement} />,
+        );
+      }
+    }
+
+    return playersHtmlList;
+  }
+
   return (
     <GameAction.Provider value={{ actionType, actionSocketId }}>
-      {/* FIGURE OUT THE COL SPAN AND ROW SPAN FOR OTHER PLAYERS, 
-      GAMEBOARD AND MAIN PLAYER */}
-
       <div className="grid grid-cols-4 grid-rows-4 gap-6 p-3">
         <GameBoard
           topCard={gameState.topCard}
           enforcedColor={gameState.enforcedColor}
+          gridPosition={middlePlacement}
         />
-        {gameState.playerOrder.map((player) => {
-          if (player.socketId !== socket.id) {
-            return <OtherPlayer otherPlayer={player} />;
-          }
-        })}
-        {gameState.playerOrder.map((player) => {
-          if (player.socketId === socket.id) {
-            return <CurrentPlayer player={player} />;
-          }
-        })}
+        {renderPlayer()}
       </div>
     </GameAction.Provider>
   );

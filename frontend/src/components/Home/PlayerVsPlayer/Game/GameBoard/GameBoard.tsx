@@ -2,9 +2,13 @@ import type { GameBoardProps } from "../../../../../types/commonTypes";
 import { getCardImgPath, getCardCoverImgPath } from "../../../../../api/helper";
 import { socket } from "../../../../../api/socket";
 
-export default function GameBoard({ topCard, enforcedColor }: GameBoardProps) {
+export default function GameBoard({
+  topCard,
+  enforcedColor,
+  gridPosition,
+}: GameBoardProps) {
   return (
-    <div className="flex gap-3 p-3 text-center border">
+    <div className={`${gridPosition} 4 flex gap-3 p-3 text-center border`}>
       <button
         onClick={() => {
           socket.emit("draw-card");

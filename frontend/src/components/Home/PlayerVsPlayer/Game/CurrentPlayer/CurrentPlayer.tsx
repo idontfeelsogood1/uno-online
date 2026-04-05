@@ -6,7 +6,10 @@ import type {
 import Hand from "./Hand/Hand";
 import PlayHand from "./PlayHand/PlayHand";
 
-export default function CurrentPlayer({ player }: CurrentPlayerProps) {
+export default function CurrentPlayer({
+  player,
+  gridPosition,
+}: CurrentPlayerProps) {
   const [pseudoPlayHand, setPseudoPlayHand] = useState<Card[]>([]);
   const [pseudoHand, setPseudoHand] = useState<Card[]>(player.hand);
 
@@ -35,7 +38,7 @@ export default function CurrentPlayer({ player }: CurrentPlayerProps) {
   }, [player]);
 
   return (
-    <div className="flex flex-col gap-3 p-3 border">
+    <div className={`${gridPosition} flex flex-col gap-3 p-3 border`}>
       <div className="border">{player.username}</div>
       <PlayHand
         pseudoHand={pseudoHand}
