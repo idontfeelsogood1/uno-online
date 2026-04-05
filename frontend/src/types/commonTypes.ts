@@ -20,10 +20,12 @@ export interface GameProps {
 export interface GameBoardProps {
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
+  readonly gridPosition: string;
 }
 
 export interface OtherPlayerProps {
   readonly otherPlayer: GamePlayer;
+  readonly gridPosition: string;
 }
 
 export interface OtherHandProps {
@@ -32,6 +34,7 @@ export interface OtherHandProps {
 
 export interface CurrentPlayerProps {
   readonly player: GamePlayer;
+  readonly gridPosition: string;
 }
 
 export interface PlayHandProps {
