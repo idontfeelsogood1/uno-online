@@ -37,6 +37,13 @@ export default function CurrentPlayer({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player]);
 
+  // FLEX-WARP DOESNT WORK
+  // MIGHT BE BECAUSE THE OUTER DIVS ARE NOT FLEX
+
+  // THINK ABOUT THE OVERALL LAYOUT AGAIN BEFORE TOUCHING ANYTHING
+  // THINK ABOUT HOW TO MINIMIZE CARD USING SOME CARD OVERLAPPING METHODS
+  // I CAN EVEN NOT USE FLEX-WRAP
+
   return (
     <div className={`${gridPosition} flex flex-col gap-3 p-3 border`}>
       <div className="border">{player.username}</div>

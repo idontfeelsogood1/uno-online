@@ -181,7 +181,7 @@ export default function PlayHand({
           PREV
         </button>
         <div>
-          <div className="flex flex-warp gap-3 p-3 border bg-black">
+          <div className="flex flex-warp justify-center -space-x-20.5 p-3 border bg-black">
             {renderHand()}
           </div>
           <div className="border p-3">
