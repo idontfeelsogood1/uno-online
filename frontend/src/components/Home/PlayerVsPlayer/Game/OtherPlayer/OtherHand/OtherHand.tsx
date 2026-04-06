@@ -1,7 +1,7 @@
 import type { OtherHandProps } from "../../../../../../types/commonTypes";
 import { getCardCoverImgPath } from "../../../../../../api/helper";
 
-export default function OtherHand({ otherHand }: OtherHandProps) {
+export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
   function renderHand(): React.ReactElement[] {
     const img: React.ReactElement[] = [];
     for (let i = 0; i < 7; i++) {
@@ -19,7 +19,9 @@ export default function OtherHand({ otherHand }: OtherHandProps) {
   }
 
   return (
-    <div className="flex flex-warp gap-3 p-3 border bg-black">
+    <div
+      className={`flex ${rotation} flex-warp justify-center p-3 border bg-black`}
+    >
       {renderHand()}
     </div>
   );
