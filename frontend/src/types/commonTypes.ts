@@ -25,11 +25,12 @@ export interface GameBoardProps {
 
 export interface OtherPlayerProps {
   readonly otherPlayer: GamePlayer;
-  readonly gridPosition: string;
+  readonly gridPosition: object;
 }
 
 export interface OtherHandProps {
   readonly otherHand: Card[];
+  readonly rotation: string;
 }
 
 export interface CurrentPlayerProps {
@@ -71,6 +72,12 @@ export interface GameEndProps {
   ownerSocketId: string;
   setHomeView: CallableFunction;
   continueGame: CallableFunction;
+}
+
+export interface GridPosition {
+  placement: string;
+  rotation: string;
+  position: string;
 }
 
 export interface RoomData {
