@@ -94,11 +94,11 @@ export default function Hand({
   }
 
   return (
-    <div className="border p-3">
+    <div className="flex border p-3 justify-center">
       <button onClick={() => switchPage("left")} className="border">
         PREV
       </button>
-      <div className="flex flex-warp justify-center -space-x-20.5 p-3 border bg-black">
+      <div className="flex justify-center grow -space-x-20.5 p-3 border">
         {renderHand()}
       </div>
       <button onClick={() => switchPage("right")} className="border">

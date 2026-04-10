@@ -14,9 +14,11 @@ export default function Game({
   actionType,
   actionSocketId,
 }: GameProps) {
-  const leftPlacement: string = "col-start-1 row-start-2 row-span-2";
+  const leftPlacement: string =
+    "col-start-1 row-start-2 row-span-2 flex-row-reverse";
   const rightPlacement: string = "col-start-4 row-start-2 row-span-2";
-  const topPlacement: string = "col-start-2 row-start-1 col-span-2";
+  const topPlacement: string =
+    "col-start-2 row-start-1 col-span-2 flex-col-reverse";
   const bottomPlacement: string = "col-start-2 row-start-4 col-span-2";
   const middlePlacement: string =
     "col-start-2 col-span-2 row-start-2 row-span-2";
@@ -24,17 +26,9 @@ export default function Game({
   const cardRotationSide: string = "flex-col -space-y-41";
   const cardRotationTop: string = "-space-x-20";
 
-  // FIGURE OUT HOW TO DO CONDITIONAL ROTATION FOR OtherPlayer/OtherHand
-  // AND NEGATIVE SPACING FOR EACH POSTION
-  // AND SWITCH POSITION/ROTATE THE NAME AND THE CARDS
-  // TO MATCH REFERENCE
-
-  // IDEAS:
-  // USE LOCATIONAL PROPS TO KNOW WHAT POSITION THAT COMPONENT IS IN
-  // DEPENDING ON THE POSITION, RENDER WHAT IS FIRST AND WHAT IS NEXT
-
-  // LOCATIONAL PROPS CAN BE IN A VARIABLE
-  // AND NESTED INTO A CHILD ARRAY INSIDE THE ARRAY
+  // FIGURE OUT HOW TO LIMIT THE HEIGHT/WIDTH (use max-width min-height, etc...)
+  // OF EACH GRID ITEMS AND HOW TO STACK CARDS CLOSER DYNAMICALLY
+  // DO THIS FOR CurrentPlayer first
 
   const otherPlayersPlacement: GridPosition[] = [
     {

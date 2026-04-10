@@ -8,7 +8,9 @@ export default function GameBoard({
   gridPosition,
 }: GameBoardProps) {
   return (
-    <div className={`${gridPosition} 4 flex gap-3 p-3 text-center border`}>
+    <div
+      className={`${gridPosition} 4 flex justify-center items-center gap-3 p-3 text-center border`}
+    >
       <button
         onClick={() => {
           socket.emit("draw-card");

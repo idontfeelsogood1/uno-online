@@ -171,7 +171,7 @@ export default function PlayHand({
 
   return (
     <>
-      <div className="border p-3">
+      <div className="border p-3 flex justify-center">
         <button
           onClick={() => {
             switchPage("left");
@@ -180,11 +180,11 @@ export default function PlayHand({
         >
           PREV
         </button>
-        <div>
-          <div className="flex flex-warp justify-center -space-x-20.5 p-3 border bg-black">
+        <div className="grow">
+          <div className="flex justify-center -space-x-20.5 p-3 border">
             {renderHand()}
           </div>
-          <div className="border p-3">
+          <div className="flex justify-center border p-3 gap-3">
             <button onClick={playCards} className="border">
               PLAY CARDS
             </button>

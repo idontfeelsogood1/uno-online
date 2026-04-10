@@ -10,10 +10,11 @@ export default function OtherPlayer({
 }: OtherPlayerProps & {
   gridPosition: GridPosition;
 }) {
-  // FIGURE OUT THE ROTATION/POSITION FOR THE USERNAME AND THE HAND
-  // USING gridPostion.position
+  // gridPostion.position MAY BE THE KEY
   return (
-    <div className={`flex ${gridPosition.placement} border gap-3 p-3`}>
+    <div
+      className={`flex ${gridPosition.placement} justify-center align-middle border gap-3 p-3`}
+    >
       <div className="border">{otherPlayer.username}</div>
       <OtherHand
         otherHand={otherPlayer.hand}

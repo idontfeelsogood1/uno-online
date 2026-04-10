@@ -20,7 +20,7 @@ export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
 
   return (
     <div
-      className={`flex ${rotation} flex-warp justify-center p-3 border bg-black`}
+      className={`flex ${rotation} justify-center items-center grow p-3 border`}
     >
       {renderHand()}
     </div>
