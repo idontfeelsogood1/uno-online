@@ -30,6 +30,11 @@ export default function Game({
   // OF EACH GRID ITEMS AND HOW TO STACK CARDS CLOSER DYNAMICALLY
   // DO THIS FOR CurrentPlayer first
 
+  // WHEN THE WIDTH DECREASES, THE CARDS OVERLAPS CLOSER AND VICE VERSA, THIS IS FOR ROW CARDS
+  // DO THE SAME THING FOR HEIGHT
+
+  // SETUP A MAX-WIDTH MIN-HEIGHT FOR THE GRID ITEMS
+
   const otherPlayersPlacement: GridPosition[] = [
     {
       placement: topPlacement,

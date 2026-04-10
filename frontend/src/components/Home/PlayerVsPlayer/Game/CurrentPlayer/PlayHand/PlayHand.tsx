@@ -73,7 +73,7 @@ export default function PlayHand({
             removeCardFromPlayHand(pseudoPlayHand[i]);
           }}
           alt={pseudoPlayHand[i].name}
-          className="w-50 h-77.5"
+          className="w-50 h-77.5 shrink-0"
         ></img>,
       );
     }
@@ -181,7 +181,11 @@ export default function PlayHand({
           PREV
         </button>
         <div className="grow">
-          <div className="flex justify-center -space-x-20.5 p-3 border">
+          <div
+            className="flex justify-center p-3 border         
+            -space-x-28.75
+            @[1030px]:-space-x-20"
+          >
             {renderHand()}
           </div>
           <div className="flex justify-center border p-3 gap-3">
