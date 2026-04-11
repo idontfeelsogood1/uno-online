@@ -73,7 +73,7 @@ export default function PlayHand({
             removeCardFromPlayHand(pseudoPlayHand[i]);
           }}
           alt={pseudoPlayHand[i].name}
-          className="w-50 h-77.5 shrink-0"
+          className="shrink h-full max-h-64 aspect-2/3"
         ></img>,
       );
     }
@@ -171,7 +171,7 @@ export default function PlayHand({
 
   return (
     <>
-      <div className="border p-3 flex justify-center">
+      <div className="border p-3 flex justify-center min-h-0 min-w-0">
         <button
           onClick={() => {
             switchPage("left");
@@ -182,7 +182,7 @@ export default function PlayHand({
         </button>
         <div className="grow">
           <div
-            className="flex justify-center p-3 border         
+            className="flex justify-center p-3 border h-full min-h-0      
             -space-x-28.75
             @[1030px]:-space-x-20"
           >

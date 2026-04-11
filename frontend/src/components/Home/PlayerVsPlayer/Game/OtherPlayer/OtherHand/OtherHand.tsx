@@ -8,7 +8,7 @@ export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
       if (otherHand[i] !== undefined) {
         img.push(
           <img
-            className="w-50 h-77.5"
+            className="shrink h-full max-h-58 aspect-2/3"
             src={getCardCoverImgPath()}
             alt="Card cover"
           />,

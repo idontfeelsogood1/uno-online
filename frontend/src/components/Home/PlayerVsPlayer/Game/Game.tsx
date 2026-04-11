@@ -23,17 +23,8 @@ export default function Game({
   const middlePlacement: string =
     "col-start-2 col-span-2 row-start-2 row-span-2";
 
-  const cardRotationSide: string = "flex-col -space-y-41";
-  const cardRotationTop: string = "-space-x-20";
-
-  // FIGURE OUT HOW TO LIMIT THE HEIGHT/WIDTH (use max-width min-height, etc...)
-  // OF EACH GRID ITEMS AND HOW TO STACK CARDS CLOSER DYNAMICALLY
-  // DO THIS FOR CurrentPlayer first
-
-  // WHEN THE WIDTH DECREASES, THE CARDS OVERLAPS CLOSER AND VICE VERSA, THIS IS FOR ROW CARDS
-  // DO THE SAME THING FOR HEIGHT
-
-  // SETUP A MAX-WIDTH MIN-HEIGHT FOR THE GRID ITEMS
+  const cardRotationSide: string = "flex-col -space-y-41 h-full min-h-0";
+  const cardRotationTop: string = "-space-x-20 h-full min-h-0";
 
   const otherPlayersPlacement: GridPosition[] = [
     {
@@ -89,7 +80,7 @@ export default function Game({
 
   return (
     <GameAction.Provider value={{ actionType, actionSocketId }}>
-      <div className="grid grid-cols-4 grid-rows-4 gap-6 p-3">
+      <div className="grow h-full grid grid-cols-4 grid-rows-4 gap-6 p-3">
         <GameBoard
           topCard={gameState.topCard}
           enforcedColor={gameState.enforcedColor}

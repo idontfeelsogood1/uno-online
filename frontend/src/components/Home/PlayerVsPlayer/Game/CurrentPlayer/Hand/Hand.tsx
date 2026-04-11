@@ -86,7 +86,7 @@ export default function Hand({
             addCardToPlayHand(pseudoHand[i]);
           }}
           alt={pseudoHand[i].name}
-          className="w-50 h-77.5 shrink-0"
+          className="shrink h-full max-h-64 aspect-2/3"
         ></img>,
       );
     }
@@ -94,16 +94,16 @@ export default function Hand({
   }
 
   return (
-    <div className="@container flex border p-3 justify-center">
+    <div className="@container flex border p-3 justify-center min-h-0 min-w-0">
       <button onClick={() => switchPage("left")} className="border">
         PREV
       </button>
       {/* FIGURE OUT HOW TO CHANGE THE NEGATIVE SPACING DYNAMICALLY AS THE WIDTH */}
       {/* SET BREAKPOINTS FOR PERCENTAGES AT SPECIFIC SCREEN WIDTH */}
       <div
-        className="flex justify-center grow p-3 border 
-        -space-x-28.75
-        @[1030px]:-space-x-20
+        className="flex justify-center grow p-3 border h-full min-h-0
+        -space-x-10
+        @[1030px]:-space-x-10
       "
       >
         {renderHand()}

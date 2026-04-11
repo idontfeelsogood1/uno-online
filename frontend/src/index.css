@@ -2,6 +2,6 @@
 
 @layer base {
   #root {
-    @apply min-h-screen flex flex-col p-3 border;
+    @apply h-screen flex flex-col p-3 border-8;
   }
 }
