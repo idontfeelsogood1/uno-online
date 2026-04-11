@@ -98,8 +98,6 @@ export default function Hand({
       <button onClick={() => switchPage("left")} className="border">
         PREV
       </button>
-      {/* FIGURE OUT HOW TO CHANGE THE NEGATIVE SPACING DYNAMICALLY AS THE WIDTH */}
-      {/* SET BREAKPOINTS FOR PERCENTAGES AT SPECIFIC SCREEN WIDTH */}
       <div
         className="flex justify-center grow p-3 border h-full min-h-0
         -space-x-10

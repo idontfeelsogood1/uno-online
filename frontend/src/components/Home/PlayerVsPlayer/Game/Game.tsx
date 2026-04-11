@@ -15,13 +15,12 @@ export default function Game({
   actionSocketId,
 }: GameProps) {
   const leftPlacement: string =
-    "col-start-1 row-start-2 row-span-2 flex-row-reverse";
-  const rightPlacement: string = "col-start-4 row-start-2 row-span-2";
+    "col-start-1 row-start-2 flex-row-reverse min-h-0 min-w-0";
+  const rightPlacement: string = "col-start-3 row-start-2 min-h-0 min-w-0";
   const topPlacement: string =
-    "col-start-2 row-start-1 col-span-2 flex-col-reverse";
-  const bottomPlacement: string = "col-start-2 row-start-4 col-span-2";
-  const middlePlacement: string =
-    "col-start-2 col-span-2 row-start-2 row-span-2";
+    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
+  const bottomPlacement: string = "col-start-2 row-start-3 min-h-0 min-w-0";
+  const middlePlacement: string = "col-start-2 row-start-2 min-h-0 min-w-0";
 
   const cardRotationSide: string = "flex-col -space-y-41 h-full min-h-0";
   const cardRotationTop: string = "-space-x-20 h-full min-h-0";
@@ -80,7 +79,7 @@ export default function Game({
 
   return (
     <GameAction.Provider value={{ actionType, actionSocketId }}>
-      <div className="grow h-full grid grid-cols-4 grid-rows-4 gap-6 p-3">
+      <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1fr] gap-6 p-3">
         <GameBoard
           topCard={gameState.topCard}
           enforcedColor={gameState.enforcedColor}
