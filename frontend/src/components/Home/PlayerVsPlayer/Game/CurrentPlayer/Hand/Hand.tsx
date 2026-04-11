@@ -94,19 +94,19 @@ export default function Hand({
   }
 
   return (
-    <div className="@container flex border p-3 justify-center min-h-0 min-w-0">
-      <button onClick={() => switchPage("left")} className="border">
+    <div className="@container flex border p-3 justify-center min-h-34 min-w-0">
+      <button onClick={() => switchPage("left")} className="border shrink-0">
         PREV
       </button>
       <div
-        className="flex justify-center grow p-3 border h-full min-h-0
-        -space-x-10
-        @[1030px]:-space-x-10
+        className="flex justify-center p-3 border grow min-h-0 
+        -space-x-2
+        @[1030px]:-space-x-2
       "
       >
         {renderHand()}
       </div>
-      <button onClick={() => switchPage("right")} className="border">
+      <button onClick={() => switchPage("right")} className="border shrink-0">
         NEXT
       </button>
     </div>
