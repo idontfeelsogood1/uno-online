@@ -20,18 +20,22 @@ export interface GameProps {
 export interface GameBoardProps {
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
+  readonly gridPosition: string;
 }
 
 export interface OtherPlayerProps {
   readonly otherPlayer: GamePlayer;
+  readonly gridPosition: object;
 }
 
 export interface OtherHandProps {
   readonly otherHand: Card[];
+  readonly rotation: string;
 }
 
 export interface CurrentPlayerProps {
   readonly player: GamePlayer;
+  readonly gridPosition: string;
 }
 
 export interface PlayHandProps {
@@ -68,6 +72,12 @@ export interface GameEndProps {
   ownerSocketId: string;
   setHomeView: CallableFunction;
   continueGame: CallableFunction;
+}
+
+export interface GridPosition {
+  placement: string;
+  rotation: string;
+  position: string;
 }
 
 export interface RoomData {

@@ -37,7 +37,10 @@ export default function PlayerLobby({
 
   if (!username) {
     return (
-      <dialog open>
+      <dialog
+        open
+        className="flex flex-col text-center gap-3 p-3 fixed inset-0 m-auto h-fit z-99 border"
+      >
         <h1>Enter Username</h1>
         <input
           type="text"
@@ -45,11 +48,13 @@ export default function PlayerLobby({
           onChange={(e) => {
             setUsernameInputValue(e.target.value);
           }}
+          className="border"
         />
         <button
           onClick={() => {
             setUsername(usernameInputValue);
           }}
+          className="border"
         >
           OK
         </button>
@@ -57,6 +62,7 @@ export default function PlayerLobby({
           onClick={() => {
             setHomeView(null);
           }}
+          className="border"
         >
           CLOSE
         </button>
@@ -64,9 +70,13 @@ export default function PlayerLobby({
     );
   }
 
+  // FIGURE OUT OF TO CENTER A DIALOG
   if (isCreatingRoom) {
     return (
-      <dialog open>
+      <dialog
+        open
+        className="flex flex-col gap-3 p-3 text-center fixed inset-0 m-auto h-fit z-99 border"
+      >
         <h1>Create room</h1>
         <input
           type="text"
@@ -74,9 +84,10 @@ export default function PlayerLobby({
           onChange={(e) => {
             setRoomNameInputValue(e.target.value);
           }}
+          className="border"
         />
-        <div>Max Players: </div>
-        <div>
+        <div>Max Players</div>
+        <div className="flex gap-3 justify-center border">
           <input
             type="radio"
             name="roomSize"
@@ -110,6 +121,7 @@ export default function PlayerLobby({
           onClick={() => {
             createRoom(username, roomNameInputValue, selectedRoomSize);
           }}
+          className="border"
         >
           CREATE
         </button>
@@ -117,6 +129,7 @@ export default function PlayerLobby({
           onClick={() => {
             setIsCreatingRoom(false);
           }}
+          className="border"
         >
           BACK
         </button>
@@ -125,12 +138,18 @@ export default function PlayerLobby({
   }
 
   return (
-    <dialog open>
+    <dialog
+      open
+      className="flex flex-col gap-3 p-3 text-center fixed inset-0 m-auto h-fit z-99 border"
+    >
       <h1>Room list</h1>
-      <ul>
+      <ul className="flex flex-col gap-3 p-3 border">
         {lobbyState.map((room) => {
           return (
-            <li onClick={() => joinRoom(room.roomId)}>
+            <li
+              onClick={() => joinRoom(room.roomId)}
+              className="flex gap-3 p-3 border"
+            >
               <span>{room.roomName}</span>
               <span>
                 {room.currentPlayers.length}/{room.maxPlayers}
@@ -142,11 +161,14 @@ export default function PlayerLobby({
           );
         })}
       </ul>
-      <button onClick={updateLobbyState}>REFRESH</button>
+      <button onClick={updateLobbyState} className="border">
+        REFRESH
+      </button>
       <button
         onClick={() => {
           setIsCreatingRoom(true);
         }}
+        className="border"
       >
         CREATE ROOM
       </button>
@@ -154,6 +176,7 @@ export default function PlayerLobby({
         onClick={() => {
           setHomeView(null);
         }}
+        className="border"
       >
         BACK
       </button>

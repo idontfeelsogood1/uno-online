@@ -1,20 +1,26 @@
 import type { OtherHandProps } from "../../../../../../types/commonTypes";
 import { getCardCoverImgPath } from "../../../../../../api/helper";
 
-export default function OtherHand({ otherHand }: OtherHandProps) {
+export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
   function renderHand(): React.ReactElement[] {
-    const htmlList: React.ReactElement[] = [];
-
+    const img: React.ReactElement[] = [];
     for (let i = 0; i < 7; i++) {
       if (otherHand[i] !== undefined) {
-        htmlList.push(<img src={getCardCoverImgPath()} alt="Card Cover"></img>);
-      } else {
-        return htmlList;
+        img.push(
+          <img
+            className="shrink h-full max-h-44 aspect-2/3"
+            src={getCardCoverImgPath()}
+            alt="Card cover"
+          />,
+        );
       }
     }
-
-    return htmlList;
+    return img;
   }
 
-  return <div>{renderHand()}</div>;
+  return (
+    <div className={`flex ${rotation} justify-center items-center border`}>
+      {renderHand()}
+    </div>
+  );
 }

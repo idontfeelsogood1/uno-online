@@ -8,13 +8,16 @@ export default function GameEnd({
   continueGame,
 }: GameEndProps) {
   return (
-    <dialog open>
+    <dialog
+      open
+      className="flex flex-col text-center gap-3 p-3 fixed inset-0 m-auto h-fit z-99 border"
+    >
       <h1>GAME ENDED</h1>
       <div>
-        <ul>
+        <ul className="flex flex-col border gap-3 p-3">
           {players.map((player) => {
             return (
-              <li>
+              <li className="flex gap-3 border">
                 <span>{player.username}</span>
                 {player.socketId === ownerSocketId && <span>(OWNER)</span>}
               </li>
@@ -23,9 +26,13 @@ export default function GameEnd({
         </ul>
       </div>
       <div>
-        <button onClick={() => setHomeView()}>HOME</button>
+        <button onClick={() => setHomeView()} className="border">
+          HOME
+        </button>
         {players.length > 1 && socket.id === ownerSocketId && (
-          <button onClick={() => continueGame()}>CONTINUE</button>
+          <button onClick={() => continueGame()} className="border">
+            CONTINUE
+          </button>
         )}
       </div>
     </dialog>

@@ -1,11 +1,25 @@
-import type { OtherPlayerProps } from "../../../../../types/commonTypes";
+import type {
+  GridPosition,
+  OtherPlayerProps,
+} from "../../../../../types/commonTypes";
 import OtherHand from "./OtherHand/OtherHand";
 
-export default function OtherPlayer({ otherPlayer }: OtherPlayerProps) {
+export default function OtherPlayer({
+  otherPlayer,
+  gridPosition,
+}: OtherPlayerProps & {
+  gridPosition: GridPosition;
+}) {
+  // gridPostion.position MAY BE THE KEY
   return (
-    <div>
-      <div>{otherPlayer.username}</div>
-      <OtherHand otherHand={otherPlayer.hand} />
+    <div
+      className={`flex ${gridPosition.placement} justify-center align-middle border gap-1 p-1`}
+    >
+      <div className="border">{otherPlayer.username}</div>
+      <OtherHand
+        otherHand={otherPlayer.hand}
+        rotation={gridPosition.rotation}
+      />
     </div>
   );
 }

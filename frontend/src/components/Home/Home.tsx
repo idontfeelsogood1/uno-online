@@ -14,11 +14,12 @@ export default function Home() {
   }
 
   return (
-    <div>
+    <div className="flex m-auto justify-center items-center gap-7">
       <button
         onClick={() => {
           setView("BOT");
         }}
+        className="border"
       >
         Player Vs Bot
       </button>
@@ -26,6 +27,7 @@ export default function Home() {
         onClick={() => {
           setView("PVP");
         }}
+        className="border"
       >
         Multiplayer
       </button>

@@ -86,6 +86,7 @@ export default function Hand({
             addCardToPlayHand(pseudoHand[i]);
           }}
           alt={pseudoHand[i].name}
+          className="shrink h-full max-h-64 aspect-2/3"
         ></img>,
       );
     }
@@ -93,10 +94,20 @@ export default function Hand({
   }
 
   return (
-    <div>
-      <button onClick={() => switchPage("left")}>PREV</button>
-      <div>{renderHand()}</div>
-      <button onClick={() => switchPage("right")}>NEXT</button>
+    <div className="@container flex flex-1 border p-1 justify-center min-h-34 min-w-0">
+      <button onClick={() => switchPage("left")} className="border shrink-0">
+        PREV
+      </button>
+      {/* FIGURE OUT NEGATIVE SPACING BREAKPOINT FOR EACH SCREEN DIMENSIONS */}
+      <div
+        className="flex justify-center items-center p-1 border grow min-h-0 
+        -space-x-2"
+      >
+        {renderHand()}
+      </div>
+      <button onClick={() => switchPage("right")} className="border shrink-0">
+        NEXT
+      </button>
     </div>
   );
 }
