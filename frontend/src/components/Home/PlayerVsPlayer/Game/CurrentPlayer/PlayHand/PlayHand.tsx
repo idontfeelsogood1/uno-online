@@ -172,7 +172,7 @@ export default function PlayHand({
   return (
     <>
       {/* THIS MIGHT BE THE PROBLEM */}
-      <div className="@container border p-3 flex justify-center min-h-0 min-w-0 h-full grow">
+      <div className="@container border p-1 flex flex-1 justify-center min-h-0 min-w-0 h-full">
         <button
           onClick={() => {
             switchPage("left");
@@ -183,13 +183,12 @@ export default function PlayHand({
         </button>
         <div className="grow flex flex-col min-h-0">
           <div
-            className="flex justify-center p-3 border grow min-h-0      
-            -space-x-2
-            @[1030px]:-space-x-2"
+            className="flex justify-center items-center p-1 border grow min-h-0      
+            -space-x-2"
           >
             {renderHand()}
           </div>
-          <div className="flex justify-center border p-3 gap-3 shrink-0">
+          <div className="flex justify-center border p-1 gap-1 shrink-0">
             <button onClick={playCards} className="border">
               PLAY CARDS
             </button>

@@ -8,7 +8,7 @@ export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
       if (otherHand[i] !== undefined) {
         img.push(
           <img
-            className="shrink h-full max-h-50 aspect-2/3"
+            className="shrink h-full max-h-44 aspect-2/3"
             src={getCardCoverImgPath()}
             alt="Card cover"
           />,
@@ -19,9 +19,7 @@ export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
   }
 
   return (
-    <div
-      className={`flex ${rotation} justify-center items-center grow p-3 border`}
-    >
+    <div className={`flex ${rotation} justify-center items-center border`}>
       {renderHand()}
     </div>
   );

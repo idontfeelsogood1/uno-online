@@ -94,15 +94,14 @@ export default function Hand({
   }
 
   return (
-    <div className="@container flex border p-3 justify-center min-h-34 min-w-0">
+    <div className="@container flex flex-1 border p-1 justify-center min-h-34 min-w-0">
       <button onClick={() => switchPage("left")} className="border shrink-0">
         PREV
       </button>
+      {/* FIGURE OUT NEGATIVE SPACING BREAKPOINT FOR EACH SCREEN DIMENSIONS */}
       <div
-        className="flex justify-center p-3 border grow min-h-0 
-        -space-x-2
-        @[1030px]:-space-x-2
-      "
+        className="flex justify-center items-center p-1 border grow min-h-0 
+        -space-x-2"
       >
         {renderHand()}
       </div>

@@ -38,7 +38,9 @@ export default function CurrentPlayer({
   }, [player]);
 
   return (
-    <div className={`${gridPosition} flex flex-col gap-3 p-3 border`}>
+    <div
+      className={`${gridPosition} flex flex-col gap-1 p-1 pl-120 pr-120 border`}
+    >
       <div className="border">{player.username}</div>
       <PlayHand
         pseudoHand={pseudoHand}

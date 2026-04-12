@@ -13,7 +13,7 @@ export default function OtherPlayer({
   // gridPostion.position MAY BE THE KEY
   return (
     <div
-      className={`flex ${gridPosition.placement} justify-center align-middle border gap-3 p-3`}
+      className={`flex ${gridPosition.placement} justify-center align-middle border gap-1 p-1`}
     >
       <div className="border">{otherPlayer.username}</div>
       <OtherHand

@@ -15,15 +15,17 @@ export default function Game({
   actionSocketId,
 }: GameProps) {
   const leftPlacement: string =
-    "col-start-1 row-start-2 flex-row-reverse min-h-0 min-w-0";
-  const rightPlacement: string = "col-start-3 row-start-2 min-h-0 min-w-0";
+    "col-start-1 row-start-2 flex-row-reverse h-full w-full min-h-0 min-w-0";
+  const rightPlacement: string =
+    "col-start-3 row-start-2 h-full w-full min-h-0 min-w-0";
   const topPlacement: string =
-    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
-  const bottomPlacement: string = "col-start-2 row-start-3 min-h-0 min-w-0";
+    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0 pb-30";
+  const bottomPlacement: string =
+    "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0";
   const middlePlacement: string = "col-start-2 row-start-2 min-h-0 min-w-0";
 
-  const cardRotationSide: string = "flex-col -space-y-41 h-full min-h-0";
-  const cardRotationTop: string = "-space-x-20 h-full min-h-0";
+  const cardRotationSide: string = "flex-col -space-y-29 h-full min-h-0";
+  const cardRotationTop: string = "-space-x-6 h-full min-h-0";
 
   const otherPlayersPlacement: GridPosition[] = [
     {
@@ -78,8 +80,10 @@ export default function Game({
   }
 
   return (
+    // EACH SCREEN DIMENSTIONS HAS ITS OWN FR AND LAYOUT
+    // FIGURE THAT OUT LATER
     <GameAction.Provider value={{ actionType, actionSocketId }}>
-      <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1fr] gap-6 p-3">
+      <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.4fr] gap-4 p-1">
         <GameBoard
           topCard={gameState.topCard}
           enforcedColor={gameState.enforcedColor}

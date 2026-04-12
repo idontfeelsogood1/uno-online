@@ -9,7 +9,7 @@ export default function GameBoard({
 }: GameBoardProps) {
   return (
     <div
-      className={`${gridPosition} 4 flex justify-center items-center gap-3 p-3 text-center border`}
+      className={`${gridPosition} 4 flex justify-center items-center gap-1 p-1 text-center border`}
     >
       <button
         onClick={() => {
@@ -19,14 +19,14 @@ export default function GameBoard({
         <img
           src={getCardCoverImgPath()}
           alt="Draw cards"
-          className="w-50 h-77.5"
+          className="shrink h-full max-h-64 aspect-2/3"
         />
       </button>
 
       <img
         src={getCardImgPath(topCard)}
         alt={topCard.color + " " + topCard.value}
-        className="w-50 h-77.5"
+        className="shrink h-full max-h-64 aspect-2/3"
       />
 
       <div className="border">{topCard.color}</div>
