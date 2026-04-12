@@ -19,7 +19,7 @@ export default function Game({
   const rightPlacement: string =
     "col-start-3 row-start-2 h-full w-full min-h-0 min-w-0";
   const topPlacement: string =
-    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0 pb-30";
+    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0 pb-20";
   const bottomPlacement: string =
     "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0";
   const middlePlacement: string = "col-start-2 row-start-2 min-h-0 min-w-0";
