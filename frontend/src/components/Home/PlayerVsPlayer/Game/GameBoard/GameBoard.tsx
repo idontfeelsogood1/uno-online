@@ -5,6 +5,7 @@ import type {
 import { getCardImgPath, getCardCoverImgPath } from "../../../../../api/helper";
 import { socket } from "../../../../../api/socket";
 import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 
 export default function GameBoard({
   topCard,
@@ -39,8 +40,9 @@ export default function GameBoard({
     <div className="relative shrink h-full max-h-64 aspect-2/3">
       {players.map((player) =>
         player.hand.map((card) => (
-          <img
+          <motion.img
             key={card.id}
+            layoutId={card.id}
             className="absolute inset-0 w-full h-full object-cover shadow-sm"
             src={getCardCoverImgPath()}
             alt="Card cover"

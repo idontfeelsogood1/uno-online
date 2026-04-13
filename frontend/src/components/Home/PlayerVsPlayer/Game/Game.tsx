@@ -9,6 +9,7 @@ import OtherPlayer from "./OtherPlayer/OtherPlayer";
 import { socket } from "../../../../api/socket";
 import { GameAction } from "../../../../api/GameAction";
 import { useState } from "react";
+import { LayoutGroup } from "motion/react";
 
 export default function Game({
   gameState,
@@ -87,16 +88,18 @@ export default function Game({
 
   return (
     <GameAction.Provider value={{ actionType, actionSocketId }}>
-      <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.4fr] gap-4 p-1">
-        <GameBoard
-          topCard={gameState.topCard}
-          enforcedColor={gameState.enforcedColor}
-          gridPosition={middlePlacement}
-          players={gameState.playerOrder}
-          setPlayers={setPlayers}
-        />
-        {renderPlayer()}
-      </div>
+      <LayoutGroup>
+        <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.4fr] gap-4 p-1">
+          <GameBoard
+            topCard={gameState.topCard}
+            enforcedColor={gameState.enforcedColor}
+            gridPosition={middlePlacement}
+            players={gameState.playerOrder}
+            setPlayers={setPlayers}
+          />
+          {renderPlayer()}
+        </div>
+      </LayoutGroup>
     </GameAction.Provider>
   );
 }

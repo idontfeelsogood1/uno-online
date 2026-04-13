@@ -5,6 +5,7 @@ import type {
   PageProps,
 } from "../../../../../../types/commonTypes";
 import { useEffect, useState } from "react";
+import { motion } from "motion/react";
 
 export default function Hand({
   pseudoHand,
@@ -79,15 +80,26 @@ export default function Hand({
     if (pseudoHandOffset <= -1) pseudoHandOffset = 0;
 
     for (let i = page.startIndex; i <= page.endIndex - pseudoHandOffset; i++) {
+      const dealDelay: number = (i * 4 + 0) * 0.15;
+
       htmlList.push(
-        <img
+        <motion.img
+          // PRESSING A CARD AFTER A WHILE RESULTS IN UNDEFINED KEY ID, FIX THIS
+          key={pseudoHand[i].id}
+          layoutId={pseudoHand[i].id}
           src={getCardImgPath(pseudoHand[i])}
           onClick={() => {
             addCardToPlayHand(pseudoHand[i]);
           }}
           alt={pseudoHand[i].name}
           className="shrink h-full max-h-64 aspect-2/3"
-        ></img>,
+          transition={{
+            type: "spring",
+            stiffness: 260,
+            damping: 20,
+            delay: dealDelay,
+          }}
+        />,
       );
     }
     return htmlList;
