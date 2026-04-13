@@ -8,12 +8,15 @@ import GameBoard from "./GameBoard/GameBoard";
 import OtherPlayer from "./OtherPlayer/OtherPlayer";
 import { socket } from "../../../../api/socket";
 import { GameAction } from "../../../../api/GameAction";
+import { useState } from "react";
 
 export default function Game({
   gameState,
   actionType,
   actionSocketId,
 }: GameProps) {
+  const [players, setPlayers] = useState<GamePlayer[]>([]);
+
   const leftPlacement: string =
     "col-start-1 row-start-2 flex-row-reverse h-full w-full min-h-0 min-w-0";
   const rightPlacement: string =
@@ -46,32 +49,35 @@ export default function Game({
   ];
 
   function renderPlayer(): React.ReactElement[] {
-    const players: GamePlayer[] = [];
+    const tmpPlayers: GamePlayer[] = [];
 
-    gameState.playerOrder.forEach((player) => {
+    players.forEach((player) => {
       if (player.socketId !== socket.id) {
-        players.push(player);
+        tmpPlayers.push(player);
       }
     });
-    gameState.playerOrder.forEach((player) => {
+    players.forEach((player) => {
       if (player.socketId === socket.id) {
-        players.push(player);
+        tmpPlayers.push(player);
       }
     });
 
     const playersHtmlList: React.ReactElement[] = [];
 
-    for (let i = 0; i < gameState.playerOrder.length; i++) {
-      if (i < gameState.playerOrder.length - 1) {
+    for (let i = 0; i < tmpPlayers.length; i++) {
+      if (i < tmpPlayers.length - 1) {
         playersHtmlList.push(
           <OtherPlayer
-            otherPlayer={players[i]}
+            otherPlayer={tmpPlayers[i]}
             gridPosition={otherPlayersPlacement[i]}
           />,
         );
       } else {
         playersHtmlList.push(
-          <CurrentPlayer player={players[i]} gridPosition={bottomPlacement} />,
+          <CurrentPlayer
+            player={tmpPlayers[i]}
+            gridPosition={bottomPlacement}
+          />,
         );
       }
     }
@@ -80,14 +86,14 @@ export default function Game({
   }
 
   return (
-    // EACH SCREEN DIMENSTIONS HAS ITS OWN FR AND LAYOUT
-    // FIGURE THAT OUT LATER
     <GameAction.Provider value={{ actionType, actionSocketId }}>
       <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.4fr] gap-4 p-1">
         <GameBoard
           topCard={gameState.topCard}
           enforcedColor={gameState.enforcedColor}
           gridPosition={middlePlacement}
+          players={gameState.playerOrder}
+          setPlayers={setPlayers}
         />
         {renderPlayer()}
       </div>
