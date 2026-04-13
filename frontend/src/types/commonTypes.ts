@@ -21,6 +21,8 @@ export interface GameBoardProps {
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
   readonly gridPosition: string;
+  readonly players: GamePlayer[];
+  readonly setPlayers: CallableFunction;
 }
 
 export interface OtherPlayerProps {
@@ -108,7 +110,7 @@ export interface GameData {
 export interface GamePlayer {
   readonly socketId: string;
   readonly username: string;
-  readonly hand: Card[];
+  hand: Card[];
   readonly uno: boolean;
 }
 
