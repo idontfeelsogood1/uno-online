@@ -64,3 +64,9 @@ PlayerVsPlayer COMPONENT:
 
 PlayerVsBot COMPONENT:
 // TO BE IMPLEMENTED
+
+// ANIMATIONS:
+
+    - When player start the game:
+        - Play cards getting distributed to every player from the middle of Gameboard 
+        - It follows an order, from the first to the last player following a circle
