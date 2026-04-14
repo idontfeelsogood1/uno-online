@@ -34,50 +34,53 @@ export default function GameBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
-  function renderTempHand(): React.ReactElement[] {
+  function renderTempHand(): React.ReactElement {
     const img: React.ReactElement[] = [];
 
-    <div className="relative shrink h-full max-h-64 aspect-2/3">
-      {players.map((player) =>
-        player.hand.map((card) => (
+    players.map((player) =>
+      player.hand.map((card) =>
+        img.push(
           <motion.img
             key={card.id}
             layoutId={card.id}
             className="absolute inset-0 w-full h-full object-cover shadow-sm"
             src={getCardCoverImgPath()}
             alt="Card cover"
-          />
-        )),
-      )}
-    </div>;
-    return img;
+          />,
+        ),
+      ),
+    );
+
+    return (
+      <div className="relative shrink h-full max-h-64 aspect-2/3">{img}</div>
+    );
   }
 
   return (
     <div
       className={`${gridPosition} 4 flex justify-center items-center gap-1 p-1 text-center border`}
     >
-      <button
-        onClick={() => {
-          socket.emit("draw-card");
-        }}
-      >
-        <img
-          src={getCardCoverImgPath()}
-          alt="Draw cards"
-          className="shrink h-full max-h-64 aspect-2/3"
-        />
-      </button>
-
       {!hasInitialized ? (
         renderTempHand()
       ) : (
-        <img
-          src={getCardImgPath(topCard)}
-          alt={topCard.color + " " + topCard.value}
-          className="shrink h-full max-h-64 aspect-2/3"
-        />
+        <button
+          onClick={() => {
+            socket.emit("draw-card");
+          }}
+        >
+          <img
+            src={getCardCoverImgPath()}
+            alt="Draw cards"
+            className="shrink h-full max-h-64 aspect-2/3"
+          />
+        </button>
       )}
+
+      <img
+        src={getCardImgPath(topCard)}
+        alt={topCard.color + " " + topCard.value}
+        className="shrink h-full max-h-64 aspect-2/3"
+      />
 
       <div className="border">{topCard.color}</div>
 
