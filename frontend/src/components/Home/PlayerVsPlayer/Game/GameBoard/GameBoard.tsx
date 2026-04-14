@@ -35,24 +35,32 @@ export default function GameBoard({
   }, []);
 
   function renderTempHand(): React.ReactElement {
-    const img: React.ReactElement[] = [];
+    const elements: React.ReactElement[] = [];
 
     players.map((player) =>
       player.hand.map((card) =>
-        img.push(
-          <motion.img
+        elements.push(
+          <motion.div
             key={card.id}
             layoutId={card.id}
-            className="absolute inset-0 w-full h-full object-cover shadow-sm"
-            src={getCardCoverImgPath()}
-            alt="Card cover"
-          />,
+            className="absolute inset-0 w-full h-full shadow-sm"
+          >
+            <div className="w-full h-full relative transform-3d rotate-y-180">
+              <img
+                src={getCardCoverImgPath()}
+                alt="Card cover"
+                className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
+              />
+            </div>
+          </motion.div>,
         ),
       ),
     );
 
     return (
-      <div className="relative shrink h-full max-h-64 aspect-2/3">{img}</div>
+      <div className="relative shrink h-full max-h-64 aspect-2/3">
+        {elements}
+      </div>
     );
   }
 

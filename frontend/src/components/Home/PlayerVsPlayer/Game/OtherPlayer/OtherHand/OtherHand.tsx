@@ -1,27 +1,53 @@
 import type { OtherHandProps } from "../../../../../../types/commonTypes";
 import { getCardCoverImgPath } from "../../../../../../api/helper";
+import { motion } from "motion/react";
 
 export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
-  function renderHand(): React.ReactElement[] {
+  function renderHand(): React.ReactElement {
     const img: React.ReactElement[] = [];
     for (let i = 0; i < 7; i++) {
+      const dealDelay = i * 0.15;
+
       if (otherHand[i] !== undefined) {
         img.push(
-          <img
+          <motion.div
             key={otherHand[i].id}
-            className="shrink h-full max-h-44 aspect-2/3"
-            src={getCardCoverImgPath()}
-            alt="Card cover"
-          />,
+            layoutId={otherHand[i].id}
+            className="shrink w-full h-full max-h-64 backface-hidden aspect-2/3 z-10"
+            initial={{ scale: 1 }}
+            animate={{ scale: 1 }}
+            transition={{
+              layout: {
+                type: "spring",
+                stiffness: 80,
+                damping: 14,
+                delay: dealDelay,
+              },
+              scale: {
+                type: "tween",
+                duration: 0.6,
+                delay: dealDelay,
+              },
+            }}
+          >
+            {/* BACK OF CARD */}
+            <img
+              src={getCardCoverImgPath()}
+              alt="Card cover"
+              className="absolute h-full rounded-md shadow-md"
+            />
+          </motion.div>,
         );
       }
     }
-    return img;
+    return (
+      <div
+        className={`relative flex ${rotation} justify-center items-center border`}
+      >
+        {img}
+      </div>
+    );
   }
 
-  return (
-    <div className={`flex ${rotation} justify-center items-center border`}>
-      {renderHand()}
-    </div>
-  );
+  return <>{renderHand()}</>;
 }

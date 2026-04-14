@@ -1,4 +1,7 @@
-import { getCardImgPath } from "../../../../../../api/helper";
+import {
+  getCardCoverImgPath,
+  getCardImgPath,
+} from "../../../../../../api/helper";
 import type {
   Card,
   HandProps,
@@ -80,28 +83,63 @@ export default function Hand({
     if (pseudoHandOffset <= -1) pseudoHandOffset = 0;
 
     for (let i = page.startIndex; i <= page.endIndex - pseudoHandOffset; i++) {
-      const dealDelay: number = (i * 4 + 0) * 0.15;
+      const staggerIndex = i - page.startIndex;
+      const dealDelay = staggerIndex * 0.15;
 
       htmlList.push(
-        <motion.img
-          // PRESSING A CARD AFTER A WHILE RESULTS IN UNDEFINED KEY ID, FIX THIS
+        /* 1. THE OUTER DIV (The Transporter) 
+          This ONLY handles the layoutId flight and the scale. No rotateY here!
+        */
+        <motion.div
           key={pseudoHand[i].id}
           layoutId={pseudoHand[i].id}
-          src={getCardImgPath(pseudoHand[i])}
           onClick={() => {
             addCardToPlayHand(pseudoHand[i]);
           }}
-          alt={pseudoHand[i].name}
-          className="shrink h-full max-h-64 aspect-2/3"
+          className="shrink h-full max-h-64 aspect-2/3 cursor-pointer z-10"
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
           transition={{
-            type: "spring",
-            stiffness: 260,
-            damping: 20,
-            delay: dealDelay,
+            layout: {
+              type: "spring",
+              stiffness: 80,
+              damping: 14,
+              delay: dealDelay,
+            },
+            scale: {
+              type: "tween",
+              duration: 0.6,
+              delay: dealDelay,
+            },
           }}
-        />,
+        >
+          <motion.div
+            className="w-full h-full relative transform-3d"
+            initial={{ rotateY: 180 }}
+            animate={{ rotateY: 0 }}
+            transition={{
+              type: "tween",
+              duration: 0.6,
+              ease: "easeInOut",
+              delay: dealDelay,
+            }}
+          >
+            <img
+              src={getCardImgPath(pseudoHand[i])}
+              alt={pseudoHand[i].name}
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
+            />
+
+            <img
+              src={getCardCoverImgPath()}
+              alt="Card cover"
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-md"
+            />
+          </motion.div>
+        </motion.div>,
       );
     }
+
     return htmlList;
   }
 
