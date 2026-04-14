@@ -13,7 +13,7 @@ export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
           <motion.div
             key={otherHand[i].id}
             layoutId={otherHand[i].id}
-            className="shrink w-full h-full max-h-64 backface-hidden aspect-2/3 z-10"
+            className="relative shrink w-full h-full max-h-46 backface-hidden aspect-2/3 z-10"
             initial={{ scale: 1 }}
             animate={{ scale: 1 }}
             transition={{
@@ -30,7 +30,6 @@ export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
               },
             }}
           >
-            {/* BACK OF CARD */}
             <img
               src={getCardCoverImgPath()}
               alt="Card cover"

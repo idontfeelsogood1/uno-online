@@ -8,7 +8,7 @@ import GameBoard from "./GameBoard/GameBoard";
 import OtherPlayer from "./OtherPlayer/OtherPlayer";
 import { socket } from "../../../../api/socket";
 import { GameAction } from "../../../../api/GameAction";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { LayoutGroup } from "motion/react";
 
 export default function Game({
@@ -17,6 +17,10 @@ export default function Game({
   actionSocketId,
 }: GameProps) {
   const [players, setPlayers] = useState<GamePlayer[]>([]);
+
+  useEffect(() => {
+    setPlayers(gameState.playerOrder);
+  }, [gameState]);
 
   const leftPlacement: string =
     "col-start-1 row-start-2 flex-row-reverse h-full w-full min-h-0 min-w-0";

@@ -87,10 +87,8 @@ export default function Hand({
       const dealDelay = staggerIndex * 0.15;
 
       htmlList.push(
-        /* 1. THE OUTER DIV (The Transporter) 
-          This ONLY handles the layoutId flight and the scale. No rotateY here!
-        */
         <motion.div
+          // FOR SOME REASON, THE pseudoHand[i] EVENTUALLY RESULTS IN UNDEFINED, FIX THIS
           key={pseudoHand[i].id}
           layoutId={pseudoHand[i].id}
           onClick={() => {
