@@ -4,7 +4,7 @@ import type {
 } from "../../../../../types/commonTypes";
 import { getCardImgPath, getCardCoverImgPath } from "../../../../../api/helper";
 import { socket } from "../../../../../api/socket";
-import { useEffect, useState } from "react";
+import { useEffect } from "react";
 import { motion } from "motion/react";
 
 export default function GameBoard({
@@ -13,9 +13,9 @@ export default function GameBoard({
   gridPosition,
   players,
   setPlayers,
+  hasInitialized,
+  setHasInitialized,
 }: GameBoardProps) {
-  const [hasInitialized, setHasInitialized] = useState<boolean>(false);
-
   useEffect(() => {
     function setCardsForPlayers(): void {
       const tmpPlayers: GamePlayer[] = [];

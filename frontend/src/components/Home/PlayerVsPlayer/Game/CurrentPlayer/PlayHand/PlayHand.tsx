@@ -8,6 +8,7 @@ import { socket } from "../../../../../../api/socket";
 import ChooseColor from "../ChooseColor/ChooseColor";
 import { useContext, useEffect, useState } from "react";
 import { GameAction } from "../../../../../../api/GameAction";
+import { motion } from "motion/react";
 
 export default function PlayHand({
   pseudoHand,
@@ -66,16 +67,49 @@ export default function PlayHand({
       i <= page.endIndex - pseudoPlayHandOffset;
       i++
     ) {
+      const staggerIndex = i - page.startIndex;
+      const dealDelay = staggerIndex * 0.05;
+
       htmlList.push(
-        <img
+        <motion.div
           key={pseudoPlayHand[i].id}
-          src={getCardImgPath(pseudoPlayHand[i])}
+          layoutId={pseudoPlayHand[i].id}
           onClick={() => {
             removeCardFromPlayHand(pseudoPlayHand[i]);
           }}
-          alt={pseudoPlayHand[i].name}
-          className="shrink h-full max-h-64 aspect-2/3"
-        ></img>,
+          className="shrink h-full max-h-64 aspect-2/3 cursor-pointer z-10"
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{
+            layout: {
+              type: "spring",
+              stiffness: 80,
+              damping: 14,
+              delay: dealDelay,
+            },
+            scale: {
+              type: "tween",
+              duration: 0.6,
+              delay: dealDelay,
+            },
+          }}
+        >
+          <motion.div
+            className="w-full h-full relative transform-3d"
+            transition={{
+              type: "tween",
+              duration: 0.6,
+              ease: "easeInOut",
+              delay: dealDelay,
+            }}
+          >
+            <img
+              src={getCardImgPath(pseudoPlayHand[i])}
+              alt={pseudoPlayHand[i].name}
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
+            />
+          </motion.div>
+        </motion.div>,
       );
     }
     return htmlList;

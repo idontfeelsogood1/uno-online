@@ -16,6 +16,7 @@ export default function Game({
   actionType,
   actionSocketId,
 }: GameProps) {
+  const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
 
   useEffect(() => {
@@ -82,6 +83,7 @@ export default function Game({
           <CurrentPlayer
             player={tmpPlayers[i]}
             gridPosition={bottomPlacement}
+            hasInitialized={hasInitialized}
           />,
         );
       }
@@ -100,6 +102,8 @@ export default function Game({
             gridPosition={middlePlacement}
             players={gameState.playerOrder}
             setPlayers={setPlayers}
+            hasInitialized={hasInitialized}
+            setHasInitialized={setHasInitialized}
           />
           {renderPlayer()}
         </div>

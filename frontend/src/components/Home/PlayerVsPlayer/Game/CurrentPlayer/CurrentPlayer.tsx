@@ -9,6 +9,7 @@ import PlayHand from "./PlayHand/PlayHand";
 export default function CurrentPlayer({
   player,
   gridPosition,
+  hasInitialized,
 }: CurrentPlayerProps) {
   const [pseudoPlayHand, setPseudoPlayHand] = useState<Card[]>([]);
   const [pseudoHand, setPseudoHand] = useState<Card[]>(player.hand);
@@ -53,6 +54,7 @@ export default function CurrentPlayer({
         pseudoPlayHand={pseudoPlayHand}
         setPseudoPlayHand={setPseudoPlayHand}
         setPseudoHand={setPseudoHand}
+        hasInitialized={hasInitialized}
       />
     </div>
   );

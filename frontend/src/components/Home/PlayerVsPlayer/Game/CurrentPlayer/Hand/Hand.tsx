@@ -15,6 +15,7 @@ export default function Hand({
   pseudoPlayHand,
   setPseudoPlayHand,
   setPseudoHand,
+  hasInitialized,
 }: HandProps) {
   const [hasEditCard, setHasEditCard] = useState<boolean>(false);
   const [page, setPage] = useState<PageProps>({
@@ -88,7 +89,6 @@ export default function Hand({
 
       htmlList.push(
         <motion.div
-          // FOR SOME REASON, THE pseudoHand[i] EVENTUALLY RESULTS IN UNDEFINED, FIX THIS
           key={pseudoHand[i].id}
           layoutId={pseudoHand[i].id}
           onClick={() => {
@@ -113,7 +113,7 @@ export default function Hand({
         >
           <motion.div
             className="w-full h-full relative transform-3d"
-            initial={{ rotateY: 180 }}
+            initial={{ rotateY: !hasInitialized ? 180 : 0 }}
             animate={{ rotateY: 0 }}
             transition={{
               type: "tween",
@@ -128,11 +128,13 @@ export default function Hand({
               className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
             />
 
-            <img
-              src={getCardCoverImgPath()}
-              alt="Card cover"
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-md"
-            />
+            {!hasInitialized && (
+              <img
+                src={getCardCoverImgPath()}
+                alt="Card cover"
+                className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-md"
+              />
+            )}
           </motion.div>
         </motion.div>,
       );

@@ -23,6 +23,8 @@ export interface GameBoardProps {
   readonly gridPosition: string;
   readonly players: GamePlayer[];
   readonly setPlayers: CallableFunction;
+  readonly hasInitialized: boolean;
+  readonly setHasInitialized: CallableFunction;
 }
 
 export interface OtherPlayerProps {
@@ -38,6 +40,7 @@ export interface OtherHandProps {
 export interface CurrentPlayerProps {
   readonly player: GamePlayer;
   readonly gridPosition: string;
+  readonly hasInitialized: boolean;
 }
 
 export interface PlayHandProps {
@@ -52,6 +55,7 @@ export interface HandProps {
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
   readonly setPseudoHand: CallableFunction;
+  readonly hasInitialized: boolean;
 }
 
 export interface ChooseColorProps {
