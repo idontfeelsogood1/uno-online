@@ -84,7 +84,7 @@ export default function Hand({
 
     for (let i = page.startIndex; i <= page.endIndex - pseudoHandOffset; i++) {
       const staggerIndex = i - page.startIndex;
-      const dealDelay = staggerIndex * 0.15;
+      const dealDelay = staggerIndex * 0.05;
 
       htmlList.push(
         <motion.div

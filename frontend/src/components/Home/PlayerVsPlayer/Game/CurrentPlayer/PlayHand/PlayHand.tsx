@@ -68,7 +68,7 @@ export default function PlayHand({
     ) {
       htmlList.push(
         <img
-          key={pseudoHand[i].id}
+          key={pseudoPlayHand[i].id}
           src={getCardImgPath(pseudoPlayHand[i])}
           onClick={() => {
             removeCardFromPlayHand(pseudoPlayHand[i]);

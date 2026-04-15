@@ -6,7 +6,7 @@ export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
   function renderHand(): React.ReactElement {
     const img: React.ReactElement[] = [];
     for (let i = 0; i < 7; i++) {
-      const dealDelay = i * 0.15;
+      const dealDelay = i * 0.05;
 
       if (otherHand[i] !== undefined) {
         img.push(
