@@ -4,7 +4,8 @@ import type {
 } from "../../../../../types/commonTypes";
 import { getCardImgPath, getCardCoverImgPath } from "../../../../../api/helper";
 import { socket } from "../../../../../api/socket";
-import { useEffect } from "react";
+import { GameAction } from "../../../../../api/GameAction";
+import { useContext, useEffect, useState } from "react";
 import { motion } from "motion/react";
 
 export default function GameBoard({
@@ -12,31 +13,59 @@ export default function GameBoard({
   enforcedColor,
   gridPosition,
   players,
+  playedCards,
   setPlayers,
   hasInitialized,
   setHasInitialized,
 }: GameBoardProps) {
+  const context = useContext(GameAction);
+  const { actionType, actionSocketId } = context!;
+
+  const [animationPhase, setAnimationPhase] = useState<
+    "idle" | "showcase" | "stacking"
+  >("idle");
+
+  useEffect(() => {
+    if (
+      actionType === "played-cards" &&
+      playedCards &&
+      playedCards.length > 0
+    ) {
+      setAnimationPhase("showcase");
+
+      const stackTimer = setTimeout(() => {
+        setAnimationPhase("stacking");
+      }, 2000);
+
+      const cleanupTimer = setTimeout(() => {
+        setAnimationPhase("idle");
+      }, 3000);
+
+      return () => {
+        clearTimeout(stackTimer);
+        clearTimeout(cleanupTimer);
+      };
+    } else {
+      setAnimationPhase("idle");
+    }
+  }, [actionType, playedCards]);
+
   useEffect(() => {
     function setCardsForPlayers(): void {
       const tmpPlayers: GamePlayer[] = [];
-
       players.forEach((player) => {
         tmpPlayers.push(player);
       });
-
       setPlayers(tmpPlayers);
       setHasInitialized(true);
     }
-
     setCardsForPlayers();
     setHasInitialized(true);
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function renderTempHand(): React.ReactElement {
     const elements: React.ReactElement[] = [];
-
     players.map((player) =>
       player.hand.map((card) =>
         elements.push(
@@ -56,7 +85,6 @@ export default function GameBoard({
         ),
       ),
     );
-
     return (
       <div className="relative shrink h-full max-h-64 aspect-2/3">
         {elements}
@@ -64,18 +92,94 @@ export default function GameBoard({
     );
   }
 
+  function renderShowcase(): React.ReactElement[] {
+    const elements: React.ReactElement[] = [];
+    for (let i = 0; i < playedCards.length; i++) {
+      const dealDelay = i * 0.25;
+      elements.push(
+        <motion.div
+          key={playedCards[i].id}
+          layoutId={playedCards[i].id}
+          className="shrink h-full max-h-64 aspect-2/3 z-20"
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1.2 }}
+          transition={{
+            layout: {
+              type: "spring",
+              stiffness: 80,
+              damping: 14,
+              delay: dealDelay,
+            },
+            scale: { type: "tween", duration: 0.6, delay: dealDelay },
+          }}
+        >
+          <motion.div
+            className="w-full h-full relative transform-3d"
+            initial={{ rotateY: actionSocketId !== socket.id! ? 180 : 0 }}
+            animate={{ rotateY: 0 }}
+            transition={{
+              type: "tween",
+              duration: 0.6,
+              ease: "easeInOut",
+              delay: dealDelay,
+            }}
+          >
+            <img
+              src={getCardImgPath(playedCards[i])}
+              alt={playedCards[i].name}
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
+            />
+
+            {actionSocketId !== socket.id! && (
+              <img
+                src={getCardCoverImgPath()}
+                alt="Card cover"
+                className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-md"
+              />
+            )}
+          </motion.div>
+        </motion.div>,
+      );
+    }
+    return elements;
+  }
+
+  function renderStacking(): React.ReactElement[] {
+    const elements: React.ReactElement[] = [];
+    for (let i = 0; i < playedCards.length; i++) {
+      elements.push(
+        <motion.div
+          key={playedCards[i].id}
+          layoutId={playedCards[i].id}
+          className="absolute inset-0 w-full h-full z-10"
+          initial={{ scale: 1.2 }}
+          animate={{ scale: 1 }}
+          transition={{
+            layout: { type: "spring", stiffness: 100, damping: 15 },
+            scale: { type: "tween", duration: 0.4 },
+          }}
+        >
+          <div className="w-full h-full relative transform-3d">
+            <img
+              src={getCardImgPath(playedCards[i])}
+              alt={playedCards[i].name}
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-sm"
+            />
+          </div>
+        </motion.div>,
+      );
+    }
+    return elements;
+  }
+
   return (
     <div
-      className={`${gridPosition} 4 flex justify-center items-center gap-1 p-1 text-center border`}
+      className={`${gridPosition} relative flex justify-center items-center gap-1 p-1 text-center border`}
     >
       {!hasInitialized ? (
         renderTempHand()
       ) : (
-        <button
-          onClick={() => {
-            socket.emit("draw-card");
-          }}
-        >
+        <button onClick={() => socket.emit("draw-card")}>
           <img
             src={getCardCoverImgPath()}
             alt="Draw cards"
@@ -84,17 +188,26 @@ export default function GameBoard({
         </button>
       )}
 
-      <img
-        src={getCardImgPath(topCard)}
-        alt={topCard.color + " " + topCard.value}
-        className="shrink h-full max-h-64 aspect-2/3"
-      />
+      <div className="relative shrink h-full max-h-64 aspect-2/3">
+        <img
+          src={getCardImgPath(topCard)}
+          alt={topCard.color + " " + topCard.value}
+          className="absolute inset-0 w-full h-full object-cover rounded-md"
+        />
+        {animationPhase === "stacking" && renderStacking()}
+      </div>
 
       <div className="border">{topCard.color}</div>
 
       <div className="border">
         {topCard.color === "BLACK" ? enforcedColor : "No enforced color"}
       </div>
+
+      {animationPhase === "showcase" && (
+        <div className="absolute inset-0 flex justify-center items-center -space-x-4 pointer-events-none z-50 border">
+          {renderShowcase()}
+        </div>
+      )}
     </div>
   );
 }

@@ -101,6 +101,7 @@ export default function Game({
             enforcedColor={gameState.enforcedColor}
             gridPosition={middlePlacement}
             players={gameState.playerOrder}
+            playedCards={gameState.playedCards!}
             setPlayers={setPlayers}
             hasInitialized={hasInitialized}
             setHasInitialized={setHasInitialized}

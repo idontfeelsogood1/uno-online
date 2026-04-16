@@ -5,7 +5,7 @@ import { motion } from "motion/react";
 export default function OtherHand({ otherHand, rotation }: OtherHandProps) {
   function renderHand(): React.ReactElement {
     const img: React.ReactElement[] = [];
-    for (let i = 0; i < 7; i++) {
+    for (let i = 0; i < otherHand.length; i++) {
       const dealDelay = i * 0.05;
 
       if (otherHand[i] !== undefined) {
