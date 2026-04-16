@@ -68,14 +68,20 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
         socket.emit("get-room-state", (ack: RoomDto) => {
           setRoomState(ack.roomState);
         });
-        setGameState(data.gameState);
+        setGameState({
+          ...data.gameState,
+          playedCards: data.playedCards,
+        });
         setActionSocketId(socket.id!);
         setActionType(data.actionType);
       } else {
         socket.emit("get-room-state", (ack: RoomDto) => {
           setRoomState(ack.roomState);
         });
-        setGameState(data.gameState);
+        setGameState({
+          ...data.gameState,
+          playedCards: data.playedCards,
+        });
         setActionSocketId(data.socketId!);
         setActionType(data.actionType);
       }

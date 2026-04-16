@@ -109,6 +109,7 @@ export interface GameData {
   readonly direction: number;
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
+  readonly playedCards: Card[] | undefined;
 }
 
 export interface GamePlayer {
