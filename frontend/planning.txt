@@ -86,3 +86,12 @@ PlayerVsBot COMPONENT:
                     - On timeout, render a container of cards inside of discard pile (stacked on top)
                     - The cards will fly from the announcing container to stack on top of the pile
                     - Then close both of the container
+    - When player draw cards:
+        - USE THE SAME METHOD (ActionType and state changes on gameboard) LIKE BEFORE
+        - The card must first appear ontop Gameboard's drawPile first then make it disapear
+        - Then setting the hand of player will automatically fly the card
+    - When player switch pages:
+        - TO BE ADDED
+    - When player has won (removed from playerOrder):
+        - TO BE ADDED
+    
