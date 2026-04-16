@@ -25,6 +25,7 @@ import { WsValidationFilter } from './filter/ws-validation.filter';
 import { WsRoomFilter } from './filter/ws-room.filter';
 import { WsGameFilter } from './filter/ws-game.filter';
 import { PlayCardsDto } from './dto/play-cards-dto';
+import { Card } from './class/card/Card';
 
 let originUrl: string;
 if (process.env.NODE_ENV === 'dev') {
@@ -296,6 +297,7 @@ export class GameGateway implements OnGatewayDisconnect {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
     const { cardsToPlayIds, wildColor }: PlayCardsDto = data;
+    const playedCards: Card[] = player.getCardsToPlay(cardsToPlayIds);
 
     this.service.hasRoomNotStarted(room);
     this.service.isPlayerTurn(room, player);
@@ -335,6 +337,7 @@ export class GameGateway implements OnGatewayDisconnect {
         socketId: player.socketId,
         username: player.username,
         gameState: gameState,
+        playedCards: playedCards,
       });
     }
   }
