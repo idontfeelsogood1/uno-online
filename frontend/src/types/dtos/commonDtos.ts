@@ -30,5 +30,6 @@ export interface GameStateUpdateDto {
   socketId?: string;
   username?: string;
   gameState: GameData;
-  playedCards: Card[];
+  playedCards: Card[] | undefined;
+  cardDrew: Card | undefined;
 }

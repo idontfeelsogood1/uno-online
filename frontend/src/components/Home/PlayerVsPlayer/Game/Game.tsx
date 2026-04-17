@@ -92,6 +92,8 @@ export default function Game({
     return playersHtmlList;
   }
 
+  console.log(gameState.cardDrew);
+
   return (
     <GameAction.Provider value={{ actionType, actionSocketId }}>
       <LayoutGroup>

@@ -71,6 +71,7 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
         setGameState({
           ...data.gameState,
           playedCards: data.playedCards,
+          cardDrew: data.cardDrew,
         });
         setActionSocketId(socket.id!);
         setActionType(data.actionType);
@@ -81,6 +82,7 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
         setGameState({
           ...data.gameState,
           playedCards: data.playedCards,
+          cardDrew: data.cardDrew,
         });
         setActionSocketId(data.socketId!);
         setActionType(data.actionType);
