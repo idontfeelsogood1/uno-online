@@ -267,6 +267,7 @@ export class GameGateway implements OnGatewayDisconnect {
       socketId: player.socketId,
       username: player.username,
       gameState: this.service.generateGameState(room),
+      cardDrew: player.getHand()[player.getHand().length - 1],
     });
   }
 
