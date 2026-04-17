@@ -1,4 +1,5 @@
 import type {
+  Card,
   GameBoardProps,
   GamePlayer,
 } from "../../../../../types/commonTypes";
@@ -12,8 +13,7 @@ export default function GameBoard({
   topCard,
   enforcedColor,
   gridPosition,
-  players,
-  playedCards,
+  gameState,
   setPlayers,
   hasInitialized,
   setHasInitialized,
@@ -28,8 +28,8 @@ export default function GameBoard({
   useEffect(() => {
     if (
       actionType === "played-cards" &&
-      playedCards &&
-      playedCards.length > 0
+      gameState.playedCards &&
+      gameState.playedCards.length > 0
     ) {
       setAnimationPhase("showcase");
 
@@ -48,12 +48,16 @@ export default function GameBoard({
     } else {
       setAnimationPhase("idle");
     }
-  }, [actionType, playedCards]);
+
+    if (actionType === "draw-cards") {
+      console.log(gameState.cardDrew);
+    }
+  }, [actionType, gameState]);
 
   useEffect(() => {
     function setCardsForPlayers(): void {
       const tmpPlayers: GamePlayer[] = [];
-      players.forEach((player) => {
+      gameState.playerOrder.forEach((player) => {
         tmpPlayers.push(player);
       });
       setPlayers(tmpPlayers);
@@ -66,7 +70,7 @@ export default function GameBoard({
 
   function renderTempHand(): React.ReactElement {
     const elements: React.ReactElement[] = [];
-    players.map((player) =>
+    gameState.playerOrder.map((player) =>
       player.hand.map((card) =>
         elements.push(
           <motion.div
@@ -94,7 +98,9 @@ export default function GameBoard({
 
   function renderShowcase(): React.ReactElement[] {
     const elements: React.ReactElement[] = [];
-    for (let i = 0; i < playedCards.length; i++) {
+    const playedCards: Card[] = gameState.playedCards!;
+
+    for (let i = 0; i < gameState.playedCards!.length; i++) {
       const dealDelay = i * 0.25;
       elements.push(
         <motion.div
@@ -146,6 +152,8 @@ export default function GameBoard({
 
   function renderStacking(): React.ReactElement[] {
     const elements: React.ReactElement[] = [];
+    const playedCards: Card[] = gameState.playedCards!;
+
     for (let i = 0; i < playedCards.length; i++) {
       elements.push(
         <motion.div

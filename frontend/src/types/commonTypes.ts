@@ -21,8 +21,7 @@ export interface GameBoardProps {
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
   readonly gridPosition: string;
-  readonly players: GamePlayer[];
-  readonly playedCards: Card[];
+  readonly gameState: GameData;
   readonly setPlayers: CallableFunction;
   readonly hasInitialized: boolean;
   readonly setHasInitialized: CallableFunction;

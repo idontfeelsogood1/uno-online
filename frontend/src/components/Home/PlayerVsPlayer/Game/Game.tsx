@@ -92,8 +92,6 @@ export default function Game({
     return playersHtmlList;
   }
 
-  console.log(gameState.cardDrew);
-
   return (
     <GameAction.Provider value={{ actionType, actionSocketId }}>
       <LayoutGroup>
@@ -102,8 +100,7 @@ export default function Game({
             topCard={gameState.topCard}
             enforcedColor={gameState.enforcedColor}
             gridPosition={middlePlacement}
-            players={gameState.playerOrder}
-            playedCards={gameState.playedCards!}
+            gameState={gameState}
             setPlayers={setPlayers}
             hasInitialized={hasInitialized}
             setHasInitialized={setHasInitialized}
