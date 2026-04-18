@@ -4,19 +4,23 @@ import {
 } from "../../../../../../api/helper";
 import type {
   Card,
+  GameActionProps,
+  GameStateActionType,
   HandProps,
   PageProps,
 } from "../../../../../../types/commonTypes";
-import { useEffect, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { motion } from "motion/react";
+import { GameAction } from "../../../../../../api/GameAction";
 
 export default function Hand({
   pseudoHand,
   pseudoPlayHand,
   setPseudoPlayHand,
-  setPseudoHand,
   hasInitialized,
 }: HandProps) {
+  const action: GameActionProps = useContext(GameAction)!;
+  const actionType: GameStateActionType = action.actionType;
   const [hasEditCard, setHasEditCard] = useState<boolean>(false);
   const [page, setPage] = useState<PageProps>({
     startIndex: 0,
@@ -68,11 +72,6 @@ export default function Hand({
   }
 
   function addCardToPlayHand(card: Card) {
-    setPseudoHand(
-      pseudoHand.filter((pseudoCard) => {
-        return pseudoCard.id !== card.id;
-      }),
-    );
     setPseudoPlayHand([...pseudoPlayHand, card]);
     setHasEditCard(true);
   }
@@ -111,9 +110,12 @@ export default function Hand({
             },
           }}
         >
+          {/* FIGURE OUT THE CONDITION TO MAKE THE ANIMATION CONSISTENT */}
           <motion.div
             className="w-full h-full relative transform-3d"
-            initial={{ rotateY: !hasInitialized ? 180 : 0 }}
+            initial={{
+              rotateY: !hasInitialized || actionType === "draw-cards" ? 180 : 0,
+            }}
             animate={{ rotateY: 0 }}
             transition={{
               type: "tween",
@@ -128,7 +130,7 @@ export default function Hand({
               className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
             />
 
-            {!hasInitialized && (
+            {(!hasInitialized || actionType === "draw-cards") && (
               <img
                 src={getCardCoverImgPath()}
                 alt="Card cover"

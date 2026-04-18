@@ -44,17 +44,14 @@ export interface CurrentPlayerProps {
 }
 
 export interface PlayHandProps {
-  readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly setPseudoHand: CallableFunction;
 }
 
 export interface HandProps {
   readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly setPseudoHand: CallableFunction;
   readonly hasInitialized: boolean;
 }
 

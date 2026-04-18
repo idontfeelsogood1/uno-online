@@ -11,10 +11,8 @@ import { GameAction } from "../../../../../../api/GameAction";
 import { motion } from "motion/react";
 
 export default function PlayHand({
-  pseudoHand,
   pseudoPlayHand,
   setPseudoPlayHand,
-  setPseudoHand,
 }: PlayHandProps) {
   const action = useContext(GameAction);
   const [showChooseColor, setShowChooseColor] = useState<boolean>(false);
@@ -155,7 +153,6 @@ export default function PlayHand({
         return card.id !== pseudoCard.id;
       }),
     );
-    setPseudoHand([...pseudoHand, card]);
   }
 
   function playCondition(action: CallableFunction) {

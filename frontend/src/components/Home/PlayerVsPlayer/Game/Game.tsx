@@ -19,9 +19,40 @@ export default function Game({
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
 
+  function getPopppedHandPlayers(): GamePlayer[] {
+    const pseudoPlayers: GamePlayer[] = structuredClone(gameState.playerOrder);
+    const tmpPlayers: GamePlayer[] = [];
+
+    pseudoPlayers.forEach((player) => {
+      if (player.socketId !== socket.id) {
+        if (actionSocketId === player.socketId) {
+          player.hand.pop();
+        }
+        tmpPlayers.push(player);
+      }
+    });
+    pseudoPlayers.forEach((player) => {
+      if (player.socketId === socket.id) {
+        if (actionSocketId === player.socketId) {
+          player.hand.pop();
+        }
+        tmpPlayers.push(player);
+      }
+    });
+
+    return tmpPlayers;
+  }
+
   useEffect(() => {
-    setPlayers(gameState.playerOrder);
-  }, [gameState]);
+    if (actionType === "played-cards") {
+      setPlayers(gameState.playerOrder);
+    }
+    if (actionType === "draw-cards") {
+      setPlayers(getPopppedHandPlayers());
+    }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState, actionType]);
 
   const leftPlacement: string =
     "col-start-1 row-start-2 flex-row-reverse h-full w-full min-h-0 min-w-0";

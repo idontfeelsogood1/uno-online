@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useState } from "react";
 import type {
   Card,
   CurrentPlayerProps,
@@ -12,7 +12,6 @@ export default function CurrentPlayer({
   hasInitialized,
 }: CurrentPlayerProps) {
   const [pseudoPlayHand, setPseudoPlayHand] = useState<Card[]>([]);
-  const [pseudoHand, setPseudoHand] = useState<Card[]>(player.hand);
 
   function isCardInPseudoPlayHand(card: Card): boolean {
     let isInHand: boolean = false;
@@ -24,19 +23,9 @@ export default function CurrentPlayer({
     return isInHand;
   }
 
-  function manageHand() {
-    setPseudoHand(
-      player.hand.filter((card) => {
-        return !isCardInPseudoPlayHand(card);
-      }),
-    );
-  }
-
-  // UPDATE pseudoHand ON PROP CHANGE
-  useEffect(() => {
-    manageHand();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [player]);
+  const pseudoHand: Card[] = player.hand.filter((card) => {
+    return !isCardInPseudoPlayHand(card);
+  });
 
   return (
     <div
@@ -44,16 +33,13 @@ export default function CurrentPlayer({
     >
       <div className="border">{player.username}</div>
       <PlayHand
-        pseudoHand={pseudoHand}
         pseudoPlayHand={pseudoPlayHand}
         setPseudoPlayHand={setPseudoPlayHand}
-        setPseudoHand={setPseudoHand}
       />
       <Hand
         pseudoHand={pseudoHand}
         pseudoPlayHand={pseudoPlayHand}
         setPseudoPlayHand={setPseudoPlayHand}
-        setPseudoHand={setPseudoHand}
         hasInitialized={hasInitialized}
       />
     </div>

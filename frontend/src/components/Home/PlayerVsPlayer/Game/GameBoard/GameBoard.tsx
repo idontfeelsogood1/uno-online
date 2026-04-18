@@ -1,8 +1,4 @@
-import type {
-  Card,
-  GameBoardProps,
-  GamePlayer,
-} from "../../../../../types/commonTypes";
+import type { Card, GameBoardProps } from "../../../../../types/commonTypes";
 import { getCardImgPath, getCardCoverImgPath } from "../../../../../api/helper";
 import { socket } from "../../../../../api/socket";
 import { GameAction } from "../../../../../api/GameAction";
@@ -25,6 +21,8 @@ export default function GameBoard({
     "idle" | "showcase" | "stacking"
   >("idle");
 
+  const [drawCards, setDrawCards] = useState<boolean>(false);
+
   useEffect(() => {
     if (
       actionType === "played-cards" &&
@@ -45,26 +43,30 @@ export default function GameBoard({
         clearTimeout(stackTimer);
         clearTimeout(cleanupTimer);
       };
-    } else {
-      setAnimationPhase("idle");
     }
 
     if (actionType === "draw-cards") {
-      console.log(gameState.cardDrew);
+      setDrawCards(true);
+
+      const disappearTimer = setTimeout(() => {
+        setDrawCards(false);
+        setPlayers(gameState.playerOrder);
+      }, 50);
+
+      return () => {
+        clearTimeout(disappearTimer);
+      };
     }
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [actionType, gameState]);
 
   useEffect(() => {
     function setCardsForPlayers(): void {
-      const tmpPlayers: GamePlayer[] = [];
-      gameState.playerOrder.forEach((player) => {
-        tmpPlayers.push(player);
-      });
-      setPlayers(tmpPlayers);
+      setPlayers(gameState.playerOrder);
       setHasInitialized(true);
     }
     setCardsForPlayers();
-    setHasInitialized(true);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -187,12 +189,27 @@ export default function GameBoard({
       {!hasInitialized ? (
         renderTempHand()
       ) : (
-        <button onClick={() => socket.emit("draw-card")}>
+        <button onClick={() => socket.emit("draw-card")} className="relative">
           <img
             src={getCardCoverImgPath()}
             alt="Draw cards"
             className="shrink h-full max-h-64 aspect-2/3"
           />
+          {drawCards && (
+            <motion.div
+              key={gameState.cardDrew!.id}
+              layoutId={gameState.cardDrew!.id}
+              className="absolute inset-0 w-full h-full shadow-sm"
+            >
+              <div className="w-full h-full relative transform-3d rotate-y-180">
+                <img
+                  src={getCardCoverImgPath()}
+                  alt="Card cover"
+                  className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
+                />
+              </div>
+            </motion.div>
+          )}
         </button>
       )}
 
