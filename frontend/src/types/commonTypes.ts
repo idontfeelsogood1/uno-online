@@ -64,12 +64,6 @@ export interface GameActionProps {
   readonly actionSocketId: string;
 }
 
-export interface PageProps {
-  startIndex: number;
-  endIndex: number;
-  currentPage: number;
-}
-
 export interface GameEndProps {
   players: RoomPlayer[];
   ownerSocketId: string;
