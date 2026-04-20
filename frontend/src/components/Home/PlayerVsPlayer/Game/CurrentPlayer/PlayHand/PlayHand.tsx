@@ -9,6 +9,7 @@ import { motion } from "motion/react";
 export default function PlayHand({
   pseudoPlayHand,
   setPseudoPlayHand,
+  setNewStateReceived,
 }: PlayHandProps) {
   const action = useContext(GameAction);
   const [showChooseColor, setShowChooseColor] = useState<boolean>(false);
@@ -82,6 +83,7 @@ export default function PlayHand({
         return card.id !== pseudoCard.id;
       }),
     );
+    setNewStateReceived(false);
   }
 
   function playCondition(action: CallableFunction) {

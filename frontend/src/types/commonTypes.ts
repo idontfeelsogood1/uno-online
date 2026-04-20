@@ -46,13 +46,14 @@ export interface CurrentPlayerProps {
 export interface PlayHandProps {
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
+  readonly setNewStateReceived: CallableFunction;
 }
 
 export interface HandProps {
   readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly hasInitialized: boolean;
+  readonly newStateReceived: boolean;
 }
 
 export interface ChooseColorProps {

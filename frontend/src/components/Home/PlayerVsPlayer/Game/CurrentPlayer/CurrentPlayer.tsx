@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import type {
   Card,
   CurrentPlayerProps,
@@ -9,9 +9,14 @@ import PlayHand from "./PlayHand/PlayHand";
 export default function CurrentPlayer({
   player,
   gridPosition,
-  hasInitialized,
 }: CurrentPlayerProps) {
   const [pseudoPlayHand, setPseudoPlayHand] = useState<Card[]>([]);
+  const [newStateReceived, setNewStateReceived] = useState<boolean>(true);
+
+  useEffect(() => {
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setNewStateReceived(true);
+  }, [player]);
 
   function isCardInPseudoPlayHand(card: Card): boolean {
     let isInHand: boolean = false;
@@ -35,12 +40,13 @@ export default function CurrentPlayer({
       <PlayHand
         pseudoPlayHand={pseudoPlayHand}
         setPseudoPlayHand={setPseudoPlayHand}
+        setNewStateReceived={setNewStateReceived}
       />
       <Hand
         pseudoHand={pseudoHand}
         pseudoPlayHand={pseudoPlayHand}
         setPseudoPlayHand={setPseudoPlayHand}
-        hasInitialized={hasInitialized}
+        newStateReceived={newStateReceived}
       />
     </div>
   );

@@ -2,25 +2,15 @@ import {
   getCardCoverImgPath,
   getCardImgPath,
 } from "../../../../../../api/helper";
-import type {
-  Card,
-  GameActionProps,
-  GameStateActionType,
-  HandProps,
-} from "../../../../../../types/commonTypes";
-import { useContext } from "react";
+import type { Card, HandProps } from "../../../../../../types/commonTypes";
 import { motion } from "motion/react";
-import { GameAction } from "../../../../../../api/GameAction";
 
 export default function Hand({
   pseudoHand,
   pseudoPlayHand,
   setPseudoPlayHand,
-  hasInitialized,
+  newStateReceived,
 }: HandProps) {
-  const action: GameActionProps = useContext(GameAction)!;
-  const actionType: GameStateActionType = action.actionType;
-
   function addCardToPlayHand(card: Card) {
     setPseudoPlayHand([...pseudoPlayHand, card]);
   }
@@ -59,7 +49,7 @@ export default function Hand({
           <motion.div
             className="w-full h-full relative transform-3d"
             initial={{
-              rotateY: 180,
+              rotateY: newStateReceived ? 180 : 0,
             }}
             animate={{ rotateY: 0 }}
             transition={{
@@ -75,11 +65,13 @@ export default function Hand({
               className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
             />
 
-            <img
-              src={getCardCoverImgPath()}
-              alt="Card cover"
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-md"
-            />
+            {newStateReceived && (
+              <img
+                src={getCardCoverImgPath()}
+                alt="Card cover"
+                className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-md"
+              />
+            )}
           </motion.div>
         </motion.div>,
       );
