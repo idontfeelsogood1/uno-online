@@ -17,9 +17,7 @@ export default function PlayHand({
     useState<CallableFunction | null>(null);
 
   const containerRef = useRef<HTMLDivElement>(null);
-  const [containerWidth, setContainerWidth] = useState<number>(0);
-
-  const CARD_WIDTH = 170;
+  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
   useEffect(() => {
     if (
@@ -31,13 +29,16 @@ export default function PlayHand({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action]);
 
-  // SET THE WIDTH THE MICROSECOND THE DOM LOADS
+  // SET WIDTH/HEIGHT OF CONTAINER THE MICROSECOND THE DIV APPEARS
   useEffect(() => {
     if (!containerRef.current) return;
 
     const observer = new ResizeObserver((entries) => {
       for (const entry of entries) {
-        setContainerWidth(entry.contentRect.width);
+        setContainerSize({
+          width: entry.contentRect.width,
+          height: entry.contentRect.height,
+        });
       }
     });
 
@@ -51,17 +52,22 @@ export default function PlayHand({
   function renderHand(): React.ReactElement[] {
     const htmlList: React.ReactElement[] = [];
 
+    const actualCardHeight = Math.min(containerSize.height + 15, 256);
+    const dynamicCardWidth = actualCardHeight * (2 / 3);
+
     // CALCULATE THE STEPS
     let step = 0;
-    if (pseudoPlayHand.length > 1 && containerWidth > 0) {
-      step = (containerWidth - CARD_WIDTH) / (pseudoPlayHand.length - 1);
-      step = Math.min(step, CARD_WIDTH + 10);
+    if (pseudoPlayHand.length > 1 && containerSize.width > 0) {
+      step =
+        (containerSize.width - dynamicCardWidth) / (pseudoPlayHand.length - 1);
+      step = Math.min(step, dynamicCardWidth + 10);
       step = Math.max(step, 30);
     }
 
     // CENTERING THE CARDS
-    const totalUsedWidth = CARD_WIDTH + (pseudoPlayHand.length - 1) * step;
-    const startOffset = (containerWidth - totalUsedWidth) / 2;
+    const totalUsedWidth =
+      dynamicCardWidth + (pseudoPlayHand.length - 1) * step;
+    const startOffset = (containerSize.width - totalUsedWidth) / 2;
 
     for (let i = 0; i < pseudoPlayHand.length; i++) {
       const dealDelay = i * 0.05;
@@ -77,7 +83,7 @@ export default function PlayHand({
             removeCardFromPlayHand(pseudoPlayHand[i]);
           }}
           className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer"
-          style={{ zIndex: i, width: CARD_WIDTH }}
+          style={{ zIndex: i, width: dynamicCardWidth }}
           whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
           initial={{ scale: 0.8 }}
           animate={{ scale: 1, left: leftPosition }}
@@ -170,7 +176,7 @@ export default function PlayHand({
 
   return (
     <>
-      <div className="@container grow border p-1 flex flex-1 justify-center min-h-0 min-w-0 h-full">
+      <div className="@container border p-1 flex flex-1 justify-center">
         <div className="grow flex flex-col min-h-0">
           <div ref={containerRef} className="relative w-full border h-full">
             {renderHand()}

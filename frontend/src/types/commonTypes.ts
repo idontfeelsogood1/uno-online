@@ -54,6 +54,7 @@ export interface HandProps {
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
   readonly newStateReceived: boolean;
+  readonly hasInitialized: boolean;
 }
 
 export interface ChooseColorProps {
