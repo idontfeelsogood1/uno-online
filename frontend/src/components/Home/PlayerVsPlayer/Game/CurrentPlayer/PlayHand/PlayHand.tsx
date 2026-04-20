@@ -2,7 +2,7 @@ import { getCardImgPath } from "../../../../../../api/helper";
 import type { Card, PlayHandProps } from "../../../../../../types/commonTypes";
 import { socket } from "../../../../../../api/socket";
 import ChooseColor from "../ChooseColor/ChooseColor";
-import { useContext, useEffect, useState } from "react";
+import { useContext, useEffect, useState, useRef } from "react";
 import { GameAction } from "../../../../../../api/GameAction";
 import { motion } from "motion/react";
 
@@ -16,6 +16,11 @@ export default function PlayHand({
   const [showChooseColorActionCb, setShowChooseColorActionCb] =
     useState<CallableFunction | null>(null);
 
+  const containerRef = useRef<HTMLDivElement>(null);
+  const [containerWidth, setContainerWidth] = useState<number>(0);
+
+  const CARD_WIDTH = 170;
+
   useEffect(() => {
     if (
       action!.actionType === "played-cards" &&
@@ -26,11 +31,43 @@ export default function PlayHand({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action]);
 
+  // SET THE WIDTH THE MICROSECOND THE DOM LOADS
+  useEffect(() => {
+    if (!containerRef.current) return;
+
+    const observer = new ResizeObserver((entries) => {
+      for (const entry of entries) {
+        setContainerWidth(entry.contentRect.width);
+      }
+    });
+
+    observer.observe(containerRef.current);
+
+    return () => {
+      observer.disconnect();
+    };
+  }, []);
+
   function renderHand(): React.ReactElement[] {
     const htmlList: React.ReactElement[] = [];
 
+    // CALCULATE THE STEPS
+    let step = 0;
+    if (pseudoPlayHand.length > 1 && containerWidth > 0) {
+      step = (containerWidth - CARD_WIDTH) / (pseudoPlayHand.length - 1);
+      step = Math.min(step, CARD_WIDTH + 10);
+      step = Math.max(step, 30);
+    }
+
+    // CENTERING THE CARDS
+    const totalUsedWidth = CARD_WIDTH + (pseudoPlayHand.length - 1) * step;
+    const startOffset = (containerWidth - totalUsedWidth) / 2;
+
     for (let i = 0; i < pseudoPlayHand.length; i++) {
       const dealDelay = i * 0.05;
+
+      // CALCULATE PIXEL POSITION
+      const leftPosition = startOffset + i * step;
 
       htmlList.push(
         <motion.div
@@ -39,9 +76,11 @@ export default function PlayHand({
           onClick={() => {
             removeCardFromPlayHand(pseudoPlayHand[i]);
           }}
-          className="shrink h-full max-h-64 aspect-2/3 cursor-pointer z-10"
+          className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer"
+          style={{ zIndex: i, width: CARD_WIDTH }}
+          whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
           initial={{ scale: 0.8 }}
-          animate={{ scale: 1 }}
+          animate={{ scale: 1, left: leftPosition }}
           transition={{
             layout: {
               type: "spring",
@@ -49,15 +88,12 @@ export default function PlayHand({
               damping: 14,
               delay: dealDelay,
             },
-            scale: {
-              type: "tween",
-              duration: 0.6,
-              delay: dealDelay,
-            },
+            scale: { type: "tween", duration: 0.6, delay: dealDelay },
+            left: { type: "spring", stiffness: 200, damping: 20 },
           }}
         >
           <motion.div
-            className="w-full h-full relative transform-3d"
+            className="absolute w-full h-full transform-3d"
             transition={{
               type: "tween",
               duration: 0.6,
@@ -134,13 +170,9 @@ export default function PlayHand({
 
   return (
     <>
-      {/* THIS MIGHT BE THE PROBLEM */}
-      <div className="@container border p-1 flex flex-1 justify-center min-h-0 min-w-0 h-full">
+      <div className="@container grow border p-1 flex flex-1 justify-center min-h-0 min-w-0 h-full">
         <div className="grow flex flex-col min-h-0">
-          <div
-            className="flex justify-center items-center p-1 border grow min-h-0      
-            -space-x-2"
-          >
+          <div ref={containerRef} className="relative w-full border h-full">
             {renderHand()}
           </div>
           <div className="flex justify-center border p-1 gap-1 shrink-0">

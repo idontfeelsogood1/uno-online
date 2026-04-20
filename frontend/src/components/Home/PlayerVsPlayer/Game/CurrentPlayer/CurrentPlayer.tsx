@@ -32,6 +32,8 @@ export default function CurrentPlayer({
     return !isCardInPseudoPlayHand(card);
   });
 
+  // FIX THE CURRENT PLAYER COMPONENT'S HAND AND PLAYHAND NOT DISTRIBUTED EVENLY ON DIFFERENT SCREEN SIZE
+
   return (
     <div
       className={`${gridPosition} flex flex-col gap-1 p-1 pl-120 pr-120 border`}
