@@ -196,7 +196,7 @@ export default function GameBoard({
           <img
             src={getCardCoverImgPath()}
             alt="Draw cards"
-            className="w-full h-full max-h-64 aspect-2/3"
+            className="w-full h-full max-h-64 aspect-2/3 object-cover rounded-md shadow-lg"
           />
           {drawCards && (
             <motion.div
@@ -220,7 +220,7 @@ export default function GameBoard({
         <img
           src={getCardImgPath(topCard)}
           alt={topCard.color + " " + topCard.value}
-          className="absolute inset-0 w-full h-full object-cover rounded-md"
+          className="absolute inset-0 w-full h-full object-cover rounded-md shadow-lg"
         />
         {animationPhase === "stacking" && renderStacking()}
       </div>

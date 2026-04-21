@@ -43,11 +43,11 @@ export default function OtherHand({ otherHand, position }: OtherHandProps) {
     if (otherHand.length > 1) {
       if (isHorizontal && containerSize.width > 0) {
         step = (containerSize.width - cardWidth) / (otherHand.length - 1);
-        step = Math.min(step, cardWidth * 0.4);
+        step = Math.min(step, cardWidth * 0.8);
         step = Math.max(step, 10);
       } else if (!isHorizontal && containerSize.height > 0) {
         step = (containerSize.height - cardHeight) / (otherHand.length - 1);
-        step = Math.min(step, cardHeight * 0.3);
+        step = Math.min(step, cardHeight * 0.8);
         step = Math.max(step, 10);
       }
     }
@@ -102,7 +102,7 @@ export default function OtherHand({ otherHand, position }: OtherHandProps) {
           <img
             src={getCardCoverImgPath()}
             alt="Card cover"
-            className="absolute inset-0 w-full h-full rounded-md object-cover"
+            className="absolute inset-0 w-full h-full rounded-md shadow-lg object-cover"
           />
         </motion.div>,
       );

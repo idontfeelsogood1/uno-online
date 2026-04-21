@@ -82,7 +82,7 @@ export default function PlayHand({
           onClick={() => {
             removeCardFromPlayHand(pseudoPlayHand[i]);
           }}
-          className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer"
+          className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer shadow-lg"
           style={{ zIndex: i, width: dynamicCardWidth }}
           whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
           initial={{ scale: 0.8 }}
