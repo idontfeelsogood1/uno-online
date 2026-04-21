@@ -59,7 +59,7 @@ export default function Hand({
     const startOffset = (containerSize.width - totalUsedWidth) / 2;
 
     for (let i = 0; i < pseudoHand.length; i++) {
-      const dealDelay = i * (!hasInitialized ? 0.8 : 0.05);
+      const dealDelay = i * (!hasInitialized ? 1.2 : 0.05);
 
       // CALCULATE PIXEL POSITION
       const leftPosition = startOffset + i * step;
@@ -83,7 +83,7 @@ export default function Hand({
               damping: 14,
               delay: dealDelay,
             },
-            scale: { type: "tween", duration: 0.6, delay: dealDelay },
+            scale: { type: "tween", duration: 0.4, delay: dealDelay },
             left: { type: "spring", stiffness: 200, damping: 20 },
           }}
         >
@@ -123,7 +123,7 @@ export default function Hand({
     <div className="flex-1">
       <div
         ref={containerRef}
-        className="@container relative w-full h-full min-h-0 border p-1"
+        className="relative w-full h-full min-h-0 border p-1"
       >
         {renderHand()}
       </div>

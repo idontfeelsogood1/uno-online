@@ -55,32 +55,26 @@ export default function Game({
   }, [gameState, actionType]);
 
   const leftPlacement: string =
-    "col-start-1 row-start-2 flex-row-reverse h-full w-full min-h-0 min-w-0";
+    "col-start-1 row-start-1 row-span-2 flex-row-reverse h-full w-full min-h-0 min-w-0";
   const rightPlacement: string =
-    "col-start-3 row-start-2 h-full w-full min-h-0 min-w-0";
+    "col-start-3 row-start-1 row-span-2 h-full w-full min-h-0 min-w-0";
   const topPlacement: string =
-    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0 pb-20";
+    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
   const bottomPlacement: string =
     "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0";
   const middlePlacement: string = "col-start-2 row-start-2 min-h-0 min-w-0";
 
-  const cardRotationSide: string = "flex-col -space-y-29 h-full min-h-0";
-  const cardRotationTop: string = "-space-x-6 h-full min-h-0";
-
   const otherPlayersPlacement: GridPosition[] = [
     {
       placement: topPlacement,
-      rotation: cardRotationTop,
       position: "top",
     },
     {
       placement: leftPlacement,
-      rotation: cardRotationSide,
       position: "left",
     },
     {
       placement: rightPlacement,
-      rotation: cardRotationSide,
       position: "right",
     },
   ];

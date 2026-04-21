@@ -37,9 +37,11 @@ export default function CurrentPlayer({
 
   return (
     <div
-      className={`${gridPosition} flex flex-col gap-1 p-1 pl-120 pr-120 border`}
+      className={`${gridPosition} flex flex-col gap-1 p-1 ml-[25%] mr-[25%] border`}
     >
-      <div className="border">{player.username}</div>
+      <div className="border flex items-center justify-center text-center">
+        <span>{player.username}</span>
+      </div>
       <PlayHand
         pseudoPlayHand={pseudoPlayHand}
         setPseudoPlayHand={setPseudoPlayHand}

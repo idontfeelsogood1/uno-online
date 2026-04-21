@@ -176,7 +176,7 @@ export default function PlayHand({
 
   return (
     <>
-      <div className="@container border p-1 flex flex-1 justify-center">
+      <div className="border p-1 flex flex-1 justify-center">
         <div className="grow flex flex-col min-h-0">
           <div ref={containerRef} className="relative w-full border h-full">
             {renderHand()}

@@ -34,7 +34,7 @@ export interface OtherPlayerProps {
 
 export interface OtherHandProps {
   readonly otherHand: Card[];
-  readonly rotation: string;
+  readonly position: string;
 }
 
 export interface CurrentPlayerProps {
@@ -75,7 +75,6 @@ export interface GameEndProps {
 
 export interface GridPosition {
   placement: string;
-  rotation: string;
   position: string;
 }
 

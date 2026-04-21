@@ -189,11 +189,14 @@ export default function GameBoard({
       {!hasInitialized ? (
         renderTempHand()
       ) : (
-        <button onClick={() => socket.emit("draw-card")} className="relative">
+        <button
+          onClick={() => socket.emit("draw-card")}
+          className="relative h-full shrink-0"
+        >
           <img
             src={getCardCoverImgPath()}
             alt="Draw cards"
-            className="shrink h-full max-h-64 aspect-2/3"
+            className="w-full h-full max-h-64 aspect-2/3"
           />
           {drawCards && (
             <motion.div
