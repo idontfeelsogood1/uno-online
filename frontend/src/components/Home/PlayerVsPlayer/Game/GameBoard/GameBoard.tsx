@@ -22,6 +22,7 @@ export default function GameBoard({
   >("idle");
 
   const [drawCards, setDrawCards] = useState<boolean>(false);
+  const [prevTopCard, setPrevTopCard] = useState<Card | null>(null);
 
   useEffect(() => {
     if (
@@ -36,6 +37,7 @@ export default function GameBoard({
       }, 2000);
 
       const cleanupTimer = setTimeout(() => {
+        setPrevTopCard(topCard);
         setAnimationPhase("idle");
       }, 3000);
 
@@ -67,6 +69,7 @@ export default function GameBoard({
       setHasInitialized(true);
     }
     setCardsForPlayers();
+    setPrevTopCard(topCard);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -173,7 +176,7 @@ export default function GameBoard({
             <img
               src={getCardImgPath(playedCards[i])}
               alt={playedCards[i].name}
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-sm"
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
             />
           </div>
         </motion.div>,
@@ -196,7 +199,7 @@ export default function GameBoard({
           <img
             src={getCardCoverImgPath()}
             alt="Draw cards"
-            className="w-full h-full max-h-64 aspect-2/3 object-cover rounded-md shadow-lg"
+            className="w-full h-full max-h-64 aspect-2/3 object-cover rounded-md shadow-md"
           />
           {drawCards && (
             <motion.div
@@ -218,14 +221,14 @@ export default function GameBoard({
 
       <div className="relative shrink h-full max-h-64 aspect-2/3">
         <img
-          src={getCardImgPath(topCard)}
-          alt={topCard.color + " " + topCard.value}
-          className="absolute inset-0 w-full h-full object-cover rounded-md shadow-lg"
+          src={getCardImgPath(prevTopCard!)}
+          alt={prevTopCard!.color + " " + prevTopCard!.value}
+          className="absolute inset-0 w-full h-full object-cover rounded-md shadow-md"
         />
         {animationPhase === "stacking" && renderStacking()}
       </div>
 
-      <div className="border">{topCard.color}</div>
+      <div className="border">{prevTopCard!.color}</div>
 
       <div className="border">
         {topCard.color === "BLACK" ? enforcedColor : "No enforced color"}
