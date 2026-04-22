@@ -45,7 +45,7 @@ if (process.env.NODE_ENV === 'dev') {
 @UseFilters(WsValidationFilter)
 export class GameGateway implements OnGatewayDisconnect {
   @WebSocketServer()
-  server: Server;
+  server!: Server;
 
   constructor(private readonly service: GameService) {}
 
