@@ -22,7 +22,7 @@ export default function GameBoard({
   >("idle");
 
   const [drawCards, setDrawCards] = useState<boolean>(false);
-  const [prevTopCard, setPrevTopCard] = useState<Card | null>(null);
+  const [prevTopCard, setPrevTopCard] = useState<Card>(topCard);
 
   useEffect(() => {
     if (
@@ -69,7 +69,6 @@ export default function GameBoard({
       setHasInitialized(true);
     }
     setCardsForPlayers();
-    setPrevTopCard(topCard);
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
