@@ -1,16 +1,16 @@
 import { Injectable } from '@nestjs/common';
-import { GameRoom, RoomIsEmpty } from './class/game-room/GameRoom';
+import { GameRoom, RoomIsEmpty } from '../class/game-room/GameRoom';
 import {
   CardPatternMismatch,
   CardTypeMismatch,
   EnforcedColorMismatch,
   GameBoard,
   TurnEvents,
-} from './class/game-board/GameBoard';
-import { Player } from './class/player/Player';
-import { PlayerNotFound } from './class/game-room/GameRoom';
-import { Card, CardColor } from './class/card/Card';
-import { AmountGreaterThanDrawPile } from './class/game-board/GameBoard';
+} from '../class/game-board/GameBoard';
+import { Player } from '../class/player/Player';
+import { PlayerNotFound } from '../class/game-room/GameRoom';
+import { Card, CardColor } from '../class/card/Card';
+import { AmountGreaterThanDrawPile } from '../class/game-board/GameBoard';
 
 @Injectable()
 export class GameService {

@@ -15,17 +15,17 @@ import {
   PublicGameState,
   PlayerNotInAnyRoom,
 } from './game.service';
-import { Player } from './class/player/Player';
-import { GameRoom } from './class/game-room/GameRoom';
+import { Player } from '../class/player/Player';
+import { GameRoom } from '../class/game-room/GameRoom';
 import { randomUUID } from 'crypto';
 import { ValidationPipe, UseFilters, UsePipes } from '@nestjs/common';
-import { CreateRoomDto } from './dto/create-room.dto';
-import { JoinRoomDto } from './dto/join-room.dto';
-import { WsValidationFilter } from './filter/ws-validation.filter';
-import { WsRoomFilter } from './filter/ws-room.filter';
-import { WsGameFilter } from './filter/ws-game.filter';
-import { PlayCardsDto } from './dto/play-cards-dto';
-import { Card } from './class/card/Card';
+import { CreateRoomDto } from '../dto/create-room.dto';
+import { JoinRoomDto } from '../dto/join-room.dto';
+import { WsValidationFilter } from '../filter/ws-validation.filter';
+import { WsRoomFilter } from '../filter/ws-room.filter';
+import { WsGameFilter } from '../filter/ws-game.filter';
+import { PlayCardsDto } from '../dto/play-cards-dto';
+import { Card } from '../class/card/Card';
 
 let originUrl: string;
 if (process.env.NODE_ENV === 'dev') {

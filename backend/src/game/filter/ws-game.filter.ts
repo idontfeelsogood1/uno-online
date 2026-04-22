@@ -6,7 +6,7 @@ import {
   CardsSentMustNotBeEmpty,
   CannotUno,
   HaveNotChoosenColor,
-} from '../game.service';
+} from '../player-vs-player/game.service';
 import {
   EnforcedColorMismatch,
   CardTypeMismatch,
