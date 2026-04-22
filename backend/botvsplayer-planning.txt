@@ -1,0 +1,61 @@
+- On create-game:
+    - Create owner
+    - Create room and put the owner in
+    - Map owner.socketId to each room
+    - Create bot players
+    - Push bot players into the room
+    - Start the room
+    - Return the payload with actionType: "create-game"
+
+- On leave-game or disconnect:
+    - Remove the binding in the map (owner.socketId -> GameRoom)
+
+BotGateway {
+    public async createGame(
+        @MessageBody() data: CreateGameBotDto,
+        @ConnectedSocket() client: Socket,
+    ): Promise<void>
+    public async leaveRoom(@ConnectedSocket() client: Socket): Promise<void>
+    public async handleDisconnect(
+        @ConnectedSocket() client: Socket,
+    ): Promise<void>
+    private async handleLeaveRoom(client: Socket): Promise<void>
+    public drawCard(@ConnectedSocket() client: Socket): void
+    public playCards(
+        @ConnectedSocket() client: Socket,
+        @MessageBody() data: PlayCardsBotDto,
+    ): void
+}
+
+- Service will implement its own room system
+- Bots will have its own socketId but it will not make a network request
+- When player playCards, each bot will perform its own playCards operation with a cooldown between each bot
+    - When 1 bot is done, emit event for the frontend and so forth
+    - The event will contain the whole gameState
+
+BotService {
+    private players: Map<string, GameRoom>;
+
+    public createRoom(
+        id: string,
+        name: string,
+        ownerId: string,
+        maxPlayer: number,
+    ): GameRoom 
+
+    public setPlayerOfRoom(playerSocketId: string, roomId: string): void
+    public getRoomOfPlayer(playerSocketId: string): GameRoom | void
+    public destroyRoom(playerSocketId: string): void
+    public startGame(room: GameRoom, player: Player): vpod
+
+    public isPlayerTurn(room: GameRoom, player: Player): boolean
+    public processCurrentTurn(room: GameRoom): boolean
+    public processNextTurn(room: GameRoom): void
+    public playCards(
+        room: GameRoom,
+        player: Player,
+        cardToPlayIds: string[],
+        wildColor?: CardColor,
+        uno?: boolean,
+    ): void
+}
