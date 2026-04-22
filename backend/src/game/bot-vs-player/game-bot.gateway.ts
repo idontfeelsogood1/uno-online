@@ -7,6 +7,8 @@ import { GameBotService } from './game-bot.service';
 import { ConnectedSocket, MessageBody } from '@nestjs/websockets';
 import { CreateGameDto } from '../dto/create-game.dto';
 import { randomUUID } from 'crypto';
+import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
+import { WsValidationFilter } from '../filter/ws-validation.filter';
 
 let originUrl: string;
 if (process.env.NODE_ENV === 'dev') {
@@ -16,12 +18,14 @@ if (process.env.NODE_ENV === 'dev') {
 }
 
 @WebSocketGateway({
-  namespace: 'bot',
+  namespace: 'PlayerVsBot',
   cors: {
     origin: originUrl,
     credentials: true,
   },
 })
+@UsePipes(new ValidationPipe({ transform: true }))
+@UseFilters(WsValidationFilter)
 export class GameBotGateway {
   server!: Server;
 
