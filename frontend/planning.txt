@@ -62,9 +62,6 @@ PlayerVsPlayer COMPONENT:
         - Show button to go back to Home
         - Show button to continue the Game (only owner can see this button, other player sees a waiting message)
 
-PlayerVsBot COMPONENT:
-// TO BE IMPLEMENTED
-
 // ANIMATIONS:
 
     - When player start the game:
