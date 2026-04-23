@@ -1,10 +1,10 @@
-import { getCardImgPath } from "../../../../../../api/helper";
-import type { Card, PlayHandProps } from "../../../../../../types/commonTypes";
-import { socket } from "../../../../../../api/socket";
+import { getCardImgPath } from "../../../../../api/helper";
+import type { Card, PlayHandProps } from "../../../../../types/commonTypes";
 import ChooseColor from "../ChooseColor/ChooseColor";
 import { useContext, useEffect, useState, useRef } from "react";
-import { GameAction } from "../../../../../../api/GameAction";
+import { GameAction } from "../../../../../api/GameAction";
 import { motion } from "motion/react";
+import { GameModeSocket } from "../../../../../api/GameModeSocket";
 
 export default function PlayHand({
   pseudoPlayHand,
@@ -18,6 +18,8 @@ export default function PlayHand({
 
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  const socket = useContext(GameModeSocket)!;
 
   useEffect(() => {
     if (
@@ -157,22 +159,22 @@ export default function PlayHand({
     playCondition(callback);
   }
 
-  function uno() {
-    const callback = (wildColor?: string) => {
-      const cardIds: string[] = [];
-      pseudoPlayHand.forEach((card) => {
-        cardIds.push(card.id);
-      });
+  // function uno() {
+  //   const callback = (wildColor?: string) => {
+  //     const cardIds: string[] = [];
+  //     pseudoPlayHand.forEach((card) => {
+  //       cardIds.push(card.id);
+  //     });
 
-      socket.emit("uno", {
-        cardsToPlayIds: cardIds,
-        wildColor: wildColor,
-      });
+  //     socket.emit("uno", {
+  //       cardsToPlayIds: cardIds,
+  //       wildColor: wildColor,
+  //     });
 
-      setShowChooseColor(false);
-    };
-    playCondition(callback);
-  }
+  //     setShowChooseColor(false);
+  //   };
+  //   playCondition(callback);
+  // }
 
   return (
     <>
@@ -185,8 +187,8 @@ export default function PlayHand({
             <button onClick={playCards} className="border">
               PLAY CARDS
             </button>
-            <button onClick={uno} className="border">
-              UNO (Play cards while yelling uno)
+            <button className="border">
+              UNO (Currently disabled for tweaking)
             </button>
           </div>
         </div>

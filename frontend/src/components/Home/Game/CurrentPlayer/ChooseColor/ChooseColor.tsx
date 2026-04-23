@@ -1,4 +1,4 @@
-import type { ChooseColorProps } from "../../../../../../types/commonTypes";
+import type { ChooseColorProps } from "../../../../../types/commonTypes";
 
 export default function ChooseColor({ actionCallback }: ChooseColorProps) {
   return (

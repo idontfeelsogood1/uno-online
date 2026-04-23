@@ -2,14 +2,15 @@ import type {
   GamePlayer,
   GameProps,
   GridPosition,
-} from "../../../../types/commonTypes";
+} from "../../../types/commonTypes";
 import CurrentPlayer from "./CurrentPlayer/CurrentPlayer";
 import GameBoard from "./GameBoard/GameBoard";
 import OtherPlayer from "./OtherPlayer/OtherPlayer";
-import { socket } from "../../../../api/socket";
-import { GameAction } from "../../../../api/GameAction";
+import { GameAction } from "../../../api/GameAction";
 import { useEffect, useState } from "react";
 import { LayoutGroup } from "motion/react";
+import { useContext } from "react";
+import { GameModeSocket } from "../../../api/GameModeSocket";
 
 export default function Game({
   gameState,
@@ -18,6 +19,8 @@ export default function Game({
 }: GameProps) {
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
+
+  const socket = useContext(GameModeSocket)!;
 
   function getPopppedHandPlayers(): GamePlayer[] {
     const pseudoPlayers: GamePlayer[] = structuredClone(gameState.playerOrder);

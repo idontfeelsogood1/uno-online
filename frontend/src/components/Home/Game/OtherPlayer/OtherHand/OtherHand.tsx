@@ -1,5 +1,5 @@
-import type { OtherHandProps } from "../../../../../../types/commonTypes";
-import { getCardCoverImgPath } from "../../../../../../api/helper";
+import type { OtherHandProps } from "../../../../../types/commonTypes";
+import { getCardCoverImgPath } from "../../../../../api/helper";
 import { motion } from "motion/react";
 import { useEffect, useRef, useState } from "react";
 

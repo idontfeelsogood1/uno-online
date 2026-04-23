@@ -1,7 +1,7 @@
 import type {
   GridPosition,
   OtherPlayerProps,
-} from "../../../../../types/commonTypes";
+} from "../../../../types/commonTypes";
 import OtherHand from "./OtherHand/OtherHand";
 
 export default function OtherPlayer({

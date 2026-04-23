@@ -7,6 +7,15 @@ export interface PlayerVsPlayerProps {
   readonly setHomeView: (view: HomeViewState) => void;
 }
 
+export interface PlayerVsBotProps {
+  readonly setHomeView: (view: HomeViewState) => void;
+}
+
+export interface CreateGameLobbyProps {
+  readonly setHomeView: (view: HomeViewState) => void;
+  readonly setMaxPlayers: CallableFunction;
+}
+
 export interface RoomProps {
   readonly roomState: RoomData;
 }
@@ -71,6 +80,11 @@ export interface GameEndProps {
   ownerSocketId: string;
   setHomeView: CallableFunction;
   continueGame: CallableFunction;
+}
+
+export interface BotGameEndProps {
+  readonly setHomeView: (view: HomeViewState) => void;
+  readonly continueGame: CallableFunction;
 }
 
 export interface GridPosition {
@@ -149,6 +163,7 @@ export type RoomStateActionType =
   | "player-left-room"
   | "transfered-owner";
 export type GameStateActionType =
+  | "create-game"
   | "game-started"
   | "draw-cards"
   | "played-cards"

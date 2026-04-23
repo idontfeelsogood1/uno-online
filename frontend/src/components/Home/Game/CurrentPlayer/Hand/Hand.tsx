@@ -1,9 +1,6 @@
 import { useEffect, useRef, useState } from "react";
-import {
-  getCardCoverImgPath,
-  getCardImgPath,
-} from "../../../../../../api/helper";
-import type { Card, HandProps } from "../../../../../../types/commonTypes";
+import { getCardCoverImgPath, getCardImgPath } from "../../../../../api/helper";
+import type { Card, HandProps } from "../../../../../types/commonTypes";
 import { motion } from "motion/react";
 
 export default function Hand({

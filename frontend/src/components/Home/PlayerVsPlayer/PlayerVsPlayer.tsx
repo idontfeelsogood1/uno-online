@@ -1,8 +1,8 @@
 import PlayerLobby from "./PlayerLobby/PlayerLobby";
 import Room from "./Room/Room";
-import Game from "./Game/Game";
-import GameEnd from "./Game/GameEnd/GameEnd";
-import { useState, useEffect } from "react";
+import Game from "../Game/Game";
+import GameEnd from "../Game/GameEnd/GameEnd";
+import { useState, useEffect, useContext } from "react";
 import type {
   PlayerVsPlayerProps,
   WrapperViewState,
@@ -16,7 +16,7 @@ import type {
   RoomDto,
   LobbyStateUpdateDto,
 } from "../../../types/dtos/commonDtos";
-import { socket } from "../../../api/socket";
+import { GameModeSocket } from "../../../api/GameModeSocket";
 
 export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [view, setView] = useState<WrapperViewState>("LOBBY");
@@ -28,6 +28,8 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [actionType, setActionType] = useState<GameStateActionType | null>(
     null,
   );
+
+  const socket = useContext(GameModeSocket)!;
 
   useEffect(() => {
     socket.connect();

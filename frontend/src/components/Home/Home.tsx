@@ -2,15 +2,26 @@ import PlayerVsBot from "./PlayerVsBot/PlayerVsBot";
 import PlayerVsPlayer from "./PlayerVsPlayer/PlayerVsPlayer";
 import { useState } from "react";
 import type { HomeViewState } from "../../types/commonTypes";
+import { GameModeSocket } from "../../api/GameModeSocket";
+import { socket as BotSocket } from "../../api/bot-socket";
+import { socket as PlayerSocket } from "../../api/player-socket";
 
 export default function Home() {
   const [view, setView] = useState<HomeViewState>(null);
 
   if (view === "BOT") {
-    return <PlayerVsBot setHomeView={setView} />;
+    return (
+      <GameModeSocket.Provider value={BotSocket}>
+        <PlayerVsBot setHomeView={setView} />
+      </GameModeSocket.Provider>
+    );
   }
   if (view === "PVP") {
-    return <PlayerVsPlayer setHomeView={setView} />;
+    return (
+      <GameModeSocket.Provider value={PlayerSocket}>
+        <PlayerVsPlayer setHomeView={setView} />{" "}
+      </GameModeSocket.Provider>
+    );
   }
 
   return (

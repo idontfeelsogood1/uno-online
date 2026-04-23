@@ -1,5 +1,6 @@
-import type { GameEndProps } from "../../../../../types/commonTypes";
-import { socket } from "../../../../../api/socket";
+import type { GameEndProps } from "../../../../types/commonTypes";
+import { GameModeSocket } from "../../../../api/GameModeSocket";
+import { useContext } from "react";
 
 export default function GameEnd({
   players,
@@ -7,6 +8,8 @@ export default function GameEnd({
   setHomeView,
   continueGame,
 }: GameEndProps) {
+  const socket = useContext(GameModeSocket)!;
+
   return (
     <dialog
       open

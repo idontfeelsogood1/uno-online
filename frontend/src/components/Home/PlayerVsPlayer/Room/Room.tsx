@@ -1,7 +1,10 @@
 import type { RoomProps } from "../../../../types/commonTypes";
-import { socket } from "../../../../api/socket";
+import { useContext } from "react";
+import { GameModeSocket } from "../../../../api/GameModeSocket";
 
 export default function Room({ roomState }: RoomProps) {
+  const socket = useContext(GameModeSocket)!;
+
   function leaveRoom() {
     socket.emit("leave-room");
   }

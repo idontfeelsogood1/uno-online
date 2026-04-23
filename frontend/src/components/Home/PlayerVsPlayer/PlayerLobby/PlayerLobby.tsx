@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
-import { socket } from "../../../../api/socket";
 import type { PlayerLobbyProps } from "../../../../types/commonTypes";
+import { useContext } from "react";
+import { GameModeSocket } from "../../../../api/GameModeSocket";
 
 export default function PlayerLobby({
   lobbyState,
@@ -11,6 +12,8 @@ export default function PlayerLobby({
   const [roomNameInputValue, setRoomNameInputValue] = useState<string>("");
   const [selectedRoomSize, setSelectedRoomSize] = useState<number>(3);
   const [isCreatingRoom, setIsCreatingRoom] = useState<boolean>(false);
+
+  const socket = useContext(GameModeSocket)!;
 
   function updateLobbyState() {
     socket.emit("get-lobby");
