@@ -58,6 +58,8 @@ export default function PlayerVsBot({ setHomeView }: PlayerVsBotProps) {
       socket.off("room-exception");
       socket.off("game-exception");
     };
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   function continueGame(): void {
@@ -75,15 +77,17 @@ export default function PlayerVsBot({ setHomeView }: PlayerVsBotProps) {
     );
   }
   if (view === "GAME") {
-    <>
-      <Game
-        gameState={gameState!}
-        actionType={actionType!}
-        actionSocketId={actionSocketId!}
-      />
-      {actionType === "game-ended" && (
-        <GameEnd setHomeView={setHomeView} continueGame={continueGame} />
-      )}
-    </>;
+    return (
+      <>
+        <Game
+          gameState={gameState!}
+          actionType={actionType!}
+          actionSocketId={actionSocketId!}
+        />
+        {actionType === "game-ended" && (
+          <GameEnd setHomeView={setHomeView} continueGame={continueGame} />
+        )}
+      </>
+    );
   }
 }

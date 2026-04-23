@@ -18,12 +18,12 @@ export default function CreateGameLobby({
   return (
     <dialog
       open
-      className="flex flex-col justify-center items-center border p-3 gap-3"
+      className="flex flex-col gap-3 p-3 text-center fixed inset-0 m-auto h-fit z-99 border"
     >
-      <div className="border">SELECT THE NUMBER OF PLAYERS!</div>
-      <div className="border flex justify-center items-center gap-3">
+      <div className="border p-3">SELECT THE NUMBER OF PLAYERS!</div>
+      <div className="border flex flex-col justify-center items-center gap-3 p-3">
         <div
-          className="border"
+          className="border w-full"
           onClick={(e) => {
             createGame(e.currentTarget.dataset.value!);
           }}
@@ -32,7 +32,7 @@ export default function CreateGameLobby({
           2
         </div>
         <div
-          className="border"
+          className="border w-full"
           onClick={(e) => {
             createGame(e.currentTarget.dataset.value!);
           }}
@@ -41,7 +41,7 @@ export default function CreateGameLobby({
           3
         </div>
         <div
-          className="border"
+          className="border w-full"
           onClick={(e) => {
             createGame(e.currentTarget.dataset.value!);
           }}

@@ -36,6 +36,8 @@ export default function PlayerLobby({
 
   useEffect(() => {
     updateLobbyState();
+
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   if (!username) {
