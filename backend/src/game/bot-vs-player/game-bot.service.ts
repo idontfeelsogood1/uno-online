@@ -85,4 +85,8 @@ export class GameBotService {
 
     return publicGamePlayers;
   }
+
+  public destroyRoom(socketId: string) {
+    this.players.delete(socketId);
+  }
 }

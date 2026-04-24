@@ -1,5 +1,9 @@
 import 'dotenv/config';
-import { SubscribeMessage, WebSocketGateway } from '@nestjs/websockets';
+import {
+  OnGatewayDisconnect,
+  SubscribeMessage,
+  WebSocketGateway,
+} from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { Player } from '../class/player/Player';
 import { GameRoom } from '../class/game-room/GameRoom';
@@ -26,7 +30,7 @@ if (process.env.NODE_ENV === 'dev') {
 })
 @UsePipes(new ValidationPipe({ transform: true }))
 @UseFilters(WsValidationFilter)
-export class GameBotGateway {
+export class GameBotGateway implements OnGatewayDisconnect {
   server!: Server;
 
   constructor(private readonly service: GameBotService) {}
@@ -59,5 +63,10 @@ export class GameBotGateway {
       actionType: 'create-game',
       gameState: this.service.generateGameState(room),
     });
+  }
+
+  // THIS RUNS AUTOMATICALLY WHEN CLIENT DISCONNECTS
+  public handleDisconnect(@ConnectedSocket() client: Socket): void {
+    this.service.destroyRoom(client.id);
   }
 }

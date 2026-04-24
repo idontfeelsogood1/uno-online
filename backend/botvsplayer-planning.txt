@@ -15,11 +15,9 @@ BotGateway {
         @MessageBody() data: CreateGameBotDto,
         @ConnectedSocket() client: Socket,
     ): Promise<void>
-    public async leaveRoom(@ConnectedSocket() client: Socket): Promise<void>
     public async handleDisconnect(
         @ConnectedSocket() client: Socket,
-    ): Promise<void>
-    private async handleLeaveRoom(client: Socket): Promise<void>
+    ): void
     public drawCard(@ConnectedSocket() client: Socket): void
     public playCards(
         @ConnectedSocket() client: Socket,
