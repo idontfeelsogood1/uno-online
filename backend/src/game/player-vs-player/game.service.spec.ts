@@ -15,11 +15,11 @@ import {
   RoomHasNotStarted,
   CardsSentMustNotBeEmpty,
 } from './game.service';
-import { CardPatternMismatch, TurnEvents } from '../class/game-board/GameBoard';
-import { GameRoom, PlayerNotFound } from '../class/game-room/GameRoom';
-import { Player } from '../class/player/Player';
-import { GameBoard } from '../class/game-board/GameBoard';
-import { Card, CardColor, CardValue } from '../class/card/Card';
+import { CardPatternMismatch, TurnEvents } from '../model/game-board/GameBoard';
+import { GameRoom, PlayerNotFound } from '../model/game-room/GameRoom';
+import { Player } from '../model/player/Player';
+import { GameBoard } from '../model/game-board/GameBoard';
+import { Card, CardColor, CardValue } from '../model/card/Card';
 
 describe('GameService', () => {
   let service: GameService;

@@ -1,16 +1,19 @@
 import { Injectable } from '@nestjs/common';
-import { Player } from '../class/player/Player';
-import { GameRoom } from '../class/game-room/GameRoom';
-import { GameBoard } from '../class/game-board/GameBoard';
+import { Player } from '../model/player/Player';
+import { GameRoom } from '../model/game-room/GameRoom';
+import { GameBoard } from '../model/game-board/GameBoard';
 import { randomUUID } from 'crypto';
-import { Card } from '../class/card/Card';
+import { Card } from '../model/card/Card';
+import {
+  NotPlayerTurn,
+  CannotDrawCard,
+  RoomNotFound,
+} from '../service-exception/service-exception';
 import {
   PublicGameState,
   PublicGamePlayer,
-  RoomNotFound,
-  NotPlayerTurn,
-} from '../player-vs-player/game.service';
-import { AmountGreaterThanDrawPile } from '../class/game-board/GameBoard';
+} from '../service-interface/service-interface';
+import { AmountGreaterThanDrawPile } from '../model/game-board/GameBoard';
 
 @Injectable()
 export class GameBotService {
@@ -157,12 +160,5 @@ export class GameBotService {
         game.shuffleDrawPile();
       }
     }
-  }
-}
-
-export class CannotDrawCard extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'CannotDrawCard';
   }
 }

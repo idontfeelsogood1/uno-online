@@ -11,7 +11,7 @@ import {
   PlayersCountMustBeGreaterThanOne,
   RoomHasNotStarted,
 } from '../player-vs-player/game.service';
-import { PlayerNotFound } from '../class/game-room/GameRoom';
+import { PlayerNotFound } from '../model/game-room/GameRoom';
 
 @Catch(
   PlayerIsInARoom,

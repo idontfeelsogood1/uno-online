@@ -1,14 +1,36 @@
 import { Injectable } from '@nestjs/common';
-import { GameRoom, RoomIsEmpty } from '../class/game-room/GameRoom';
+import { GameRoom, RoomIsEmpty } from '../model/game-room/GameRoom';
 import {
   CardPatternMismatch,
   GameBoard,
   TurnEvents,
-} from '../class/game-board/GameBoard';
-import { Player } from '../class/player/Player';
-import { PlayerNotFound } from '../class/game-room/GameRoom';
-import { Card, CardColor } from '../class/card/Card';
-import { AmountGreaterThanDrawPile } from '../class/game-board/GameBoard';
+} from '../model/game-board/GameBoard';
+import { Player } from '../model/player/Player';
+import { PlayerNotFound } from '../model/game-room/GameRoom';
+import { Card, CardColor } from '../model/card/Card';
+import { AmountGreaterThanDrawPile } from '../model/game-board/GameBoard';
+import {
+  CardsSentMustNotBeEmpty,
+  RoomHasNotStarted,
+  RemovedOrTransfered,
+  PlayerNotInAnyRoom,
+  PlayerIsInARoom,
+  RoomIsFull,
+  HaveNotChoosenColor,
+  CannotUno,
+  NotPlayerTurn,
+  PlayersCountMustBeGreaterThanOne,
+  NotRoomOwner,
+  RoomNotFound,
+  RoomHasStarted,
+} from '../service-exception/service-exception';
+
+import {
+  PublicGamePlayer,
+  PublicGameState,
+  PublicRoomPlayer,
+  PublicRoomState,
+} from '../service-interface/service-interface';
 
 @Injectable()
 export class GameService {
@@ -619,181 +641,5 @@ export class GameService {
     }
 
     return publicRoomPlayers;
-  }
-}
-
-export class PublicRoomState {
-  constructor(
-    roomId: string,
-    roomName: string,
-    maxPlayers: number,
-    hasRoomStarted: boolean,
-    ownerSocketId: string,
-    ownerUsername: string,
-    currentPlayers: PublicRoomPlayer[],
-  ) {
-    this.roomId = roomId;
-    this.roomName = roomName;
-    this.maxPlayers = maxPlayers;
-    this.hasRoomStarted = hasRoomStarted;
-    this.ownerSocketId = ownerSocketId;
-    this.ownerUsername = ownerUsername;
-    this.currentPlayers = currentPlayers;
-  }
-
-  readonly roomId: string;
-  readonly roomName: string;
-  readonly maxPlayers: number;
-  readonly hasRoomStarted: boolean;
-
-  readonly ownerSocketId: string;
-  readonly ownerUsername: string;
-
-  readonly currentPlayers: PublicRoomPlayer[];
-}
-
-export class PublicRoomPlayer {
-  constructor(socketId: string, username: string) {
-    this.socketId = socketId;
-    this.username = username;
-  }
-
-  readonly socketId: string;
-  readonly username: string;
-}
-
-export class PublicGameState {
-  readonly currentPlayerIndex: number;
-  readonly playerOrder: PublicGamePlayer[];
-  readonly direction: number;
-  readonly topCard: Card;
-  readonly enforcedColor: CardColor;
-
-  constructor(
-    currentPlayerIndex: number,
-    playerOrder: PublicGamePlayer[],
-    direction: number,
-    topCard: Card,
-    enforcedColor: CardColor,
-  ) {
-    this.currentPlayerIndex = currentPlayerIndex;
-    this.playerOrder = playerOrder;
-    this.direction = direction;
-    this.topCard = topCard;
-    this.enforcedColor = enforcedColor;
-  }
-}
-
-export class PublicGamePlayer {
-  readonly socketId: string;
-  readonly username: string;
-  readonly hand: Card[];
-  readonly uno: boolean;
-
-  constructor(socketId: string, username: string, hand: Card[], uno: boolean) {
-    this.socketId = socketId;
-    this.username = username;
-    this.hand = hand;
-    this.uno = uno;
-  }
-}
-
-export class CardsSentMustNotBeEmpty extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'CardsSentMustNotBeEmpty';
-  }
-}
-
-export class RoomHasNotStarted extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'RoomHasNotStarted';
-  }
-}
-
-export class RemovedOrTransfered {
-  readonly transferedOwner: Player | null;
-  readonly removedRoom: GameRoom | null;
-  constructor(transferedOwner: Player | null, removedRoom: GameRoom | null) {
-    this.transferedOwner = transferedOwner;
-    this.removedRoom = removedRoom;
-  }
-}
-
-export class PlayerIsInARoom extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'PlayerIsInARoom';
-  }
-}
-
-export class PlayerNotInAnyRoom extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'PlayerNotInAnyRoom';
-  }
-}
-
-export class RoomHasStarted extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'RoomHasStarted';
-  }
-}
-
-export class RoomIsFull extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'RoomIsFull';
-  }
-}
-
-export class PlayerWon extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'PlayerWon';
-  }
-}
-
-export class HaveNotChoosenColor extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'HaveNotChooseColor';
-  }
-}
-
-export class CannotUno extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'CannotUno';
-  }
-}
-
-export class NotPlayerTurn extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'NotPlayerTurn';
-  }
-}
-
-export class PlayersCountMustBeGreaterThanOne extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'PlayersCountMustBeGreaterThanOne';
-  }
-}
-
-export class NotRoomOwner extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'NotRoomOwner';
-  }
-}
-
-export class RoomNotFound extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'RoomNotFound';
   }
 }

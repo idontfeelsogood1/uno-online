@@ -7,7 +7,7 @@ import {
   CannotUno,
   HaveNotChoosenColor,
 } from '../player-vs-player/game.service';
-import { CardPatternMismatch } from '../class/game-board/GameBoard';
+import { CardPatternMismatch } from '../model/game-board/GameBoard';
 import { CannotDrawCard } from '../bot-vs-player/game-bot.service';
 
 // UNCAUGHT: AmountGreaterThanDrawPile, PlayerWon

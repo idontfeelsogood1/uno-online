@@ -1,5 +1,5 @@
 import { IsArray, IsString, ArrayNotEmpty } from 'class-validator';
-import { CardColor } from '../class/card/Card';
+import { CardColor } from '../model/card/Card';
 
 export class PlayCardsDto {
   @IsArray()

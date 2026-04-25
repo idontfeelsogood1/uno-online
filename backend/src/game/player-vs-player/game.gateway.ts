@@ -8,24 +8,26 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
+import { GameService } from './game.service';
 import {
-  GameService,
-  RemovedOrTransfered,
   PublicRoomState,
   PublicGameState,
+} from '../service-interface/service-interface';
+import {
   PlayerNotInAnyRoom,
-} from './game.service';
-import { Player } from '../class/player/Player';
-import { GameRoom } from '../class/game-room/GameRoom';
+  RemovedOrTransfered,
+} from '../service-exception/service-exception';
+import { Player } from '../model/player/Player';
+import { GameRoom } from '../model/game-room/GameRoom';
 import { randomUUID } from 'crypto';
 import { ValidationPipe, UseFilters, UsePipes } from '@nestjs/common';
-import { CreateRoomDto } from '../dto/create-room.dto';
-import { JoinRoomDto } from '../dto/join-room.dto';
-import { WsValidationFilter } from '../filter/ws-validation.filter';
-import { WsRoomFilter } from '../filter/ws-room.filter';
-import { WsGameFilter } from '../filter/ws-game.filter';
-import { PlayCardsDto } from '../dto/play-cards-dto';
-import { Card } from '../class/card/Card';
+import { CreateRoomDto } from '../gateway-dto/create-room.dto';
+import { JoinRoomDto } from '../gateway-dto/join-room.dto';
+import { WsValidationFilter } from '../gateway-filter/ws-validation.filter';
+import { WsRoomFilter } from '../gateway-filter/ws-room.filter';
+import { WsGameFilter } from '../gateway-filter/ws-game.filter';
+import { PlayCardsDto } from '../gateway-dto/play-cards-dto';
+import { Card } from '../model/card/Card';
 
 let originUrl: string;
 if (process.env.NODE_ENV === 'dev') {

@@ -5,16 +5,16 @@ import {
   WebSocketGateway,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { Player } from '../class/player/Player';
-import { GameRoom } from '../class/game-room/GameRoom';
+import { Player } from '../model/player/Player';
+import { GameRoom } from '../model/game-room/GameRoom';
 import { GameBotService } from './game-bot.service';
 import { ConnectedSocket, MessageBody } from '@nestjs/websockets';
-import { CreateGameDto } from '../dto/create-game.dto';
+import { CreateGameDto } from '../gateway-dto/create-game.dto';
 import { randomUUID } from 'crypto';
 import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
-import { WsValidationFilter } from '../filter/ws-validation.filter';
-import { WsRoomFilter } from '../filter/ws-room.filter';
-import { WsGameFilter } from '../filter/ws-game.filter';
+import { WsValidationFilter } from '../gateway-filter/ws-validation.filter';
+import { WsRoomFilter } from '../gateway-filter/ws-room.filter';
+import { WsGameFilter } from '../gateway-filter/ws-game.filter';
 
 let originUrl: string;
 if (process.env.NODE_ENV === 'dev') {

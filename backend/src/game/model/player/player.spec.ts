@@ -1,5 +1,5 @@
 import { GameRoom } from '../game-room/GameRoom';
-import { Player } from '../player/Player';
+import { Player } from './Player';
 import { GameBoard } from '../game-board/GameBoard';
 
 // Mock dependencies
