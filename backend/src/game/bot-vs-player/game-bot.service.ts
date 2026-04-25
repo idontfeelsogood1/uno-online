@@ -139,7 +139,7 @@ export class GameBotService {
     const game: GameBoard = room.getGameBoard();
     const playableCards: Card[] = this.getPlayableCards(player.getHand(), game);
 
-    if (playableCards.length === 0) {
+    if (playableCards.length !== 0) {
       throw new CannotDrawCard(
         `
         Player have a playable card in hand!

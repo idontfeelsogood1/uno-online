@@ -8,6 +8,7 @@ import {
   HaveNotChoosenColor,
 } from '../player-vs-player/game.service';
 import { CardPatternMismatch } from '../class/game-board/GameBoard';
+import { CannotDrawCard } from '../bot-vs-player/game-bot.service';
 
 // UNCAUGHT: AmountGreaterThanDrawPile, PlayerWon
 @Catch(
@@ -16,6 +17,7 @@ import { CardPatternMismatch } from '../class/game-board/GameBoard';
   CannotUno,
   HaveNotChoosenColor,
   CardPatternMismatch,
+  CannotDrawCard,
 )
 export class WsGameFilter extends BaseWsExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
@@ -40,6 +42,9 @@ export class WsGameFilter extends BaseWsExceptionFilter {
     }
     if (exception instanceof CardPatternMismatch) {
       message = 'Card pattern mismatch.';
+    }
+    if (exception instanceof CannotDrawCard) {
+      message = 'Player have playable cards in hand.';
     }
 
     // Emit the specific event to the frontend
