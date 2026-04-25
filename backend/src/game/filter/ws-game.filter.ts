@@ -7,11 +7,7 @@ import {
   CannotUno,
   HaveNotChoosenColor,
 } from '../player-vs-player/game.service';
-import {
-  EnforcedColorMismatch,
-  CardTypeMismatch,
-  CardPatternMismatch,
-} from '../class/game-board/GameBoard';
+import { CardPatternMismatch } from '../class/game-board/GameBoard';
 
 // UNCAUGHT: AmountGreaterThanDrawPile, PlayerWon
 @Catch(
@@ -19,8 +15,6 @@ import {
   CardsSentMustNotBeEmpty,
   CannotUno,
   HaveNotChoosenColor,
-  EnforcedColorMismatch,
-  CardTypeMismatch,
   CardPatternMismatch,
 )
 export class WsGameFilter extends BaseWsExceptionFilter {
@@ -43,12 +37,6 @@ export class WsGameFilter extends BaseWsExceptionFilter {
     }
     if (exception instanceof HaveNotChoosenColor) {
       message = 'Must choose a color if wild card is played on top of gabd.';
-    }
-    if (exception instanceof EnforcedColorMismatch) {
-      message = 'Enforced color mismatch.';
-    }
-    if (exception instanceof CardTypeMismatch) {
-      message = 'Can only play 1 type per hand.';
     }
     if (exception instanceof CardPatternMismatch) {
       message = 'Card pattern mismatch.';

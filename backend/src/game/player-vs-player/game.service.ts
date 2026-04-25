@@ -2,8 +2,6 @@ import { Injectable } from '@nestjs/common';
 import { GameRoom, RoomIsEmpty } from '../class/game-room/GameRoom';
 import {
   CardPatternMismatch,
-  CardTypeMismatch,
-  EnforcedColorMismatch,
   GameBoard,
   TurnEvents,
 } from '../class/game-board/GameBoard';
@@ -447,8 +445,6 @@ export class GameService {
     } catch (err) {
       if (err instanceof CardsSentMustNotBeEmpty) throw err;
       if (err instanceof HaveNotChoosenColor) throw err;
-      if (err instanceof EnforcedColorMismatch) throw err;
-      if (err instanceof CardTypeMismatch) throw err;
       if (err instanceof CardPatternMismatch) throw err;
     }
   }

@@ -13,6 +13,8 @@ import { CreateGameDto } from '../dto/create-game.dto';
 import { randomUUID } from 'crypto';
 import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WsValidationFilter } from '../filter/ws-validation.filter';
+import { WsRoomFilter } from '../filter/ws-room.filter';
+import { WsGameFilter } from '../filter/ws-game.filter';
 
 let originUrl: string;
 if (process.env.NODE_ENV === 'dev') {
@@ -68,5 +70,23 @@ export class GameBotGateway implements OnGatewayDisconnect {
   // THIS RUNS AUTOMATICALLY WHEN CLIENT DISCONNECTS
   public handleDisconnect(@ConnectedSocket() client: Socket): void {
     this.service.destroyRoom(client.id);
+  }
+
+  @SubscribeMessage('draw-card')
+  @UseFilters(WsRoomFilter, WsGameFilter)
+  public drawCard(@ConnectedSocket() client: Socket): void {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    const player: Player = room.getCurrentPlayer(client.id);
+
+    this.service.isPlayerTurn(room, player);
+    this.service.drawCards(room, player, 1); // TRIGGERS CLEARING THE discardPile, KEEPING THE TOP CARD, PUSHING AND SHUFFLING CARDS TO drawPile WHEN drawPile is 0
+
+    this.server.to(room.id).emit('game-state-update', {
+      actionType: 'draw-cards',
+      socketId: player.socketId,
+      username: player.username,
+      gameState: this.service.generateGameState(room),
+      cardDrew: player.getHand()[player.getHand().length - 1],
+    });
   }
 }

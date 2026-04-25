@@ -116,93 +116,99 @@ export class GameBoard {
     return 'NUMBER';
   }
 
-  // MIGHT NEED FURTHER BUG FIXING
-  public processPattern(cards: Card[]): void {
-    let pseudoTopCard: Card = this.currentTopCard!;
-
-    const firstCardIsWild: boolean = this.getCardType(cards[0]) === 'WILD';
-    const topCardIsWild: boolean = this.getCardType(pseudoTopCard) === 'WILD';
+  public isValidFirstMove(card: Card): boolean {
+    const firstCardIsWild: boolean = this.getCardType(card) === 'WILD';
+    const topCardIsWild: boolean =
+      this.getCardType(this.getCurrentTopCard()) === 'WILD';
     const firstCardMatchEnforcedColorOrWild: boolean =
-      cards[0].color === this.enforcedColor ||
-      this.getCardType(cards[0]) === 'WILD';
+      card.color === this.enforcedColor || this.getCardType(card) === 'WILD';
     const firstCardMatchTopCardColor: boolean =
-      pseudoTopCard.color === cards[0].color;
-
-    // THIS ENSURES ONLY THE FIRST CARD OF HAND THAT MATCHES THE CONSTRAINT IS SET AS pseudoTopCard
+      this.getCurrentTopCard().color === card.color;
     if (
       firstCardIsWild ||
       (topCardIsWild && firstCardMatchEnforcedColorOrWild) ||
-      firstCardMatchTopCardColor
+      firstCardMatchTopCardColor ||
+      this.isMatchingPattern(this.getCurrentTopCard(), card)
     ) {
-      pseudoTopCard = cards[0];
-    } else if (topCardIsWild) {
-      throw new EnforcedColorMismatch(
+      return true;
+    }
+
+    return false;
+  }
+
+  // ONLY WORKS CORRECTLY AFTER isValidFirstMove
+  public isMatchingPattern(previousTopCard: Card, currentCard: Card): boolean {
+    if (this.getCardType(currentCard) !== this.getCardType(previousTopCard)) {
+      return false;
+    }
+
+    if (this.getCardType(previousTopCard) === 'NUMBER') {
+      const sameColorMatchingPattern: boolean =
+        currentCard.color === previousTopCard.color &&
+        (parseInt(currentCard.value) - parseInt(previousTopCard.value) === 0 ||
+          parseInt(currentCard.value) - parseInt(previousTopCard.value) === 1);
+      const differentColorSameValue: boolean =
+        currentCard.color !== previousTopCard.color &&
+        currentCard.value === previousTopCard.value;
+
+      if (!(sameColorMatchingPattern || differentColorSameValue)) {
+        return false;
+      }
+    }
+
+    if (
+      this.getCardType(previousTopCard) === 'ACTION' ||
+      this.getCardType(previousTopCard) === 'WILD'
+    ) {
+      if (currentCard.value !== previousTopCard.value) {
+        return false;
+      }
+    }
+
+    return true;
+  }
+
+  public processPattern(cards: Card[]): void {
+    if (!this.isValidFirstMove(cards[0])) {
+      throw new CardPatternMismatch(
         `
-        Enforced color: ${this.enforcedColor}
-        Top Card: ${pseudoTopCard.name}
-        First card in cards: ${cards[0].name},
+        Previous Card: ${this.getCurrentTopCard().name}
+        Current Card: ${cards[0].name}
+        Enforced Color: ${this.getEnforcedColor()}
         `,
-        {},
+        {
+          cause: {
+            cards: {
+              prevCardId: this.getCurrentTopCard().id,
+              currentCardId: cards[0].id,
+            },
+            enforcedColor: this.getEnforcedColor(),
+          },
+        },
       );
     }
 
-    for (const card of cards) {
-      if (this.getCardType(card) !== this.getCardType(pseudoTopCard)) {
-        throw new CardTypeMismatch(
+    for (let i = 1; i < cards.length; i++) {
+      const previousTopCard = cards[i - 1];
+      const currentCard = cards[i];
+
+      if (!this.isMatchingPattern(previousTopCard, currentCard)) {
+        throw new CardPatternMismatch(
           `
-          Top card: ${pseudoTopCard.name}
-          Top card type: ${this.getCardType(pseudoTopCard)}
-          -------------------------------------------------
-          Current card: ${card.name}
-          Current card type: ${this.getCardType(card)}
-          `,
-          {},
+        Previous Card: ${previousTopCard.name}
+        Current Card: ${currentCard.name}
+        Enforced Color: ${this.getEnforcedColor()}
+        `,
+          {
+            cause: {
+              cards: {
+                prevCardId: previousTopCard.id,
+                currentCardId: currentCard.id,
+              },
+              enforcedColor: this.getEnforcedColor(),
+            },
+          },
         );
-      }
-
-      if (this.getCardType(pseudoTopCard) === 'NUMBER') {
-        const sameColorMatchingPattern: boolean =
-          card.color === pseudoTopCard.color &&
-          (parseInt(card.value) - parseInt(pseudoTopCard.value) === 0 ||
-            parseInt(card.value) - parseInt(pseudoTopCard.value) === 1);
-        const differentColorSameValue: boolean =
-          card.color !== pseudoTopCard.color &&
-          card.value === pseudoTopCard.value;
-
-        if (sameColorMatchingPattern || differentColorSameValue) {
-          pseudoTopCard = card;
-        } else {
-          throw new CardPatternMismatch(
-            `
-            Top card: ${pseudoTopCard.name}
-            Top card type: ${this.getCardType(pseudoTopCard)}
-            -------------------------------------------------
-            Current card: ${card.name}
-            Current card type: ${this.getCardType(card)}
-            `,
-            {},
-          );
-        }
-      }
-
-      if (
-        this.getCardType(pseudoTopCard) === 'ACTION' ||
-        this.getCardType(pseudoTopCard) === 'WILD'
-      ) {
-        if (card.value === pseudoTopCard.value) {
-          pseudoTopCard = card;
-        } else {
-          throw new CardPatternMismatch(
-            `
-            Top card: ${pseudoTopCard.name}
-            Top card type: ${this.getCardType(pseudoTopCard)}
-            -------------------------------------------------
-            Current card: ${card.name}
-            Current card type: ${this.getCardType(card)}
-            `,
-            {},
-          );
-        }
       }
     }
   }
@@ -345,20 +351,6 @@ export class TurnEvents {
     this.draw_two_amount = draw_two_amount;
     this.wild_amount = wild_amount;
     this.wild_draw_four_amount = wild_draw_four_amount;
-  }
-}
-
-export class EnforcedColorMismatch extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'EnforcedColorMismatch';
-  }
-}
-
-export class CardTypeMismatch extends Error {
-  constructor(message: string, options: object) {
-    super(message, options);
-    this.name = 'CardTypeMismatch';
   }
 }
 

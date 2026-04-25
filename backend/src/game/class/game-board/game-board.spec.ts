@@ -1,8 +1,6 @@
 import {
   GameBoard,
   AmountGreaterThanDrawPile,
-  EnforcedColorMismatch,
-  CardTypeMismatch,
   CardPatternMismatch,
 } from './GameBoard';
 import { Card, CardColor, CardValue } from '../card/Card';
@@ -450,21 +448,21 @@ describe('GameBoard', () => {
         gameBoard.setEnforcedColor(CardColor.BLUE);
         expect(() => {
           gameBoard.processPattern([redOne, redTwo]);
-        }).toThrow(EnforcedColorMismatch);
+        }).toThrow(CardPatternMismatch);
       });
 
       it('should throw CardTypeMismatch when mixing Types in a chain (Number -> Action)', () => {
         // Red 2 (Number) -> Red Skip (Action)
         expect(() => {
           gameBoard.processPattern([redTwo, redSkip]);
-        }).toThrow(CardTypeMismatch);
+        }).toThrow(CardPatternMismatch);
       });
 
       it('should throw CardTypeMismatch when mixing Types in a chain (Wild -> Number)', () => {
         // Wild 1 (Wild) -> Red One (Number)
         expect(() => {
           gameBoard.processPattern([wildCard1, redOne]);
-        }).toThrow(CardTypeMismatch);
+        }).toThrow(CardPatternMismatch);
       });
 
       it('should fail if a long chain breaks sequence at the very end', () => {
