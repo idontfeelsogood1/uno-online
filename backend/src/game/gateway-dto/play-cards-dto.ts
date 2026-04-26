@@ -1,4 +1,10 @@
-import { IsArray, IsString, ArrayNotEmpty } from 'class-validator';
+import {
+  IsArray,
+  IsString,
+  IsBoolean,
+  ArrayNotEmpty,
+  IsOptional,
+} from 'class-validator';
 import { CardColor } from '../model/card/Card';
 
 export class PlayCardsDto {
@@ -8,4 +14,8 @@ export class PlayCardsDto {
   cardsToPlayIds: string[];
 
   wildColor?: CardColor;
+
+  @IsBoolean()
+  @IsOptional()
+  uno: boolean = false;
 }

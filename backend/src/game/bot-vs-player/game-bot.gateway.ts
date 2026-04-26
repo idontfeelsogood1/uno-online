@@ -15,6 +15,8 @@ import { UseFilters, UsePipes, ValidationPipe } from '@nestjs/common';
 import { WsValidationFilter } from '../gateway-filter/ws-validation.filter';
 import { WsRoomFilter } from '../gateway-filter/ws-room.filter';
 import { WsGameFilter } from '../gateway-filter/ws-game.filter';
+import { PlayCardsDto } from '../gateway-dto/play-cards-dto';
+import { Card } from '../model/card/Card';
 
 let originUrl: string;
 if (process.env.NODE_ENV === 'dev') {
@@ -88,5 +90,92 @@ export class GameBotGateway implements OnGatewayDisconnect {
       gameState: this.service.generateGameState(room),
       cardDrew: player.getHand()[player.getHand().length - 1],
     });
+  }
+
+  @SubscribeMessage('play-cards')
+  @UseFilters(WsRoomFilter, WsGameFilter)
+  public playCards(
+    @ConnectedSocket() client: Socket,
+    @MessageBody() data: PlayCardsDto,
+  ): void {
+    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
+    const player: Player = room.getCurrentPlayer(client.id);
+    const { cardsToPlayIds, wildColor, uno }: PlayCardsDto = data;
+    const playedCards: Card[] = player.getCardsToPlay(cardsToPlayIds);
+
+    this.service.isPlayerTurn(room, player);
+    this.service.playCards(room, player, cardsToPlayIds, wildColor);
+    if (uno) player.setIsUno(true);
+    this.service.processCurrentTurn(room); // REMEMBER TO SET ISUNO = FALSE
+    this.service.processNextTurn(room);
+
+    this.server.to(room.id).emit('game-state-update', {
+      actionType: 'played-cards',
+      socketId: player.socketId,
+      username: player.username,
+      gameState: this.service.generateGameState(room),
+      playedCards: playedCards,
+    });
+  }
+
+  public async handleBotMoves(room: GameRoom, client: Socket): Promise<void> {
+    const sleep = (ms: number) =>
+      new Promise((resolve) => setTimeout(resolve, ms));
+
+    // BOTS PLAYING
+    while (true) {
+      // BREAKS WHEN GAME ENDED
+      if (this.service.hasGameEnded(room)) {
+        this.service.destroyRoom(client.id);
+        this.server.to(room.id).emit('game-state-update', {
+          actionType: 'game-ended',
+          gameState: this.service.generateGameState(room),
+        });
+        break;
+      }
+
+      // BREAKS WHEN ITS THE PLAYER'S TURN
+      if (this.service.isBotTurn(room, client.id)) {
+        const bot: Player = room.getPlayerFromOrder();
+        while (
+          this.service.getPlayableCards(bot.getHand(), room.getGameBoard())
+            .length === 0
+        ) {
+          await sleep(1000);
+          this.service.drawCards(room, bot, 1);
+          this.server.to(room.id).emit('game-state-update', {
+            actionType: 'draw-cards',
+            socketId: bot.socketId,
+            username: bot.username,
+            gameState: this.service.generateGameState(room),
+            cardDrew: bot.getHand()[bot.getHand().length - 1],
+          });
+        }
+
+        await sleep(2000);
+        const longestPattern: Card[] = this.service.getLongestPattern(
+          room,
+          bot,
+        );
+        const cardPatternIds: string[] =
+          this.service.getCardIds(longestPattern);
+        bot.setIsUno(true);
+        this.service.playCards(
+          room,
+          bot,
+          cardPatternIds,
+          this.service.generateRandomWildColor(),
+        );
+        this.service.processCurrentTurn(room);
+        this.service.processNextTurn(room);
+        this.server.to(room.id).emit('game-state-update', {
+          actionType: 'played-cards',
+          socketId: bot.socketId,
+          username: bot.username,
+          gameState: this.service.generateGameState(room),
+          playedCards: longestPattern,
+        });
+      } else break;
+    }
   }
 }

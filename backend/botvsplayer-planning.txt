@@ -20,32 +20,34 @@
         - Send back gameState with actionType
 
 - On play-cards:
+    - If player's turn:
+        - Process the player's hand pattern
+            - If incorrect:
+                - Throw errors to filters
+            - If correct:
+                - Process current turn for the player
+                - Process next turn for the bot or the player
+
     - Go into a loop, breaks when some conditions are met (game-end (1 player left), etc...)
-        - If player's turn:
-            - Process the player's hand pattern
-                - If incorrect:
-                    - Throw errors to filters
-                - If correct:
-                    - Process current turn for the player
-                    - Process next turn for the bot or the player
-        - If next turn is player's turn:
-            - Send back the gameState to the player
-            - Breaks the loop
         - If game-end:
-            - Send back the gameState to the player
             - Destroy the room
+            - Send back the gameState to the player
             - Breaks the loop
         - If next turn is bot's turn:
+            If no playable cards in hand:
+                - Set timeout for 1 second
+                - Draw a card 
+                - Send back gamestate
+                - Repeat until there's a playable card agaisnt the top card
+                
             - Set timeout to simulate thinking
             - Do the dfs and get the patterns:
-                If no playable pattern:
-                    - Draw a card until there's a playable card agaisnt the top card, each actions have timeout (Send gamestate in meanwhile)
-                    - Repeat the process to find the pattern
-                If playable pattern:
-                    - Play the longest sequence
+                - Play the longest sequence
             - Process current turn for the current bot
             - Process next turn for the next bot or player
             - Send back gameState to the client
+        - If next turn is player's turn:
+            - Breaks the loop
 
 BotGateway {
     public async createGame(
