@@ -10,7 +10,7 @@ import {
   NotRoomOwner,
   PlayersCountMustBeGreaterThanOne,
   RoomHasNotStarted,
-} from '../player-vs-player/game.service';
+} from '../service-exception/service-exception';
 import { PlayerNotFound } from '../model/game-room/GameRoom';
 
 @Catch(

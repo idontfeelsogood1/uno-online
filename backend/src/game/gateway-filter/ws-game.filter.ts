@@ -6,9 +6,9 @@ import {
   CardsSentMustNotBeEmpty,
   CannotUno,
   HaveNotChoosenColor,
-} from '../player-vs-player/game.service';
+  CannotDrawCard,
+} from '../service-exception/service-exception';
 import { CardPatternMismatch } from '../model/game-board/GameBoard';
-import { CannotDrawCard } from '../bot-vs-player/game-bot.service';
 
 // UNCAUGHT: AmountGreaterThanDrawPile, PlayerWon
 @Catch(
