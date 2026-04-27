@@ -1,6 +1,5 @@
 import { Test, TestingModule } from '@nestjs/testing';
 import {
-  GameService,
   RoomNotFound,
   NotRoomOwner,
   PlayersCountMustBeGreaterThanOne,
@@ -14,7 +13,8 @@ import {
   RemovedOrTransfered,
   RoomHasNotStarted,
   CardsSentMustNotBeEmpty,
-} from './game.service';
+} from '../service-exception/service-exception';
+import { GameService } from './game.service';
 import { CardPatternMismatch, TurnEvents } from '../model/game-board/GameBoard';
 import { GameRoom, PlayerNotFound } from '../model/game-room/GameRoom';
 import { Player } from '../model/player/Player';
