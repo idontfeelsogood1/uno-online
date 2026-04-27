@@ -357,4 +357,60 @@ export class GameBotService {
     const randomIndex = Math.floor(Math.random() * validColors.length);
     return validColors[randomIndex];
   }
+
+  // FIGURE OUT DFS
+  public getLongestPattern(room: GameRoom, bot: Player): Card[] {
+    const patterns: Card[][] = [];
+    const game: GameBoard = room.getGameBoard();
+    const visited: Set<Card> = new Set<Card>();
+
+    for (const card of bot.getHand()) {
+      if (game.isValidFirstMove(card)) {
+        visited.add(card);
+        this.findAllPattern(patterns, [card], visited, bot.getHand(), game);
+        visited.delete(card);
+      }
+    }
+
+    let maxLength: number = 0;
+    let maxIndex: number = 0;
+    for (let i = 0; i < patterns.length; i++) {
+      if (patterns[i].length > maxLength) {
+        maxLength = patterns[i].length;
+        maxIndex = i;
+      }
+    }
+
+    return patterns[maxIndex];
+  }
+
+  private findAllPattern(
+    patterns: Card[][],
+    currentPattern: Card[],
+    visited: Set<Card>,
+    hand: Card[],
+    game: GameBoard,
+  ): void {
+    for (const card of hand) {
+      if (
+        game.isMatchingPattern(
+          currentPattern[currentPattern.length - 1],
+          card,
+        ) &&
+        !visited.has(card)
+      ) {
+        visited.add(card);
+        this.findAllPattern(
+          patterns,
+          [...currentPattern, card],
+          visited,
+          hand,
+          game,
+        );
+        visited.delete(card);
+      }
+    }
+    patterns.push(currentPattern);
+    return;
+  }
 }

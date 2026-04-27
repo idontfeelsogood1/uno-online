@@ -127,7 +127,7 @@ export class GameBoard {
     if (
       firstCardIsWild ||
       (topCardIsWild && firstCardMatchEnforcedColorOrWild) ||
-      firstCardMatchTopCardColor ||
+      (topCardIsWild && firstCardMatchTopCardColor) ||
       this.isMatchingPattern(this.getCurrentTopCard(), card)
     ) {
       return true;

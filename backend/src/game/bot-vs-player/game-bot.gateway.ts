@@ -141,10 +141,11 @@ export class GameBotGateway implements OnGatewayDisconnect {
       // BREAKS WHEN ITS THE PLAYER'S TURN
       if (this.service.isBotTurn(room, client.id)) {
         const bot: Player = room.getPlayerFromOrder();
-        while (
+        const havePlayableCards: boolean =
           this.service.getPlayableCards(bot.getHand(), room.getGameBoard())
-            .length === 0
-        ) {
+            .length !== 0;
+
+        while (!havePlayableCards) {
           await sleep(4000);
           this.service.drawCards(room, bot, 1);
           this.server.to(room.id).emit('game-state-update', {
