@@ -39,7 +39,7 @@
                 - Draw a card 
                 - Send back gamestate
                 - Repeat until there's a playable card agaisnt the top card
-                
+
             - Set timeout to simulate thinking
             - Do the dfs and get the patterns:
                 - Play the longest sequence
@@ -48,6 +48,24 @@
             - Send back gameState to the client
         - If next turn is player's turn:
             - Breaks the loop
+
+- DFS:
+    Loop through the hand
+    Compare against the top card
+        If valid:
+            Push that card into currentPattern
+            Set as visited
+            Start from that card, visit every other cards
+                If valid and not visited:
+                    Push that card into currentPattern  
+                    Set as visited
+                    Repeat the same process
+                Else (base case):
+                    Push the currentPattern into patterns 
+                Upon return, if there are no more cards to visit 
+                    Remove the current card as visited
+        Else:
+            Continue onto the next card
 
 BotGateway {
     public async createGame(
