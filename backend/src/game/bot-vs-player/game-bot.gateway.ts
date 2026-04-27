@@ -3,6 +3,7 @@ import {
   OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
+  WebSocketServer,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
 import { Player } from '../model/player/Player';
@@ -35,6 +36,7 @@ if (process.env.NODE_ENV === 'dev') {
 @UsePipes(new ValidationPipe({ transform: true }))
 @UseFilters(WsValidationFilter)
 export class GameBotGateway implements OnGatewayDisconnect {
+  @WebSocketServer()
   server!: Server;
 
   constructor(private readonly service: GameBotService) {}
@@ -94,10 +96,10 @@ export class GameBotGateway implements OnGatewayDisconnect {
 
   @SubscribeMessage('play-cards')
   @UseFilters(WsRoomFilter, WsGameFilter)
-  public playCards(
+  public async playCards(
     @ConnectedSocket() client: Socket,
     @MessageBody() data: PlayCardsDto,
-  ): void {
+  ): Promise<void> {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = room.getCurrentPlayer(client.id);
     const { cardsToPlayIds, wildColor, uno }: PlayCardsDto = data;
@@ -116,6 +118,8 @@ export class GameBotGateway implements OnGatewayDisconnect {
       gameState: this.service.generateGameState(room),
       playedCards: playedCards,
     });
+
+    await this.handleBotMoves(room, client);
   }
 
   public async handleBotMoves(room: GameRoom, client: Socket): Promise<void> {
@@ -141,7 +145,7 @@ export class GameBotGateway implements OnGatewayDisconnect {
           this.service.getPlayableCards(bot.getHand(), room.getGameBoard())
             .length === 0
         ) {
-          await sleep(1000);
+          await sleep(4000);
           this.service.drawCards(room, bot, 1);
           this.server.to(room.id).emit('game-state-update', {
             actionType: 'draw-cards',
@@ -152,7 +156,7 @@ export class GameBotGateway implements OnGatewayDisconnect {
           });
         }
 
-        await sleep(2000);
+        await sleep(5000);
         const longestPattern: Card[] = this.service.getLongestPattern(
           room,
           bot,
