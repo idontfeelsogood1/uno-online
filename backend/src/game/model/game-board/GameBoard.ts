@@ -323,12 +323,13 @@ export class GameBoard {
 
   // ONLY ALLOWS NUMBER TYPE
   public startDiscardPile(): void {
-    this.drawPile.forEach((card, index) => {
-      if (this.getCardType(card) === 'NUMBER') {
-        const card = this.drawPile.splice(index, 1);
+    const pseudoDrawPile: Card[] = this.getDrawPile();
+    for (let i = 0; i < pseudoDrawPile.length; i++) {
+      if (this.getCardType(pseudoDrawPile[i]) === 'NUMBER') {
+        const card = this.drawPile.splice(i, 1);
         return this.pushToDiscardPile(card);
       }
-    });
+    }
   }
 }
 
