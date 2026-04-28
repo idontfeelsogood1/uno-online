@@ -447,6 +447,8 @@ describe('GameBotService', () => {
       const cardB = new Card('b', 'Red 2', CardColor.RED, CardValue.TWO);
       const cardC = new Card('c', 'Blue 2', CardColor.BLUE, CardValue.TWO);
       const cardD = new Card('d', 'Blue 5', CardColor.BLUE, CardValue.FIVE);
+
+      // 2. Set top Card
       gameBoard.setCurrentTopCard(
         new Card('zero', 'Red 0', CardColor.RED, CardValue.ZERO),
       );
@@ -458,6 +460,9 @@ describe('GameBotService', () => {
 
       expect(longestPattern).toBeDefined();
       expect(longestPattern).toHaveLength(3);
+      expect(longestPattern[0]).toBe(cardA);
+      expect(longestPattern[1]).toBe(cardB);
+      expect(longestPattern[2]).toBe(cardC);
     });
   });
 });

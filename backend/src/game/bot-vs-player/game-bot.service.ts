@@ -137,6 +137,7 @@ export class GameBotService {
   public getPlayableCards(hand: Card[], game: GameBoard): Card[] {
     const playableCards: Card[] = [];
 
+    // FIGURE OUT THE CONDITION RIGHT HERE, ITS THE PROBLEM
     for (const card of hand) {
       if (game.isValidFirstMove(card)) playableCards.push(card);
     }
@@ -153,7 +154,15 @@ export class GameBotService {
         `
         Player have a playable card in hand!
         `,
-        { cause: playableCards },
+        {
+          cause: {
+            playerName: player.username,
+            playerHand: JSON.stringify(player.getHand()),
+            topCard: game.getCurrentTopCard(),
+            enforcedColor: game.getEnforcedColor(),
+            playableCards: JSON.stringify(playableCards),
+          },
+        },
       );
     }
 
@@ -279,6 +288,24 @@ export class GameBotService {
     return false;
   }
 
+  public processNextTurnDrawCards(
+    room: GameRoom,
+    player: Player,
+    amount: number,
+  ): void {
+    const game: GameBoard = room.getGameBoard();
+
+    try {
+      player.pushToHand(game.popFromDrawPile(amount));
+    } catch (err) {
+      if (err instanceof AmountGreaterThanDrawPile) {
+        const clearedCards: Card[] = game.clearDiscardPile();
+        game.pushToDrawPile(clearedCards);
+        game.shuffleDrawPile();
+      }
+    }
+  }
+
   public processNextTurn(room: GameRoom): void {
     this.updateDirection(room);
     this.updateCurrentPlayerIndex(room);
@@ -287,11 +314,19 @@ export class GameBotService {
     const { draw_two_amount, wild_draw_four_amount }: TurnEvents =
       game.getTurnEvents();
 
+    // FIX THIS PART, THE PREVIOUS BOT PLAYED A +2 CARD
+    // BUT THE PLAYER CANT RECEIVE IT BECAUSE OF THE CONDITION IN drawCards
+    // CONSIDER IMPLEMENTING ANOTHER METHOD
+
     if (draw_two_amount) {
-      this.drawCards(room, nextPlayer, draw_two_amount * 2);
+      this.processNextTurnDrawCards(room, nextPlayer, draw_two_amount * 2);
     }
     if (wild_draw_four_amount) {
-      this.drawCards(room, nextPlayer, wild_draw_four_amount * 4);
+      this.processNextTurnDrawCards(
+        room,
+        nextPlayer,
+        wild_draw_four_amount * 4,
+      );
     }
   }
 
