@@ -124,10 +124,11 @@ export class GameBoard {
       card.color === this.enforcedColor || this.getCardType(card) === 'WILD';
     const firstCardMatchTopCardColor: boolean =
       this.getCurrentTopCard().color === card.color;
+
     if (
       firstCardIsWild ||
       (topCardIsWild && firstCardMatchEnforcedColorOrWild) ||
-      (topCardIsWild && firstCardMatchTopCardColor) ||
+      firstCardMatchTopCardColor ||
       this.isMatchingPattern(this.getCurrentTopCard(), card)
     ) {
       return true;
