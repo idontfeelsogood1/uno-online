@@ -1,7 +1,7 @@
 import PlayerLobby from "./PlayerLobby/PlayerLobby";
 import Room from "./Room/Room";
 import Game from "../Game/Game";
-import GameEnd from "../Game/GameEnd/GameEnd";
+import GameEnd from "./GameEnd/GameEnd";
 import { useState, useEffect, useContext } from "react";
 import type {
   PlayerVsPlayerProps,

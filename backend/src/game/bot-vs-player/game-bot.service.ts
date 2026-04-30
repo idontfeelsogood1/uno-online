@@ -268,27 +268,7 @@ export class GameBotService {
     room.setCurrentPlayerIndex(currentIndex);
   }
 
-  public processCurrentTurn(room: GameRoom): boolean {
-    const currentPlayer: Player = room.getPlayerFromOrder();
-    const hand: Card[] = currentPlayer.getHand();
-    const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
-
-    if (zeroOrOneCardLeftOnHand && currentPlayer.isUno() === false) {
-      this.drawCards(room, currentPlayer, 2);
-    }
-    if (hand.length === 0 && currentPlayer.isUno() === true) {
-      const currentIndex: number = room.getCurrentPlayerIndex();
-      room.removeFromPlayerOrder(currentPlayer.socketId);
-      this.setNewCurrentPlayerIndex(room, currentIndex);
-      return true;
-    }
-
-    currentPlayer.setIsUno(false);
-
-    return false;
-  }
-
-  public processNextTurnDrawCards(
+  private processTurnDrawCards(
     room: GameRoom,
     player: Player,
     amount: number,
@@ -306,6 +286,26 @@ export class GameBotService {
     }
   }
 
+  public processCurrentTurn(room: GameRoom): boolean {
+    const currentPlayer: Player = room.getPlayerFromOrder();
+    const hand: Card[] = currentPlayer.getHand();
+    const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
+
+    if (zeroOrOneCardLeftOnHand && currentPlayer.isUno() === false) {
+      this.processTurnDrawCards(room, currentPlayer, 2);
+    }
+    if (hand.length === 0 && currentPlayer.isUno() === true) {
+      const currentIndex: number = room.getCurrentPlayerIndex();
+      room.removeFromPlayerOrder(currentPlayer.socketId);
+      this.setNewCurrentPlayerIndex(room, currentIndex);
+      return true;
+    }
+
+    currentPlayer.setIsUno(false);
+
+    return false;
+  }
+
   public processNextTurn(room: GameRoom): void {
     this.updateDirection(room);
     this.updateCurrentPlayerIndex(room);
@@ -314,19 +314,11 @@ export class GameBotService {
     const { draw_two_amount, wild_draw_four_amount }: TurnEvents =
       game.getTurnEvents();
 
-    // FIX THIS PART, THE PREVIOUS BOT PLAYED A +2 CARD
-    // BUT THE PLAYER CANT RECEIVE IT BECAUSE OF THE CONDITION IN drawCards
-    // CONSIDER IMPLEMENTING ANOTHER METHOD
-
     if (draw_two_amount) {
-      this.processNextTurnDrawCards(room, nextPlayer, draw_two_amount * 2);
+      this.processTurnDrawCards(room, nextPlayer, draw_two_amount * 2);
     }
     if (wild_draw_four_amount) {
-      this.processNextTurnDrawCards(
-        room,
-        nextPlayer,
-        wild_draw_four_amount * 4,
-      );
+      this.processTurnDrawCards(room, nextPlayer, wild_draw_four_amount * 4);
     }
   }
 

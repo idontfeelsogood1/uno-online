@@ -126,10 +126,6 @@ export class GameBotGateway implements OnGatewayDisconnect {
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
 
-    // STATE DESYNC HAPPENED SOMETIMES, INVESTIGATE THE PAYLOAD AND FIND THE BUG
-    // FRONTEND SHOWS YELLOW 2 AS TOP CARD BUT BACKEND IS BLUE 8
-    // FRONTEND SHOWS PLAYER'S HAND HAVE 3 CARDS BUT BACKEND IS ONLY 1
-
     // BOTS PLAYING
     while (true) {
       // BREAKS WHEN GAME ENDED
@@ -145,7 +141,7 @@ export class GameBotGateway implements OnGatewayDisconnect {
       // BREAKS WHEN ITS THE PLAYER'S TURN
       if (this.service.isBotTurn(room, client.id)) {
         const bot: Player = room.getPlayerFromOrder();
-        console.log(bot);
+
         while (
           this.service.getPlayableCards(bot.getHand(), room.getGameBoard())
             .length === 0
