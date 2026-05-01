@@ -91,4 +91,7 @@ PlayerVsPlayer COMPONENT:
         - TO BE ADDED
     - When player has won (removed from playerOrder):
         - TO BE ADDED
-    
+
+// BUGS TO FIX:
+- cardDrew and playCards length property is not defined when clicking drawCard while the animation is playing (renderShowCase, stacking, etc...)
+    - fix: Disable the button during the animations process and re-enable when they ends.
