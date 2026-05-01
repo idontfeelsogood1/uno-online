@@ -173,6 +173,7 @@ export class GameBotService {
         const clearedCards: Card[] = game.clearDiscardPile();
         game.pushToDrawPile(clearedCards);
         game.shuffleDrawPile();
+        player.pushToHand(game.popFromDrawPile(amount));
       }
     }
   }
@@ -282,6 +283,7 @@ export class GameBotService {
         const clearedCards: Card[] = game.clearDiscardPile();
         game.pushToDrawPile(clearedCards);
         game.shuffleDrawPile();
+        player.pushToHand(game.popFromDrawPile(amount));
       }
     }
   }
