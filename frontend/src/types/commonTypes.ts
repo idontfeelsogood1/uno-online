@@ -53,6 +53,7 @@ export interface CurrentPlayerProps {
 }
 
 export interface PlayHandProps {
+  readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
   readonly setNewStateReceived: CallableFunction;
@@ -167,6 +168,5 @@ export type GameStateActionType =
   | "game-started"
   | "draw-cards"
   | "played-cards"
-  | "player-won"
   | "player-left"
   | "game-ended";

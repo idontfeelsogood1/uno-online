@@ -7,6 +7,7 @@ import { motion } from "motion/react";
 import { GameModeSocket } from "../../../../../api/GameModeSocket";
 
 export default function PlayHand({
+  pseudoHand,
   pseudoPlayHand,
   setPseudoPlayHand,
   setNewStateReceived,
@@ -19,6 +20,8 @@ export default function PlayHand({
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
 
+  const [canUno, setCanUno] = useState<boolean>(false);
+
   const socket = useContext(GameModeSocket)!;
 
   useEffect(() => {
@@ -30,6 +33,10 @@ export default function PlayHand({
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [action]);
+
+  useEffect(() => {
+    setCanUno(false);
+  }, [pseudoPlayHand]);
 
   // SET WIDTH/HEIGHT OF CONTAINER THE MICROSECOND THE DIV APPEARS
   useEffect(() => {
@@ -152,6 +159,7 @@ export default function PlayHand({
       socket.emit("play-cards", {
         cardsToPlayIds: cardIds,
         wildColor: wildColor,
+        uno: canUno,
       });
 
       setShowChooseColor(false);
@@ -159,22 +167,11 @@ export default function PlayHand({
     playCondition(callback);
   }
 
-  // function uno() {
-  //   const callback = (wildColor?: string) => {
-  //     const cardIds: string[] = [];
-  //     pseudoPlayHand.forEach((card) => {
-  //       cardIds.push(card.id);
-  //     });
-
-  //     socket.emit("uno", {
-  //       cardsToPlayIds: cardIds,
-  //       wildColor: wildColor,
-  //     });
-
-  //     setShowChooseColor(false);
-  //   };
-  //   playCondition(callback);
-  // }
+  function uno() {
+    if (pseudoHand.length <= 1) {
+      setCanUno(true);
+    }
+  }
 
   return (
     <>
@@ -187,8 +184,12 @@ export default function PlayHand({
             <button onClick={playCards} className="border">
               PLAY CARDS
             </button>
-            <button className="border">
-              UNO (Currently disabled for tweaking)
+            <button
+              className={`border ${canUno ? "opacity-50" : "opacity-100"}`}
+              onClick={uno}
+              disabled={canUno ? true : false}
+            >
+              UNO
             </button>
           </div>
         </div>

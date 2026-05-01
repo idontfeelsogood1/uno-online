@@ -40,6 +40,7 @@ export default function CurrentPlayer({
         <span>{player.username}</span>
       </div>
       <PlayHand
+        pseudoHand={pseudoHand}
         pseudoPlayHand={pseudoPlayHand}
         setPseudoPlayHand={setPseudoPlayHand}
         setNewStateReceived={setNewStateReceived}
