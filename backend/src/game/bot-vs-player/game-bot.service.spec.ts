@@ -350,7 +350,9 @@ describe('GameBotService', () => {
       owner.pushToHand([new Card('1', 'R1', CardColor.RED, CardValue.ONE)]);
       owner.setIsUno(false);
 
-      const drawSpy = jest.spyOn(service, 'drawCards').mockImplementation();
+      const drawSpy = jest
+        .spyOn(service, 'processTurnDrawCards')
+        .mockImplementation();
 
       service.processCurrentTurn(room);
 
@@ -379,7 +381,9 @@ describe('GameBotService', () => {
       } as TurnEvents);
 
       room.setCurrentPlayerIndex(0); // Owner
-      const drawSpy = jest.spyOn(service, 'drawCards').mockImplementation();
+      const drawSpy = jest
+        .spyOn(service, 'processTurnDrawCards')
+        .mockImplementation();
 
       service.processNextTurn(room);
 

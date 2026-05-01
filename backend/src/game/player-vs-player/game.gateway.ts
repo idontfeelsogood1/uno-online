@@ -261,8 +261,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
     this.service.hasRoomNotStarted(room);
     this.service.isPlayerTurn(room, player);
-    this.service.drawCards(room, player, 1); // TRIGGERS CLEARING THE discardPile, KEEPING THE TOP CARD, PUSHING AND SHUFFLING CARDS TO drawPile WHEN drawPile is 0
-    player.setIsUno(false);
+    this.service.drawCards(room, player, 1);
 
     this.server.to(room.id).emit('game-state-update', {
       actionType: 'draw-cards',
@@ -271,23 +270,6 @@ export class GameGateway implements OnGatewayDisconnect {
       gameState: this.service.generateGameState(room),
       cardDrew: player.getHand()[player.getHand().length - 1],
     });
-  }
-
-  @SubscribeMessage('uno')
-  @UseFilters(WsRoomFilter, WsGameFilter)
-  public uno(
-    @ConnectedSocket() client: Socket,
-    @MessageBody() data: PlayCardsDto,
-  ): void {
-    const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
-    const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
-    const { cardsToPlayIds }: PlayCardsDto = data;
-
-    this.service.hasRoomNotStarted(room);
-    this.service.isPlayerTurn(room, player);
-    this.service.uno(player, cardsToPlayIds);
-
-    this.playCards(client, data);
   }
 
   // THIS ROUTE SHOULD STOP THE GAME WHEN A PLAYER HAS WON AND HANDLE CLEANUP OPERATIONS
@@ -299,22 +281,14 @@ export class GameGateway implements OnGatewayDisconnect {
   ): void {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
-    const { cardsToPlayIds, wildColor }: PlayCardsDto = data;
+    const { cardsToPlayIds, wildColor, uno }: PlayCardsDto = data;
     const playedCards: Card[] = player.getCardsToPlay(cardsToPlayIds);
 
     this.service.hasRoomNotStarted(room);
     this.service.isPlayerTurn(room, player);
-
-    try {
-      this.service.playCards(room, player, cardsToPlayIds, wildColor);
-    } catch (err) {
-      player.setIsUno(false);
-      throw err;
-    }
-
-    // UPON PLAYER WON, THIS REMOVE THEM FROM ORDER AND SET NEW PLAYER INDEX
-    const hasPlayerWon = this.service.processCurrentTurn(room);
-    player.setIsUno(false);
+    this.service.playCards(room, player, cardsToPlayIds, wildColor);
+    if (uno) player.setIsUno(true);
+    this.service.processCurrentTurn(room);
     this.service.processNextTurn(room);
 
     const gameState: PublicGameState = this.service.generateGameState(room);
@@ -323,13 +297,6 @@ export class GameGateway implements OnGatewayDisconnect {
       this.service.resetRoom(room);
       this.server.to(room.id).emit('game-state-update', {
         actionType: 'game-ended',
-        socketId: player.socketId,
-        username: player.username,
-        gameState: gameState,
-      });
-    } else if (hasPlayerWon) {
-      this.server.to(room.id).emit('game-state-update', {
-        actionType: 'player-won',
         socketId: player.socketId,
         username: player.username,
         gameState: gameState,

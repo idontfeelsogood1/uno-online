@@ -23,6 +23,7 @@ import {
   NotRoomOwner,
   RoomNotFound,
   RoomHasStarted,
+  CannotDrawCard,
 } from '../service-exception/service-exception';
 
 import {
@@ -368,8 +369,36 @@ export class GameService {
     game.pushToDrawPile(player.getHand());
   }
 
+  public getPlayableCards(hand: Card[], game: GameBoard): Card[] {
+    const playableCards: Card[] = [];
+
+    for (const card of hand) {
+      if (game.isValidFirstMove(card)) playableCards.push(card);
+    }
+
+    return playableCards;
+  }
+
   public drawCards(room: GameRoom, player: Player, amount: number): void {
     const game: GameBoard = room.getGameBoard();
+    const playableCards: Card[] = this.getPlayableCards(player.getHand(), game);
+
+    if (playableCards.length !== 0) {
+      throw new CannotDrawCard(
+        `
+        Player have a playable card in hand!
+        `,
+        {
+          cause: {
+            playerName: player.username,
+            playerHand: JSON.stringify(player.getHand()),
+            topCard: game.getCurrentTopCard(),
+            enforcedColor: game.getEnforcedColor(),
+            playableCards: JSON.stringify(playableCards),
+          },
+        },
+      );
+    }
 
     try {
       player.pushToHand(game.popFromDrawPile(amount));
@@ -475,13 +504,31 @@ export class GameService {
   // CALL THESE AFTER playCards
   // **************************
 
+  private processTurnDrawCards(
+    room: GameRoom,
+    player: Player,
+    amount: number,
+  ): void {
+    const game: GameBoard = room.getGameBoard();
+
+    try {
+      player.pushToHand(game.popFromDrawPile(amount));
+    } catch (err) {
+      if (err instanceof AmountGreaterThanDrawPile) {
+        const clearedCards: Card[] = game.clearDiscardPile();
+        game.pushToDrawPile(clearedCards);
+        game.shuffleDrawPile();
+      }
+    }
+  }
+
   public processCurrentTurn(room: GameRoom): boolean {
     const currentPlayer: Player = room.getPlayerFromOrder();
     const hand: Card[] = currentPlayer.getHand();
     const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
 
     if (zeroOrOneCardLeftOnHand && currentPlayer.isUno() === false) {
-      this.drawCards(room, currentPlayer, 2);
+      this.processTurnDrawCards(room, currentPlayer, 2);
     }
     if (hand.length === 0 && currentPlayer.isUno() === true) {
       const currentIndex: number = room.getCurrentPlayerIndex();
@@ -489,6 +536,8 @@ export class GameService {
       this.setNewCurrentPlayerIndex(room, currentIndex);
       return true;
     }
+
+    currentPlayer.setIsUno(false);
 
     return false;
   }
@@ -575,10 +624,10 @@ export class GameService {
       game.getTurnEvents();
 
     if (draw_two_amount) {
-      this.drawCards(room, nextPlayer, draw_two_amount * 2);
+      this.processTurnDrawCards(room, nextPlayer, draw_two_amount * 2);
     }
     if (wild_draw_four_amount) {
-      this.drawCards(room, nextPlayer, wild_draw_four_amount * 4);
+      this.processTurnDrawCards(room, nextPlayer, wild_draw_four_amount * 4);
     }
   }
 
