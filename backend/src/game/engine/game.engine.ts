@@ -1,0 +1,296 @@
+import { Injectable } from '@nestjs/common';
+import { GameRoom } from '../model/game-room/GameRoom';
+import { Player } from '../model/player/Player';
+import {
+  CannotDrawCard,
+  CardsSentMustNotBeEmpty,
+  HaveNotChoosenColor,
+  NotPlayerTurn,
+} from '../service-exception/service-exception';
+import { Card, CardColor } from '../model/card/Card';
+import {
+  AmountGreaterThanDrawPile,
+  CardPatternMismatch,
+  GameBoard,
+  TurnEvents,
+} from '../model/game-board/GameBoard';
+import {
+  PublicGamePlayer,
+  PublicGameState,
+} from '../service-interface/service-interface';
+
+@Injectable()
+export class GameEngine {
+  public isPlayerTurn(room: GameRoom, player: Player): boolean {
+    const currentPlayer: Player = room.getPlayerFromOrder();
+
+    if (player.socketId !== currentPlayer.socketId) {
+      throw new NotPlayerTurn(
+        `
+              playerId: ${player.socketId}
+              currentPlayerTurnId: ${currentPlayer.socketId}
+              `,
+        {},
+      );
+    }
+
+    return true;
+  }
+
+  public playCards(
+    room: GameRoom,
+    player: Player,
+    cardToPlayIds: string[],
+    wildColor?: CardColor,
+  ): void {
+    try {
+      const game: GameBoard = room.getGameBoard();
+
+      if (cardToPlayIds.length <= 0) {
+        throw new CardsSentMustNotBeEmpty(
+          `
+          Location: playCards
+          Cards length: ${cardToPlayIds.length}
+          `,
+          {},
+        );
+      }
+
+      const cardsToPlay: Card[] = player.getCardsToPlay(cardToPlayIds);
+      const cardsToPlayTopCardType: string = game.getCardType(
+        cardsToPlay[cardsToPlay.length - 1],
+      );
+
+      game.processPattern(cardsToPlay);
+
+      if (cardsToPlayTopCardType === 'WILD' && wildColor) {
+        game.setEnforcedColor(wildColor);
+      }
+      if (cardsToPlayTopCardType === 'WILD' && !wildColor) {
+        throw new HaveNotChoosenColor(
+          `
+          topCard: ${cardsToPlay[cardsToPlay.length - 1].name}
+          color: ${wildColor}
+          `,
+          {},
+        );
+      }
+
+      const removedCards: Card[] = player.removeCards(cardToPlayIds);
+      game.pushToDiscardPile(removedCards);
+
+      game.setTurnEvents(removedCards);
+      game.setCurrentTopCard(removedCards[removedCards.length - 1]);
+    } catch (err) {
+      if (err instanceof CardsSentMustNotBeEmpty) throw err;
+      if (err instanceof HaveNotChoosenColor) throw err;
+      if (err instanceof CardPatternMismatch) throw err;
+    }
+  }
+
+  public drawCards(room: GameRoom, player: Player, amount: number): void {
+    const game: GameBoard = room.getGameBoard();
+    const playableCards: Card[] = this.getPlayableCards(player.getHand(), game);
+
+    if (playableCards.length !== 0) {
+      throw new CannotDrawCard(
+        `
+        Player have a playable card in hand!
+        `,
+        {
+          cause: {
+            playerName: player.username,
+            playerHand: JSON.stringify(player.getHand()),
+            topCard: game.getCurrentTopCard(),
+            enforcedColor: game.getEnforcedColor(),
+            playableCards: JSON.stringify(playableCards),
+          },
+        },
+      );
+    }
+
+    try {
+      player.pushToHand(game.popFromDrawPile(amount));
+    } catch (err) {
+      if (err instanceof AmountGreaterThanDrawPile) {
+        const clearedCards: Card[] = game.clearDiscardPile();
+        game.pushToDrawPile(clearedCards);
+        game.shuffleDrawPile();
+        player.pushToHand(game.popFromDrawPile(amount));
+      }
+    }
+  }
+
+  public getPlayableCards(hand: Card[], game: GameBoard): Card[] {
+    const playableCards: Card[] = [];
+
+    for (const card of hand) {
+      if (game.isValidFirstMove(card)) playableCards.push(card);
+    }
+
+    return playableCards;
+  }
+
+  // ONLY WORKS WHEN PLAYER IS REMOVED FIRST
+  public setNewCurrentPlayerIndex(
+    room: GameRoom,
+    removedPlayerIndex: number | null,
+  ): void {
+    const direction: number = room.getDirection();
+    const maxIndex: number = room.getPlayerOrder().length - 1;
+    let currentIndex: number = room.getCurrentPlayerIndex();
+
+    if (removedPlayerIndex === null) return;
+
+    if (removedPlayerIndex === currentIndex) {
+      // KEEP currentIndex WHEN ARRAY SPLICE AND INDEX IS NOT OUT OF BOUND
+      // RESET TO 0 IF OUT OF BOUND
+      if (direction === 1 && currentIndex > maxIndex) {
+        currentIndex = 0;
+      }
+
+      // DECREMENT currentIndex BY DEFAULT WHEN ARRAY SPLICE
+      // SET currentIndex = maxIndex WHEN ITS OUT OF BOUND
+      if (direction === -1 && currentIndex <= 0) {
+        currentIndex = maxIndex;
+      } else if (direction === -1) currentIndex--;
+
+      // SHIFT THE INDEX IF THE REMOVED PLAYER IS BEHIND THE CURRENT PLAYER
+    } else if (removedPlayerIndex < currentIndex) {
+      currentIndex--;
+    }
+
+    room.setCurrentPlayerIndex(currentIndex);
+  }
+
+  private processTurnDrawCards(
+    room: GameRoom,
+    player: Player,
+    amount: number,
+  ): void {
+    const game: GameBoard = room.getGameBoard();
+
+    try {
+      player.pushToHand(game.popFromDrawPile(amount));
+    } catch (err) {
+      if (err instanceof AmountGreaterThanDrawPile) {
+        const clearedCards: Card[] = game.clearDiscardPile();
+        game.pushToDrawPile(clearedCards);
+        game.shuffleDrawPile();
+        player.pushToHand(game.popFromDrawPile(amount));
+      }
+    }
+  }
+
+  public processCurrentTurn(room: GameRoom): boolean {
+    const currentPlayer: Player = room.getPlayerFromOrder();
+    const hand: Card[] = currentPlayer.getHand();
+    const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
+
+    if (zeroOrOneCardLeftOnHand && currentPlayer.isUno() === false) {
+      this.processTurnDrawCards(room, currentPlayer, 2);
+    }
+    if (hand.length === 0 && currentPlayer.isUno() === true) {
+      const currentIndex: number = room.getCurrentPlayerIndex();
+      room.removeFromPlayerOrder(currentPlayer.socketId);
+      this.setNewCurrentPlayerIndex(room, currentIndex);
+      return true;
+    }
+
+    currentPlayer.setIsUno(false);
+
+    return false;
+  }
+
+  public processNextTurn(room: GameRoom): void {
+    this.updateDirection(room);
+    this.updateCurrentPlayerIndex(room);
+    const nextPlayer: Player = room.getPlayerFromOrder();
+    const game: GameBoard = room.getGameBoard();
+    const { draw_two_amount, wild_draw_four_amount }: TurnEvents =
+      game.getTurnEvents();
+
+    if (draw_two_amount) {
+      this.processTurnDrawCards(room, nextPlayer, draw_two_amount * 2);
+    }
+    if (wild_draw_four_amount) {
+      this.processTurnDrawCards(room, nextPlayer, wild_draw_four_amount * 4);
+    }
+  }
+
+  public updateDirection(room: GameRoom): void {
+    let direction: number = room.getDirection();
+    let { reverse_amount }: TurnEvents = room.getGameBoard().getTurnEvents();
+
+    while (reverse_amount) {
+      if (direction === 1) direction = -1;
+      else if (direction === -1) direction = 1;
+      reverse_amount--;
+    }
+
+    room.setDirection(direction);
+  }
+
+  public updateCurrentPlayerIndex(room: GameRoom): void {
+    let currentIndex: number = room.getCurrentPlayerIndex();
+    let { skip_amount }: TurnEvents = room.getGameBoard().getTurnEvents();
+    const direction: number = room.getDirection();
+    const playerOrder: Player[] = room.getPlayerOrder();
+
+    while (skip_amount) {
+      if (direction === 1) {
+        if (currentIndex === playerOrder.length - 1) currentIndex = 0;
+        else currentIndex++;
+      }
+      if (direction === -1) {
+        if (currentIndex === 0) currentIndex = playerOrder.length - 1;
+        else currentIndex--;
+      }
+      skip_amount--;
+    }
+
+    // UPDATE THE INDEX BY DEFAULT (FOR NON-SKIP AND SKIPS)
+    if (direction === 1) {
+      if (currentIndex === playerOrder.length - 1) currentIndex = 0;
+      else currentIndex++;
+    }
+    if (direction === -1) {
+      if (currentIndex === 0) currentIndex = playerOrder.length - 1;
+      else currentIndex--;
+    }
+
+    room.setCurrentPlayerIndex(currentIndex);
+  }
+
+  public hasGameEnded(room: GameRoom): boolean {
+    return room.getPlayerOrder().length <= 1;
+  }
+
+  public generateGameState(room: GameRoom): PublicGameState {
+    return new PublicGameState(
+      room.getCurrentPlayerIndex(),
+      this.generatePublicGamePlayers(room),
+      room.getDirection(),
+      room.getGameBoard().getCurrentTopCard(),
+      room.getGameBoard().getEnforcedColor(),
+    );
+  }
+
+  public generatePublicGamePlayers(room: GameRoom): PublicGamePlayer[] {
+    const playerOrder: Player[] = room.getPlayerOrder();
+    const publicGamePlayers: PublicGamePlayer[] = [];
+
+    for (const player of playerOrder) {
+      publicGamePlayers.push(
+        new PublicGamePlayer(
+          player.socketId,
+          player.username,
+          player.getHand(),
+          player.isUno(),
+        ),
+      );
+    }
+
+    return publicGamePlayers;
+  }
+}

@@ -8,7 +8,7 @@ import {
   OnGatewayDisconnect,
 } from '@nestjs/websockets';
 import { Socket, Server } from 'socket.io';
-import { GameService } from './game.service';
+import { GamePlayerService } from './game-player.service';
 import {
   PublicRoomState,
   PublicGameState,
@@ -28,6 +28,7 @@ import { WsRoomFilter } from '../gateway-filter/ws-room.filter';
 import { WsGameFilter } from '../gateway-filter/ws-game.filter';
 import { PlayCardsDto } from '../gateway-dto/play-cards-dto';
 import { Card } from '../model/card/Card';
+import { GameEngine } from '../engine/game.engine';
 
 let originUrl: string;
 if (process.env.NODE_ENV === 'dev') {
@@ -45,11 +46,14 @@ if (process.env.NODE_ENV === 'dev') {
 })
 @UsePipes(new ValidationPipe({ transform: true }))
 @UseFilters(WsValidationFilter)
-export class GameGateway implements OnGatewayDisconnect {
+export class GamePlayerGateway implements OnGatewayDisconnect {
   @WebSocketServer()
   server!: Server;
 
-  constructor(private readonly service: GameService) {}
+  constructor(
+    private readonly service: GamePlayerService,
+    private readonly engine: GameEngine,
+  ) {}
 
   // ===============================
   // ROOM AND DISCONNECTION HANDLING
@@ -168,7 +172,7 @@ export class GameGateway implements OnGatewayDisconnect {
     this.service.removePlayerFromRoomPlayerOrder(room, player.socketId);
 
     // ONLY WORKS WHEN PREVIOUS PLAYER IS REMOVED FIRST
-    this.service.setNewCurrentPlayerIndex(room, playerIndex);
+    this.engine.setNewCurrentPlayerIndex(room, playerIndex);
 
     const result: RemovedOrTransfered =
       this.service.transferOwnerOrRemoveRoomOnEmpty(room)!;
@@ -181,7 +185,7 @@ export class GameGateway implements OnGatewayDisconnect {
       ? this.service.generateRoomState(room)
       : null;
     const gameState: PublicGameState | null = !result.removedRoom
-      ? this.service.generateGameState(room)
+      ? this.engine.generateGameState(room)
       : null;
 
     client.emit('room-state-update', {
@@ -216,7 +220,7 @@ export class GameGateway implements OnGatewayDisconnect {
       });
     }
 
-    if (room.hasStarted() && this.service.hasGameEnded(room)) {
+    if (room.hasStarted() && this.engine.hasGameEnded(room)) {
       this.service.resetRoom(room);
       this.server.to(room.id).emit('game-state-update', {
         actionType: 'game-ended',
@@ -237,7 +241,7 @@ export class GameGateway implements OnGatewayDisconnect {
 
     this.server.to(room.id).emit('game-state-update', {
       actionType: 'game-started',
-      gameState: this.service.generateGameState(room),
+      gameState: this.engine.generateGameState(room),
     });
   }
 
@@ -249,7 +253,7 @@ export class GameGateway implements OnGatewayDisconnect {
   public getGameState(@ConnectedSocket() client: Socket): object {
     const room: GameRoom = this.service.getRoomOfPlayer(client.id)!;
     return {
-      gameState: this.service.generateGameState(room),
+      gameState: this.engine.generateGameState(room),
     };
   }
 
@@ -260,14 +264,14 @@ export class GameGateway implements OnGatewayDisconnect {
     const player: Player = this.service.getPlayerOfRoom(room.id, client.id)!;
 
     this.service.hasRoomNotStarted(room);
-    this.service.isPlayerTurn(room, player);
-    this.service.drawCards(room, player, 1);
+    this.engine.isPlayerTurn(room, player);
+    this.engine.drawCards(room, player, 1);
 
     this.server.to(room.id).emit('game-state-update', {
       actionType: 'draw-cards',
       socketId: player.socketId,
       username: player.username,
-      gameState: this.service.generateGameState(room),
+      gameState: this.engine.generateGameState(room),
       cardDrew: player.getHand()[player.getHand().length - 1],
     });
   }
@@ -285,15 +289,15 @@ export class GameGateway implements OnGatewayDisconnect {
     const playedCards: Card[] = player.getCardsToPlay(cardsToPlayIds);
 
     this.service.hasRoomNotStarted(room);
-    this.service.isPlayerTurn(room, player);
-    this.service.playCards(room, player, cardsToPlayIds, wildColor);
+    this.engine.isPlayerTurn(room, player);
+    this.engine.playCards(room, player, cardsToPlayIds, wildColor);
     if (uno) player.setIsUno(true);
-    this.service.processCurrentTurn(room);
-    this.service.processNextTurn(room);
+    this.engine.processCurrentTurn(room);
+    this.engine.processNextTurn(room);
 
-    const gameState: PublicGameState = this.service.generateGameState(room);
+    const gameState: PublicGameState = this.engine.generateGameState(room);
 
-    if (this.service.hasGameEnded(room)) {
+    if (this.engine.hasGameEnded(room)) {
       this.service.resetRoom(room);
       this.server.to(room.id).emit('game-state-update', {
         actionType: 'game-ended',

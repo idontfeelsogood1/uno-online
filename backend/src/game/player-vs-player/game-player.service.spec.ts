@@ -14,7 +14,7 @@ import {
   RoomHasNotStarted,
   CardsSentMustNotBeEmpty,
 } from '../service-exception/service-exception';
-import { GameService } from './game.service';
+import { GameService } from './game-player.service';
 import { CardPatternMismatch, TurnEvents } from '../model/game-board/GameBoard';
 import { GameRoom, PlayerNotFound } from '../model/game-room/GameRoom';
 import { Player } from '../model/player/Player';
