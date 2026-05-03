@@ -115,8 +115,8 @@ BotService {
     ): void
 }
 
-REFACTOR PLAN:
-- Sync uno functionality across both modes
-- Identify the functions that is the core engine of the game
-- Sync discrepancies 
-- Extract them into another file (game.engine.ts)
+DEPLOYMENT PLAN:
+- Import game.engine into each service.specs
+- Setup CI/CD
+- Containerize
+- Deploy locally both backend and frontend

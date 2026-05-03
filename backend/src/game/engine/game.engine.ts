@@ -163,7 +163,7 @@ export class GameEngine {
     room.setCurrentPlayerIndex(currentIndex);
   }
 
-  private processTurnDrawCards(
+  public processTurnDrawCards(
     room: GameRoom,
     player: Player,
     amount: number,

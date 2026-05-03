@@ -4,7 +4,6 @@ import {
   NotRoomOwner,
   PlayersCountMustBeGreaterThanOne,
   NotPlayerTurn,
-  CannotUno,
   HaveNotChoosenColor,
   RoomIsFull,
   RoomHasStarted,
@@ -13,23 +12,30 @@ import {
   RemovedOrTransfered,
   RoomHasNotStarted,
   CardsSentMustNotBeEmpty,
-} from '../service-exception/service-exception';
-import { GameService } from './game-player.service';
-import { CardPatternMismatch, TurnEvents } from '../model/game-board/GameBoard';
-import { GameRoom, PlayerNotFound } from '../model/game-room/GameRoom';
-import { Player } from '../model/player/Player';
-import { GameBoard } from '../model/game-board/GameBoard';
-import { Card, CardColor, CardValue } from '../model/card/Card';
+  CannotDrawCard,
+} from '../game/service-exception/service-exception';
+import { GamePlayerService } from '../game/player-vs-player/game-player.service';
+import {
+  CardPatternMismatch,
+  TurnEvents,
+} from '../game/model/game-board/GameBoard';
+import { GameRoom, PlayerNotFound } from '../game/model/game-room/GameRoom';
+import { Player } from '../game/model/player/Player';
+import { GameBoard } from '../game/model/game-board/GameBoard';
+import { Card, CardColor, CardValue } from '../game/model/card/Card';
+import { GameEngine } from '../game/engine/game.engine';
 
-describe('GameService', () => {
-  let service: GameService;
+describe('GamePlayerService', () => {
+  let service: GamePlayerService;
+  let engine: GameEngine;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GameService],
+      providers: [GamePlayerService, GameEngine],
     }).compile();
 
-    service = module.get<GameService>(GameService);
+    service = module.get<GamePlayerService>(GamePlayerService);
+    engine = module.get<GameEngine>(GameEngine);
   });
 
   it('should be defined', () => {
@@ -391,14 +397,14 @@ describe('GameService', () => {
 
     it('should return true if it is the player turn', () => {
       const currentPlayer = room.getPlayerFromOrder();
-      expect(service.isPlayerTurn(room, currentPlayer)).toBe(true);
+      expect(engine.isPlayerTurn(room, currentPlayer)).toBe(true);
     });
 
     it('should throw NotPlayerTurn if it is not the player turn', () => {
       const currentPlayer = room.getPlayerFromOrder();
       const notCurrentPlayer =
         currentPlayer.socketId === owner.socketId ? player2 : owner;
-      expect(() => service.isPlayerTurn(room, notCurrentPlayer)).toThrow(
+      expect(() => engine.isPlayerTurn(room, notCurrentPlayer)).toThrow(
         NotPlayerTurn,
       );
     });
@@ -426,22 +432,35 @@ describe('GameService', () => {
       gameBoard = room.getGameBoard();
     });
 
-    it('should allow the current player to draw cards', () => {
+    it('should allow the current player to draw cards if they dont have a playable card in hand', () => {
       const currentPlayer = room.getPlayerFromOrder();
-      const initialHandSize = currentPlayer.getHand().length;
+      const hand: Card[] = currentPlayer.getHand();
+      while (hand.length > 0) hand.pop();
 
-      service.drawCards(room, currentPlayer, 1);
+      engine.drawCards(room, currentPlayer, 1);
 
-      expect(currentPlayer.getHand()).toHaveLength(initialHandSize + 1);
+      expect(currentPlayer.getHand()).toHaveLength(1);
+    });
+
+    it('should NOT allow the current player to draw cards if they have a playable card in hand', () => {
+      const currentPlayer = room.getPlayerFromOrder();
+      const hand: Card[] = currentPlayer.getHand();
+      gameBoard.setCurrentTopCard(hand[hand.length - 1]);
+
+      expect(() => engine.drawCards(room, currentPlayer, 1)).toThrow(
+        CannotDrawCard,
+      );
     });
 
     it('should reshuffle discard pile if draw pile runs out', () => {
       const currentPlayer = room.getPlayerFromOrder();
+      const hand: Card[] = currentPlayer.getHand();
 
       // Simulate a nearly empty/drained draw pile
       // 1. Drain the draw pile manually
       const remainingDraw = gameBoard.getDrawPile().length;
-      gameBoard.popFromDrawPile(remainingDraw);
+      const poppedCards = gameBoard.popFromDrawPile(remainingDraw);
+      gameBoard.pushToDiscardPile(poppedCards);
 
       // 2. Spy on the reshuffle methods
       const clearDiscardSpy = jest.spyOn(gameBoard, 'clearDiscardPile');
@@ -449,86 +468,11 @@ describe('GameService', () => {
       const shuffleSpy = jest.spyOn(gameBoard, 'shuffleDrawPile');
 
       // 3. Attempt to draw (Logic: tries pop -> fails -> catch -> reshuffle)
-      service.drawCards(room, currentPlayer, 1);
+      while (hand.length > 0) hand.pop();
+      engine.drawCards(room, currentPlayer, 1);
       expect(clearDiscardSpy).toHaveBeenCalled();
       expect(pushDrawSpy).toHaveBeenCalled();
       expect(shuffleSpy).toHaveBeenCalled();
-    });
-  });
-
-  // ==========================================
-  // UNO LOGIC
-  // ==========================================
-  describe('Uno Logic', () => {
-    let room: GameRoom;
-    let owner: Player;
-    let player2: Player;
-    let gameBoard: GameBoard;
-
-    beforeEach(() => {
-      owner = service.createPlayer('owner-socket', 'Owner');
-      player2 = service.createPlayer('p2-socket', 'Player 2');
-      room = service.createRoom('room-1', 'Test Room', owner.socketId, 4);
-      service.addRoom(room);
-      service.addPlayerToRoom(room.id, owner);
-      service.addPlayerToRoom(room.id, player2);
-
-      service.startGame(room, owner);
-      gameBoard = room.getGameBoard();
-    });
-
-    it('should set isUno to true when playing a card will leave 1 card remaining', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-
-      // Manipulate hand to have exactly 2 cards
-      const hand = currentPlayer.getHand();
-      while (hand.length > 0) hand.pop(); // Clear hand
-      const cards = gameBoard.generateUnoDeck();
-
-      const cardToKeep = cards[0];
-      const cardToPlay = cards[1];
-
-      hand.push(cardToKeep);
-      hand.push(cardToPlay);
-
-      // Call Uno with the ID of the card we intend to play
-      service.uno(currentPlayer, [cardToPlay.id]);
-
-      expect(currentPlayer.isUno()).toBe(true);
-    });
-
-    it('should set isUno to true when playing final card leaves 0 remaining (winning move)', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-
-      // Manipulate hand to have exactly 1 card (the one we are about to play)
-      const hand = currentPlayer.getHand();
-      while (hand.length > 0) hand.pop();
-      const cards = gameBoard.generateUnoDeck();
-      const cardToPlay = cards[0];
-      hand.push(cardToPlay);
-
-      // Call Uno with the ID of the card we intend to play
-      service.uno(currentPlayer, [cardToPlay.id]);
-
-      expect(currentPlayer.isUno()).toBe(true);
-    });
-
-    it('should throw CardsSentMustNotBeEmpty when sending an empty hand', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-      expect(() => {
-        service.uno(currentPlayer, []);
-      }).toThrow(CardsSentMustNotBeEmpty);
-    });
-
-    it('should throw CannotUno if calculating the move leaves > 1 card', () => {
-      const currentPlayer = room.getPlayerFromOrder();
-      // StartGame gives 7 cards. Playing 1 leaves 6. 6 > 1.
-
-      const cardToPlay = currentPlayer.getHand()[0];
-
-      expect(() => {
-        service.uno(currentPlayer, [cardToPlay.id]);
-      }).toThrow(CannotUno);
     });
   });
 
@@ -568,7 +512,7 @@ describe('GameService', () => {
       currentPlayer.pushToHand([validCard]);
       const initialHandSize = currentPlayer.getHand().length;
 
-      service.playCards(room, currentPlayer, [validCard.id]);
+      engine.playCards(room, currentPlayer, [validCard.id]);
 
       expect(currentPlayer.getHand()).toHaveLength(initialHandSize - 1);
       expect(gameBoard.getCurrentTopCard().id).toBe(validCard.id);
@@ -578,7 +522,7 @@ describe('GameService', () => {
     it('should throw CardsSentMustNotBeEmpty when sending an empty hand', () => {
       const currentPlayer = room.getPlayerFromOrder();
       expect(() => {
-        service.playCards(room, currentPlayer, []);
+        engine.playCards(room, currentPlayer, []);
       }).toThrow(CardsSentMustNotBeEmpty);
     });
 
@@ -602,7 +546,7 @@ describe('GameService', () => {
       currentPlayer.pushToHand([invalidCard]);
 
       expect(() => {
-        service.playCards(room, currentPlayer, [invalidCard.id]);
+        engine.playCards(room, currentPlayer, [invalidCard.id]);
       }).toThrow(CardPatternMismatch);
     });
 
@@ -620,7 +564,7 @@ describe('GameService', () => {
 
       currentPlayer.pushToHand([wildCard]);
 
-      service.playCards(room, currentPlayer, [wildCard.id], CardColor.BLUE);
+      engine.playCards(room, currentPlayer, [wildCard.id], CardColor.BLUE);
 
       expect(gameBoard.getEnforcedColor()).toBe(CardColor.BLUE);
       expect(gameBoard.getCurrentTopCard().id).toBe(wildCard.id);
@@ -639,7 +583,7 @@ describe('GameService', () => {
       currentPlayer.pushToHand([wildCard]);
 
       expect(() => {
-        service.playCards(room, currentPlayer, [wildCard.id]);
+        engine.playCards(room, currentPlayer, [wildCard.id]);
       }).toThrow(HaveNotChoosenColor);
     });
   });
@@ -672,9 +616,9 @@ describe('GameService', () => {
       while (hand.length > 0) hand.pop();
       currentPlayer.setIsUno(false);
 
-      const drawSpy = jest.spyOn(service, 'drawCards');
+      const drawSpy = jest.spyOn(engine, 'processTurnDrawCards');
 
-      service.processCurrentTurn(room);
+      engine.processCurrentTurn(room);
 
       expect(drawSpy).toHaveBeenCalledWith(room, currentPlayer, 2);
     });
@@ -688,9 +632,9 @@ describe('GameService', () => {
       hand.push(gameBoard.generateUnoDeck()[0]);
       currentPlayer.setIsUno(false);
 
-      const drawSpy = jest.spyOn(service, 'drawCards');
+      const drawSpy = jest.spyOn(engine, 'processTurnDrawCards');
 
-      service.processCurrentTurn(room);
+      engine.processCurrentTurn(room);
 
       expect(drawSpy).toHaveBeenCalledWith(room, currentPlayer, 2);
     });
@@ -700,9 +644,9 @@ describe('GameService', () => {
       // Default hand is 7 cards
       currentPlayer.setIsUno(false);
 
-      const drawSpy = jest.spyOn(service, 'drawCards');
+      const drawSpy = jest.spyOn(engine, 'processTurnDrawCards');
 
-      service.processCurrentTurn(room);
+      engine.processCurrentTurn(room);
 
       expect(drawSpy).not.toHaveBeenCalled();
     });
@@ -716,9 +660,9 @@ describe('GameService', () => {
       hand.push(gameBoard.generateUnoDeck()[0]);
       currentPlayer.setIsUno(true);
 
-      const drawSpy = jest.spyOn(service, 'drawCards');
+      const drawSpy = jest.spyOn(engine, 'processTurnDrawCards');
 
-      service.processCurrentTurn(room);
+      engine.processCurrentTurn(room);
 
       expect(drawSpy).not.toHaveBeenCalled();
     });
@@ -751,7 +695,7 @@ describe('GameService', () => {
         reverse_amount: 1,
       } as TurnEvents);
 
-      service.updateDirection(room);
+      engine.updateDirection(room);
       expect(room.getDirection()).toBe(-1);
     });
 
@@ -761,7 +705,7 @@ describe('GameService', () => {
         reverse_amount: 1,
       } as TurnEvents);
 
-      service.updateDirection(room);
+      engine.updateDirection(room);
       expect(room.getDirection()).toBe(1);
     });
 
@@ -771,7 +715,7 @@ describe('GameService', () => {
         reverse_amount: 2,
       } as TurnEvents);
 
-      service.updateDirection(room);
+      engine.updateDirection(room);
       expect(room.getDirection()).toBe(1);
     });
 
@@ -781,7 +725,7 @@ describe('GameService', () => {
         reverse_amount: 0,
       } as TurnEvents);
 
-      service.updateDirection(room);
+      engine.updateDirection(room);
       expect(room.getDirection()).toBe(1);
     });
   });
@@ -821,7 +765,7 @@ describe('GameService', () => {
         skip_amount: 0, // 0 skips + 1 default = 1 step
       } as TurnEvents);
 
-      service.updateCurrentPlayerIndex(room);
+      engine.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(1); // P2
     });
@@ -834,7 +778,7 @@ describe('GameService', () => {
         skip_amount: 0,
       } as TurnEvents);
 
-      service.updateCurrentPlayerIndex(room);
+      engine.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(0); // P1
     });
@@ -847,7 +791,7 @@ describe('GameService', () => {
         skip_amount: 0,
       } as TurnEvents);
 
-      service.updateCurrentPlayerIndex(room);
+      engine.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(1); // P2
     });
@@ -860,7 +804,7 @@ describe('GameService', () => {
         skip_amount: 0,
       } as TurnEvents);
 
-      service.updateCurrentPlayerIndex(room);
+      engine.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(3); // P4
     });
@@ -874,7 +818,7 @@ describe('GameService', () => {
         skip_amount: 1,
       } as TurnEvents);
 
-      service.updateCurrentPlayerIndex(room);
+      engine.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(2); // P3
     });
@@ -888,7 +832,7 @@ describe('GameService', () => {
         skip_amount: 2,
       } as TurnEvents);
 
-      service.updateCurrentPlayerIndex(room);
+      engine.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(3); // P4
     });
@@ -901,7 +845,7 @@ describe('GameService', () => {
         skip_amount: 1,
       } as TurnEvents);
 
-      service.updateCurrentPlayerIndex(room);
+      engine.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(0); // P1
     });
@@ -914,7 +858,7 @@ describe('GameService', () => {
         skip_amount: 1,
       } as TurnEvents);
 
-      service.updateCurrentPlayerIndex(room);
+      engine.updateCurrentPlayerIndex(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(3); // P4
     });
@@ -955,10 +899,10 @@ describe('GameService', () => {
         wild_draw_four_amount: 0,
       } as TurnEvents);
 
-      const directionSpy = jest.spyOn(service, 'updateDirection');
-      const indexSpy = jest.spyOn(service, 'updateCurrentPlayerIndex');
+      const directionSpy = jest.spyOn(engine, 'updateDirection');
+      const indexSpy = jest.spyOn(engine, 'updateCurrentPlayerIndex');
 
-      service.processNextTurn(room);
+      engine.processNextTurn(room);
 
       expect(directionSpy).toHaveBeenCalledWith(room);
       expect(indexSpy).toHaveBeenCalledWith(room);
@@ -978,7 +922,7 @@ describe('GameService', () => {
       const nextPlayer = room.getPlayerOrder()[1];
       const initialHand = nextPlayer.getHand().length;
 
-      service.processNextTurn(room);
+      engine.processNextTurn(room);
 
       // Should have advanced
       expect(room.getCurrentPlayerIndex()).toBe(1);
@@ -999,7 +943,7 @@ describe('GameService', () => {
       const nextPlayer = room.getPlayerOrder()[1];
       const initialHand = nextPlayer.getHand().length;
 
-      service.processNextTurn(room);
+      engine.processNextTurn(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(nextPlayer.getHand()).toHaveLength(initialHand + 4);
@@ -1017,7 +961,7 @@ describe('GameService', () => {
       const nextPlayer = room.getPlayerOrder()[1];
       const initialHand = nextPlayer.getHand().length;
 
-      service.processNextTurn(room);
+      engine.processNextTurn(room);
 
       expect(nextPlayer.getHand()).toHaveLength(initialHand + 4); // 2 * 2 = 4
     });
@@ -1089,7 +1033,7 @@ describe('GameService', () => {
       // P3 (index 2) leaves. He is "after" P2.
       const index: number = service.getIndexFromOrder(room, p3)!;
       service.removePlayerFromRoomPlayerOrder(room, p3.socketId);
-      service.setNewCurrentPlayerIndex(room, index);
+      engine.setNewCurrentPlayerIndex(room, index);
 
       // Still P2
       expect(room.getCurrentPlayerIndex()).toBe(1);
@@ -1103,7 +1047,7 @@ describe('GameService', () => {
       // P1 (index 0) leaves.
       const index: number = service.getIndexFromOrder(room, p1)!;
       service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
-      service.setNewCurrentPlayerIndex(room, index);
+      engine.setNewCurrentPlayerIndex(room, index);
 
       // Still P2 (which is now index 0)
       expect(room.getCurrentPlayerIndex()).toBe(0);
@@ -1123,7 +1067,7 @@ describe('GameService', () => {
       // P1 (index 0) leaves.
       const index: number = service.getIndexFromOrder(room, p1)!;
       service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
-      service.setNewCurrentPlayerIndex(room, index);
+      engine.setNewCurrentPlayerIndex(room, index);
 
       // Still P3 (which is now index 1)
       expect(room.getCurrentPlayerIndex()).toBe(1);
@@ -1137,7 +1081,7 @@ describe('GameService', () => {
       // P2 (index 1) leaves. Order [P1, P3]. Length 2. MaxIndex 1.
       const index: number = service.getIndexFromOrder(room, p2)!;
       service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
-      service.setNewCurrentPlayerIndex(room, index);
+      engine.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
@@ -1150,7 +1094,7 @@ describe('GameService', () => {
       // P2 (index 1) leaves.
       const index: number = service.getIndexFromOrder(room, p2)!;
       service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
-      service.setNewCurrentPlayerIndex(room, index);
+      engine.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
@@ -1163,7 +1107,7 @@ describe('GameService', () => {
       // P3 (index 2) leaves.
       const index: number = service.getIndexFromOrder(room, p3)!;
       service.removePlayerFromRoomPlayerOrder(room, p3.socketId);
-      service.setNewCurrentPlayerIndex(room, index);
+      engine.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(0);
       expect(room.getPlayerFromOrder()).toBe(p1);
@@ -1177,7 +1121,7 @@ describe('GameService', () => {
       // P2 (index 1) leaves.
       const index: number = service.getIndexFromOrder(room, p2)!;
       service.removePlayerFromRoomPlayerOrder(room, p2.socketId);
-      service.setNewCurrentPlayerIndex(room, index);
+      engine.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(0);
       expect(room.getPlayerFromOrder()).toBe(p1);
@@ -1191,7 +1135,7 @@ describe('GameService', () => {
       // P1 (index 0) leaves.
       const index: number = service.getIndexFromOrder(room, p1)!;
       service.removePlayerFromRoomPlayerOrder(room, p1.socketId);
-      service.setNewCurrentPlayerIndex(room, index);
+      engine.setNewCurrentPlayerIndex(room, index);
 
       expect(room.getCurrentPlayerIndex()).toBe(1);
       expect(room.getPlayerFromOrder()).toBe(p3);
@@ -1245,7 +1189,7 @@ describe('GameService', () => {
     it('should generate correct Game State', () => {
       service.startGame(room, owner);
 
-      const gameState = service.generateGameState(room);
+      const gameState = engine.generateGameState(room);
 
       expect(gameState).toBeDefined();
       expect(gameState.currentPlayerIndex).toBe(room.getCurrentPlayerIndex());
@@ -1291,12 +1235,12 @@ describe('GameService', () => {
       // Simulate player2 leaving during game
       service.removePlayerFromRoomPlayerOrder(room, player2.socketId);
 
-      expect(service.hasGameEnded(room)).toBe(true);
+      expect(engine.hasGameEnded(room)).toBe(true);
     });
 
     it('should identify when game has NOT ended (>1 player left)', () => {
       service.startGame(room, owner);
-      expect(service.hasGameEnded(room)).toBe(false);
+      expect(engine.hasGameEnded(room)).toBe(false);
     });
 
     it('should reset the room correctly', () => {

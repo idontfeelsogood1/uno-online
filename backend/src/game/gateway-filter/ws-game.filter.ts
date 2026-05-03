@@ -45,7 +45,6 @@ export class WsGameFilter extends BaseWsExceptionFilter {
     }
     if (exception instanceof CannotDrawCard) {
       message = 'Player have playable cards in hand.';
-      console.log(exception);
     }
 
     // Emit the specific event to the frontend

@@ -1,26 +1,29 @@
 import { Test, TestingModule } from '@nestjs/testing';
-import { GameBotService } from './game-bot.service';
-import { GameRoom } from '../model/game-room/GameRoom';
-import { Player } from '../model/player/Player';
-import { GameBoard, TurnEvents } from '../model/game-board/GameBoard';
-import { Card, CardColor, CardValue } from '../model/card/Card';
+import { GameBotService } from '../game/bot-vs-player/game-bot.service';
+import { GameRoom } from '../game/model/game-room/GameRoom';
+import { Player } from '../game/model/player/Player';
+import { GameBoard, TurnEvents } from '../game/model/game-board/GameBoard';
+import { Card, CardColor, CardValue } from '../game/model/card/Card';
 import {
   RoomNotFound,
   NotPlayerTurn,
   CannotDrawCard,
   CardsSentMustNotBeEmpty,
   HaveNotChoosenColor,
-} from '../service-exception/service-exception';
+} from '../game/service-exception/service-exception';
+import { GameEngine } from '../game/engine/game.engine';
 
 describe('GameBotService', () => {
   let service: GameBotService;
+  let engine: GameEngine;
 
   beforeEach(async () => {
     const module: TestingModule = await Test.createTestingModule({
-      providers: [GameBotService],
+      providers: [GameBotService, GameEngine],
     }).compile();
 
     service = module.get<GameBotService>(GameBotService);
+    engine = module.get<GameEngine>(GameEngine);
   });
 
   it('should be defined', () => {
@@ -117,7 +120,7 @@ describe('GameBotService', () => {
 
     it('should generate accurate PublicGameState', () => {
       service.startGame(room);
-      const state = service.generateGameState(room);
+      const state = engine.generateGameState(room);
 
       expect(state.currentPlayerIndex).toBe(room.getCurrentPlayerIndex());
       expect(state.direction).toBe(room.getDirection());
@@ -147,12 +150,12 @@ describe('GameBotService', () => {
 
     it('should return true if it is the players turn', () => {
       // By default, index 0 (owner) starts
-      expect(service.isPlayerTurn(room, owner)).toBe(true);
+      expect(engine.isPlayerTurn(room, owner)).toBe(true);
     });
 
     it('should throw NotPlayerTurn if it is not the players turn', () => {
       expect(() => {
-        service.isPlayerTurn(room, bot);
+        engine.isPlayerTurn(room, bot);
       }).toThrow(NotPlayerTurn);
     });
 
@@ -198,7 +201,7 @@ describe('GameBotService', () => {
         new Card('2', 'Blue 2', CardColor.BLUE, CardValue.TWO),
       ];
 
-      const playable = service.getPlayableCards(hand, gameBoard);
+      const playable = engine.getPlayableCards(hand, gameBoard);
       expect(playable).toHaveLength(1);
       expect(playable[0].color).toBe(CardColor.RED);
     });
@@ -206,35 +209,39 @@ describe('GameBotService', () => {
     it('should throw CannotDrawCard if player tries to draw but has playable cards', () => {
       // Force a playable card scenario
       jest
-        .spyOn(service, 'getPlayableCards')
+        .spyOn(engine, 'getPlayableCards')
         .mockReturnValue([new Card('1', 'R1', CardColor.RED, CardValue.ONE)]);
 
       expect(() => {
-        service.drawCards(room, bot, 1);
+        engine.drawCards(room, bot, 1);
       }).toThrow(CannotDrawCard);
     });
 
     it('should allow draw if no playable cards exist', () => {
       // Force no playable cards
-      jest.spyOn(service, 'getPlayableCards').mockReturnValue([]);
+      jest.spyOn(engine, 'getPlayableCards').mockReturnValue([]);
       const initialHandSize = bot.getHand().length;
 
-      service.drawCards(room, bot, 1);
+      engine.drawCards(room, bot, 1);
 
       expect(bot.getHand()).toHaveLength(initialHandSize + 1);
     });
 
     it('should reshuffle discard pile if draw pile runs out', () => {
-      jest.spyOn(service, 'getPlayableCards').mockReturnValue([]);
+      jest.spyOn(engine, 'getPlayableCards').mockReturnValue([]);
 
       // Drain draw pile manually
       const remainingDraw = gameBoard.getDrawPile().length;
-      gameBoard.popFromDrawPile(remainingDraw);
+      const poppedCards: Card[] = gameBoard.popFromDrawPile(remainingDraw);
+      gameBoard.pushToDiscardPile(poppedCards);
 
       const clearDiscardSpy = jest.spyOn(gameBoard, 'clearDiscardPile');
       const pushDrawSpy = jest.spyOn(gameBoard, 'pushToDrawPile');
 
-      service.drawCards(room, bot, 1);
+      const hand: Card[] = bot.getHand();
+      while (hand.length > 0) hand.pop();
+
+      engine.drawCards(room, bot, 1);
 
       expect(clearDiscardSpy).toHaveBeenCalled();
       expect(pushDrawSpy).toHaveBeenCalled();
@@ -262,7 +269,7 @@ describe('GameBotService', () => {
 
     it('should throw CardsSentMustNotBeEmpty if passing empty array', () => {
       expect(() => {
-        service.playCards(room, bot, []);
+        engine.playCards(room, bot, []);
       }).toThrow(CardsSentMustNotBeEmpty);
     });
 
@@ -281,7 +288,7 @@ describe('GameBotService', () => {
 
       const initialHandSize = bot.getHand().length;
 
-      service.playCards(room, bot, [validCard.id]);
+      engine.playCards(room, bot, [validCard.id]);
 
       expect(bot.getHand()).toHaveLength(initialHandSize - 1);
       expect(gameBoard.getDiscardPile()).toContain(validCard);
@@ -300,7 +307,7 @@ describe('GameBotService', () => {
       jest.spyOn(gameBoard, 'processPattern').mockImplementation(() => true);
       jest.spyOn(gameBoard, 'getCardType').mockReturnValue('WILD');
 
-      service.playCards(room, bot, [wildCard.id], CardColor.BLUE);
+      engine.playCards(room, bot, [wildCard.id], CardColor.BLUE);
 
       expect(gameBoard.getEnforcedColor()).toBe(CardColor.BLUE);
       expect(gameBoard.getCurrentTopCard().id).toBe(wildCard.id);
@@ -319,7 +326,7 @@ describe('GameBotService', () => {
       jest.spyOn(gameBoard, 'getCardType').mockReturnValue('WILD');
 
       expect(() => {
-        service.playCards(room, bot, [wildCard.id]);
+        engine.playCards(room, bot, [wildCard.id]);
       }).toThrow(HaveNotChoosenColor);
     });
   });
@@ -351,10 +358,10 @@ describe('GameBotService', () => {
       owner.setIsUno(false);
 
       const drawSpy = jest
-        .spyOn(service, 'processTurnDrawCards')
+        .spyOn(engine, 'processTurnDrawCards')
         .mockImplementation();
 
-      service.processCurrentTurn(room);
+      engine.processCurrentTurn(room);
 
       expect(drawSpy).toHaveBeenCalledWith(room, owner, 2);
     });
@@ -365,7 +372,7 @@ describe('GameBotService', () => {
       owner.setIsUno(true);
       room.setCurrentPlayerIndex(0);
 
-      const didWin = service.processCurrentTurn(room);
+      const didWin = engine.processCurrentTurn(room);
 
       expect(didWin).toBe(true);
       // Owner should be removed from order
@@ -382,10 +389,10 @@ describe('GameBotService', () => {
 
       room.setCurrentPlayerIndex(0); // Owner
       const drawSpy = jest
-        .spyOn(service, 'processTurnDrawCards')
+        .spyOn(engine, 'processTurnDrawCards')
         .mockImplementation();
 
-      service.processNextTurn(room);
+      engine.processNextTurn(room);
 
       expect(room.getCurrentPlayerIndex()).toBe(1); // Moved to bot1
       expect(drawSpy).toHaveBeenCalledWith(room, bot1, 2); // 1 * 2
@@ -396,7 +403,7 @@ describe('GameBotService', () => {
       room.setDirection(1); // Moving forward
 
       // If Owner (index 0) is removed, current player (Bot 1, index 1) should shift down to index 0
-      service.setNewCurrentPlayerIndex(room, 0);
+      engine.setNewCurrentPlayerIndex(room, 0);
 
       expect(room.getCurrentPlayerIndex()).toBe(0);
     });

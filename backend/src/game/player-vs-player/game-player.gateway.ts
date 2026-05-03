@@ -38,7 +38,7 @@ if (process.env.NODE_ENV === 'dev') {
 }
 
 @WebSocketGateway({
-  namespace: process.env.GAME_GATEWAY_NAMESPACE,
+  namespace: 'PlayerVsPlayer',
   cors: {
     origin: originUrl,
     credentials: true,
