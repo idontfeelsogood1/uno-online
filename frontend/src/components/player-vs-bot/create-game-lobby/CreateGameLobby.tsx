@@ -1,6 +1,6 @@
-import type { CreateGameLobbyProps } from "../../../../types/commonTypes";
+import type { CreateGameLobbyProps } from "../../../types/commonTypes";
 import { useContext } from "react";
-import { GameModeSocket } from "../../../../api/GameModeSocket";
+import { GameModeSocket } from "../../../api/GameModeSocket";
 
 export default function CreateGameLobby({
   setHomeView,

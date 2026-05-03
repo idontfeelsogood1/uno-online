@@ -1,16 +1,16 @@
-import type { PlayerVsBotProps } from "../../../types/commonTypes";
+import type { PlayerVsBotProps } from "../../types/commonTypes";
 import { useEffect, useState } from "react";
 import type {
   WrapperViewState,
   GameData,
   GameStateActionType,
-} from "../../../types/commonTypes";
-import type { GameStateUpdateDto } from "../../../types/dtos/commonDtos";
+} from "../../types/commonTypes";
+import type { GameStateUpdateDto } from "../../types/dtos/commonDtos";
 import CreateGameLobby from "./create-game-lobby/CreateGameLobby";
 import Game from "../game/Game";
 import GameEnd from "./game-end/GameEnd";
 import { useContext } from "react";
-import { GameModeSocket } from "../../../api/GameModeSocket";
+import { GameModeSocket } from "../../api/GameModeSocket";
 
 export default function PlayerVsBot({ setHomeView }: PlayerVsBotProps) {
   const [view, setView] = useState<WrapperViewState>("LOBBY");

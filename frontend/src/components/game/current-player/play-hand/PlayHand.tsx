@@ -1,10 +1,10 @@
-import { getCardImgPath } from "../../../../../api/helper";
-import type { Card, PlayHandProps } from "../../../../../types/commonTypes";
+import { getCardImgPath } from "../../../../api/helper";
+import type { Card, PlayHandProps } from "../../../../types/commonTypes";
 import ChooseColor from "../choose-color/ChooseColor";
 import { useContext, useEffect, useState, useRef } from "react";
-import { GameAction } from "../../../../../api/GameAction";
+import { GameAction } from "../../../../api/GameAction";
 import { motion } from "motion/react";
-import { GameModeSocket } from "../../../../../api/GameModeSocket";
+import { GameModeSocket } from "../../../../api/GameModeSocket";
 
 export default function PlayHand({
   pseudoHand,

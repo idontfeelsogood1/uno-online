@@ -1,5 +1,5 @@
-import type { GameEndProps } from "../../../../types/commonTypes";
-import { GameModeSocket } from "../../../../api/GameModeSocket";
+import type { GameEndProps } from "../../../types/commonTypes";
+import { GameModeSocket } from "../../../api/GameModeSocket";
 import { useContext } from "react";
 
 export default function GameEnd({

@@ -1,6 +1,6 @@
-import type { RoomProps } from "../../../../types/commonTypes";
+import type { RoomProps } from "../../../types/commonTypes";
 import { useContext } from "react";
-import { GameModeSocket } from "../../../../api/GameModeSocket";
+import { GameModeSocket } from "../../../api/GameModeSocket";
 
 export default function Room({ roomState }: RoomProps) {
   const socket = useContext(GameModeSocket)!;

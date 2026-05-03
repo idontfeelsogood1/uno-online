@@ -2,15 +2,15 @@ import type {
   GamePlayer,
   GameProps,
   GridPosition,
-} from "../../../types/commonTypes";
+} from "../../types/commonTypes";
 import CurrentPlayer from "./current-player/CurrentPlayer";
 import GameBoard from "./game-board/GameBoard";
 import OtherPlayer from "./other-player/OtherPlayer";
-import { GameAction } from "../../../api/GameAction";
+import { GameAction } from "../../api/GameAction";
 import { useEffect, useState } from "react";
 import { LayoutGroup } from "motion/react";
 import { useContext } from "react";
-import { GameModeSocket } from "../../../api/GameModeSocket";
+import { GameModeSocket } from "../../api/GameModeSocket";
 
 export default function Game({
   gameState,

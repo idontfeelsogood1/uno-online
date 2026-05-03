@@ -1,9 +1,9 @@
-import type { Card, GameBoardProps } from "../../../../types/commonTypes";
-import { getCardImgPath, getCardCoverImgPath } from "../../../../api/helper";
-import { GameAction } from "../../../../api/GameAction";
+import type { Card, GameBoardProps } from "../../../types/commonTypes";
+import { getCardImgPath, getCardCoverImgPath } from "../../../api/helper";
+import { GameAction } from "../../../api/GameAction";
 import { useContext, useEffect, useState } from "react";
 import { motion } from "motion/react";
-import { GameModeSocket } from "../../../../api/GameModeSocket";
+import { GameModeSocket } from "../../../api/GameModeSocket";
 
 export default function GameBoard({
   topCard,

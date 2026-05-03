@@ -1,4 +1,4 @@
-import type { BotGameEndProps } from "../../../../types/commonTypes";
+import type { BotGameEndProps } from "../../../types/commonTypes";
 
 export default function GameEnd({
   setHomeView,

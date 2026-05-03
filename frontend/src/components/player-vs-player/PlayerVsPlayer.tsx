@@ -9,14 +9,14 @@ import type {
   RoomData,
   GameData,
   GameStateActionType,
-} from "../../../types/commonTypes";
+} from "../../types/commonTypes";
 import type {
   RoomStateUpdateDto,
   GameStateUpdateDto,
   RoomDto,
   LobbyStateUpdateDto,
-} from "../../../types/dtos/commonDtos";
-import { GameModeSocket } from "../../../api/GameModeSocket";
+} from "../../types/dtos/commonDtos";
+import { GameModeSocket } from "../../api/GameModeSocket";
 
 export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [view, setView] = useState<WrapperViewState>("LOBBY");
