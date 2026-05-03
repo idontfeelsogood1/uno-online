@@ -62,5 +62,36 @@ PlayerVsPlayer COMPONENT:
         - Show button to go back to Home
         - Show button to continue the Game (only owner can see this button, other player sees a waiting message)
 
-PlayerVsBot COMPONENT:
-// TO BE IMPLEMENTED
+// ANIMATIONS:
+
+    - When player start the game:
+        - Play cards getting distributed to every player from the middle of Gameboard 
+        - It follows an order, from the first to the last player following a circle
+    - When player play cards:
+        - Announce to every player that these cards are played:
+            - The cards will fly from that player's hand into a container above gameboard, visible to all 
+            - Then, it will fly from the container to the discard pile 1 by 1.
+        - IMPLENTATION:
+            - Tweak play-cards response event to include cards has been played
+            - Only show the container on play-cards, other events doesnt count
+            - Do this for CurrentPlayer first
+
+            - THE FLOW:
+                - When gameboard receive an event that is play-cards:
+                    - Render a timed container on top of discard pile containing the played cards received from the event
+                    - Animation will play since they flies from playHand which is empty
+                    - On timeout, render a container of cards inside of discard pile (stacked on top)
+                    - The cards will fly from the announcing container to stack on top of the pile
+                    - Then close both of the container
+    - When player draw cards:
+        - USE THE SAME METHOD (ActionType and state changes on gameboard) LIKE BEFORE
+        - The card must first appear ontop Gameboard's drawPile first then make it disapear
+        - Then setting the hand of player will automatically fly the card
+    - When player switch pages:
+        - TO BE ADDED
+    - When player has won (removed from playerOrder):
+        - TO BE ADDED
+
+// BUGS TO FIX:
+- cardDrew and playCards length property is not defined when clicking drawCard while the animation is playing (renderShowCase, stacking, etc...)
+    - fix: Disable the button during the animations process and re-enable when they ends.

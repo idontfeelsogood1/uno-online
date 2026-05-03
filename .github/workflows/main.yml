@@ -25,7 +25,7 @@ jobs:
         run: npm ci
 
       - name: Run Unit Tests
-        run: npm run test src/game/game.service.spec.ts
+        run: npm run test src/test
 
       - name: Build Test
         run: npm run build

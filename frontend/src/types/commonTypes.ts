@@ -7,6 +7,15 @@ export interface PlayerVsPlayerProps {
   readonly setHomeView: (view: HomeViewState) => void;
 }
 
+export interface PlayerVsBotProps {
+  readonly setHomeView: (view: HomeViewState) => void;
+}
+
+export interface CreateGameLobbyProps {
+  readonly setHomeView: (view: HomeViewState) => void;
+  readonly setMaxPlayers: CallableFunction;
+}
+
 export interface RoomProps {
   readonly roomState: RoomData;
 }
@@ -21,6 +30,10 @@ export interface GameBoardProps {
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
   readonly gridPosition: string;
+  readonly gameState: GameData;
+  readonly setPlayers: CallableFunction;
+  readonly hasInitialized: boolean;
+  readonly setHasInitialized: CallableFunction;
 }
 
 export interface OtherPlayerProps {
@@ -30,26 +43,28 @@ export interface OtherPlayerProps {
 
 export interface OtherHandProps {
   readonly otherHand: Card[];
-  readonly rotation: string;
+  readonly position: string;
 }
 
 export interface CurrentPlayerProps {
   readonly player: GamePlayer;
   readonly gridPosition: string;
+  readonly hasInitialized: boolean;
 }
 
 export interface PlayHandProps {
   readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly setPseudoHand: CallableFunction;
+  readonly setNewStateReceived: CallableFunction;
 }
 
 export interface HandProps {
   readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly setPseudoHand: CallableFunction;
+  readonly newStateReceived: boolean;
+  readonly hasInitialized: boolean;
 }
 
 export interface ChooseColorProps {
@@ -61,12 +76,6 @@ export interface GameActionProps {
   readonly actionSocketId: string;
 }
 
-export interface PageProps {
-  startIndex: number;
-  endIndex: number;
-  currentPage: number;
-}
-
 export interface GameEndProps {
   players: RoomPlayer[];
   ownerSocketId: string;
@@ -74,9 +83,13 @@ export interface GameEndProps {
   continueGame: CallableFunction;
 }
 
+export interface BotGameEndProps {
+  readonly setHomeView: (view: HomeViewState) => void;
+  readonly continueGame: CallableFunction;
+}
+
 export interface GridPosition {
   placement: string;
-  rotation: string;
   position: string;
 }
 
@@ -103,12 +116,14 @@ export interface GameData {
   readonly direction: number;
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
+  readonly playedCards: Card[] | undefined;
+  readonly cardDrew: Card | undefined;
 }
 
 export interface GamePlayer {
   readonly socketId: string;
   readonly username: string;
-  readonly hand: Card[];
+  hand: Card[];
   readonly uno: boolean;
 }
 
@@ -149,9 +164,9 @@ export type RoomStateActionType =
   | "player-left-room"
   | "transfered-owner";
 export type GameStateActionType =
+  | "create-game"
   | "game-started"
   | "draw-cards"
   | "played-cards"
-  | "player-won"
   | "player-left"
   | "game-ended";

@@ -4,6 +4,7 @@ import type {
   LobbyStateActionType,
   RoomStateActionType,
   GameStateActionType,
+  Card,
 } from "../commonTypes";
 
 export interface RoomDto {
@@ -29,4 +30,6 @@ export interface GameStateUpdateDto {
   socketId?: string;
   username?: string;
   gameState: GameData;
+  playedCards: Card[] | undefined;
+  cardDrew: Card | undefined;
 }

@@ -1,0 +1,43 @@
+PlayerVsBot COMPONENT:
+- Establish websocket connection to /PlayerVsBot
+- Contains CreateGameLobby, Game components
+- Listen to error events and respond with a pop up dialogue at the top
+    - CreateGameLobby COMPONENT:
+        - Show a dialogue containing options for bot amounts
+        - Onclick, emit "create-game" event
+        - On "game-state-update", render Game component.
+        - Add exit button
+
+    - Game COMPONENT:
+        - Implement locking mechanism for draw card in the backend, 
+        - only allow them to draw until at least 1 card match the top card
+
+        - Gameboard COMPONENT:
+            - Show button to draw card
+            - Show current top card
+            - Show current color
+            - If current color is black then show additional enforced color
+        - OtherPlayer COMPONENT:
+            - Show username
+            - OtherHand COMPONENT:
+                - Show other's current hand but hidden
+                - Limit of 7
+        - CurrentPlayer COMPONENT:
+            - Show username
+            - Hand COMPONENT:
+                - Show player's current hand
+                - Onclick add to PlayHand component
+                - Add prev and next button to show overflow cards
+            - PlayHand COMPONENT:
+                - Show player's card they want to play
+                - Add functionality to remove the card they want to play
+                - Show play cards button
+                - Show UNO button (act as play cards but with uno called this is intentional)
+                - Add check to show choose a color dialogue if last card on playHand is wild
+                - Add prev and next button to show overflow cards
+        
+    - GameEnd COMPONENT:
+        - Show game finished dialogue
+        - Show player currently in room (with their scores to be implemented later)
+        - Show button to go back to Home
+        - Show button to continue the Game (only owner can see this button, other player sees a waiting message)
