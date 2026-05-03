@@ -7,7 +7,7 @@ if (import.meta.env.VITE_NODE_ENV === "dev") {
   URL = import.meta.env.VITE_API_URL;
 }
 
-export const socket = io(`${URL}/game`, {
+export const socket = io(`${URL}/PlayerVsPlayer`, {
   autoConnect: false,
   transports: ["polling", "websocket"],
 });
