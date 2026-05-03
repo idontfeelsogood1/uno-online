@@ -6,9 +6,9 @@ import type {
   GameStateActionType,
 } from "../../../types/commonTypes";
 import type { GameStateUpdateDto } from "../../../types/dtos/commonDtos";
-import CreateGameLobby from "./CreateGameLobby/CreateGameLobby";
-import Game from "../Game/Game";
-import GameEnd from "./GameEnd/GameEnd";
+import CreateGameLobby from "./create-game-lobby/CreateGameLobby";
+import Game from "../game/Game";
+import GameEnd from "./game-end/GameEnd";
 import { useContext } from "react";
 import { GameModeSocket } from "../../../api/GameModeSocket";
 

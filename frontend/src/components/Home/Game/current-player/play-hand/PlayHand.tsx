@@ -1,6 +1,6 @@
 import { getCardImgPath } from "../../../../../api/helper";
 import type { Card, PlayHandProps } from "../../../../../types/commonTypes";
-import ChooseColor from "../ChooseColor/ChooseColor";
+import ChooseColor from "../choose-color/ChooseColor";
 import { useContext, useEffect, useState, useRef } from "react";
 import { GameAction } from "../../../../../api/GameAction";
 import { motion } from "motion/react";

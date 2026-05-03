@@ -3,9 +3,9 @@ import type {
   GameProps,
   GridPosition,
 } from "../../../types/commonTypes";
-import CurrentPlayer from "./CurrentPlayer/CurrentPlayer";
-import GameBoard from "./GameBoard/GameBoard";
-import OtherPlayer from "./OtherPlayer/OtherPlayer";
+import CurrentPlayer from "./current-player/CurrentPlayer";
+import GameBoard from "./game-board/GameBoard";
+import OtherPlayer from "./other-player/OtherPlayer";
 import { GameAction } from "../../../api/GameAction";
 import { useEffect, useState } from "react";
 import { LayoutGroup } from "motion/react";

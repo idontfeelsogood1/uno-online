@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import type { Card, CurrentPlayerProps } from "../../../../types/commonTypes";
-import Hand from "./Hand/Hand";
-import PlayHand from "./PlayHand/PlayHand";
+import Hand from "./hand/Hand";
+import PlayHand from "./play-hand/PlayHand";
 
 export default function CurrentPlayer({
   player,

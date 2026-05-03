@@ -1,5 +1,5 @@
-import PlayerVsBot from "./PlayerVsBot/PlayerVsBot";
-import PlayerVsPlayer from "./PlayerVsPlayer/PlayerVsPlayer";
+import PlayerVsBot from "./player-vs-bot/PlayerVsBot";
+import PlayerVsPlayer from "./player-vs-player/PlayerVsPlayer";
 import { useState } from "react";
 import type { HomeViewState } from "../../types/commonTypes";
 import { GameModeSocket } from "../../api/GameModeSocket";

@@ -1,6 +1,10 @@
-import { GameRoom, PlayerNotFound, RoomIsEmpty } from './GameRoom';
-import { Player } from '../player/Player';
-import { GameBoard } from '../game-board/GameBoard';
+import {
+  GameRoom,
+  PlayerNotFound,
+  RoomIsEmpty,
+} from '../game/model/game-room/GameRoom';
+import { Player } from '../game/model/player/Player';
+import { GameBoard } from '../game/model/game-board/GameBoard';
 
 // Mock dependencies
 const mockGameBoard = {} as GameBoard;

@@ -2,8 +2,8 @@ import {
   GameBoard,
   AmountGreaterThanDrawPile,
   CardPatternMismatch,
-} from './GameBoard';
-import { Card, CardColor, CardValue } from '../card/Card';
+} from '../game/model/game-board/GameBoard';
+import { Card, CardColor, CardValue } from '../game/model/card/Card';
 
 // ==========================================
 // MOCKS
