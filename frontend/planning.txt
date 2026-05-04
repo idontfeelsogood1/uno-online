@@ -87,11 +87,26 @@ PlayerVsPlayer COMPONENT:
         - USE THE SAME METHOD (ActionType and state changes on gameboard) LIKE BEFORE
         - The card must first appear ontop Gameboard's drawPile first then make it disapear
         - Then setting the hand of player will automatically fly the card
-    - When player switch pages:
-        - TO BE ADDED
-    - When player has won (removed from playerOrder):
-        - TO BE ADDED
+    - When theres an event from each state received:
+        - Backend sends back an object containing the required data for frontend
+        - Object shape: {
+            socketId (the one who did the action)
+            currentPlayerIndex (the current player's turn)
+            turnEvents: {
+                cards_to_draw (for the currentPlayer)
+            }
+        }
+        - After renderStacking finished:
+            - Turn pointers will be displayed first and computed in the playerOrder using socketId and currentPlayerIndex:
+                - Display the direction 
+                - Display a marker to mark the location of whoever did the action (socketId)
+                - Move the marker until it matches the currentPlayerIndex
+            - After that, if cards_to_draw > 0:
+                - Render the hand of the player's WITHOUT the cards_to_draw
+                - Show the cards on top of GameBoard drawPile for a second
+                - Set the full hand for the player
 
 // BUGS TO FIX:
 - cardDrew and playCards length property is not defined when clicking drawCard while the animation is playing (renderShowCase, stacking, etc...)
-    - fix: Disable the button during the animations process and re-enable when they ends.
+    - fix: Disable ALL actions of the player (except adding cards to PlayHand) when the animations are in progress
+

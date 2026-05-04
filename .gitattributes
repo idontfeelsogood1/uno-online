@@ -1,0 +1,8 @@
+# Enforce Linux line endings (LF) for all files that Docker needs to read
+* text=auto
+*.sh text eol=lf
+Dockerfile text eol=lf
+.dockerignore text eol=lf
+
+# Keep standard Windows line endings for Windows-specific files
+*.bat text eol=crlf
