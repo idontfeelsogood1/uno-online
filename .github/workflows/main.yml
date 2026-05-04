@@ -61,6 +61,11 @@ jobs:
     defaults:
       run:
         working-directory: ./
+
+    environment:
+      name: Production
+      url: https://colorclashes.com
+
     steps:
       - name: Checkout Code
         uses: actions/checkout@v4
