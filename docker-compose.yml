@@ -45,3 +45,4 @@ services:
       - /var/run/docker.sock:/var/run/docker.sock
       # MUST UPDATE: Replace YOUR-REPO-NAME twice to match your repo structure
       - ./:/actions-runner/_work/uno-online/uno-online
+      - ./runner-config:/actions-runner
