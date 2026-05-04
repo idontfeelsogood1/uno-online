@@ -1,0 +1,47 @@
+version: "3.8"
+
+services:
+  backend:
+    build: ./backend
+    container_name: uno-backend
+    restart: unless-stopped
+    # Pass runtime variables into the Node server
+    environment:
+      - FRONTEND_URL=${FRONTEND_URL}
+
+  frontend:
+    build:
+      context: ./frontend
+      # Pass build-time variables into Vite
+      args:
+        - VITE_API_URL=${VITE_API_URL}
+    container_name: uno-frontend
+    restart: unless-stopped
+    depends_on:
+      - backend
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: uno-tunnel
+    restart: unless-stopped
+    command: tunnel run
+    environment:
+      - TUNNEL_TOKEN=${CLOUDFLARE_TOKEN}
+    depends_on:
+      - backend
+      - frontend
+
+  github-runner:
+    image: myoung34/github-runner:latest
+    container_name: uno-runner
+    restart: unless-stopped
+    environment:
+      # MUST UPDATE: Replace with your actual GitHub repo URL
+      - REPO_URL=https://github.com/idontfeelsogood1/uno-online
+      - RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - RUNNER_NAME=docker-runner
+    volumes:
+      # The magic key that allows DooD (Docker-out-of-Docker)
+      - /var/run/docker.sock:/var/run/docker.sock
+      # MUST UPDATE: Replace YOUR-REPO-NAME twice to match your repo structure
+      - ./:/actions-runner/_work/uno-online/uno-online
