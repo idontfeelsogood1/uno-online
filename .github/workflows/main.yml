@@ -65,8 +65,17 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Nuke Cache and Rebuild Containers
-        run: docker compose build --no-cache
+      # 1. Dynamically generate the .env file using GitHub Secrets
+      - name: Inject Environment Variables
+        run: |
+          echo "VITE_API_URL=${{ secrets.VITE_API_URL }}" >> .env
+          echo "FRONTEND_URL=${{ secrets.FRONTEND_URL }}" >> .env
+          echo "CLOUDFLARE_TOKEN=${{ secrets.CLOUDFLARE_TOKEN }}" >> .env
 
+      # 2. TARGETED Build: Explicitly tell Docker WHICH containers to build
+      - name: Nuke Cache and Rebuild Apps
+        run: docker compose build --no-cache frontend backend
+
+      # 3. TARGETED Deploy: Leave the runner and cloudflare alone!
       - name: Deploy Live
-        run: docker compose up -d
+        run: docker compose up -d frontend backend
