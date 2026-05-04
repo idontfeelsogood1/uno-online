@@ -63,7 +63,7 @@ jobs:
         working-directory: ./
 
     environment:
-      name: Production
+      name: production-docker-windows
       url: https://colorclashes.com
 
     steps:
