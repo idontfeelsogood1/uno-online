@@ -12,7 +12,7 @@ ARG VITE_API_URL
 # Turn it into an environment variable for Vite to use during the build
 ENV VITE_API_URL=$VITE_API_URL
 # NODE_ENV default to prod
-ENV NODE_ENV=production
+ENV VITE_NODE_ENV=production
 
 # Build
 RUN npm run build
