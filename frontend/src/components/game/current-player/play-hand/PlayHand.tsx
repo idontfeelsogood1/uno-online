@@ -181,13 +181,17 @@ export default function PlayHand({
             {renderHand()}
           </div>
           <div className="flex justify-center border p-1 gap-1 shrink-0">
-            <button onClick={playCards} className="border">
+            <button
+              onClick={playCards}
+              className="border"
+              disabled={action!.isActionLocked}
+            >
               PLAY CARDS
             </button>
             <button
               className={`border ${canUno ? "opacity-50" : "opacity-100"}`}
               onClick={uno}
-              disabled={canUno ? true : false}
+              disabled={canUno}
             >
               UNO
             </button>

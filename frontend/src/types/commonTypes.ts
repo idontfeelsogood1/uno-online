@@ -74,6 +74,7 @@ export interface ChooseColorProps {
 export interface GameActionProps {
   readonly actionType: GameStateActionType;
   readonly actionSocketId: string;
+  readonly isActionLocked: boolean;
 }
 
 export interface GameEndProps {

@@ -107,6 +107,5 @@ PlayerVsPlayer COMPONENT:
                 - Set the full hand for the player
 
 // BUGS TO FIX:
-- cardDrew and playCards length property is not defined when clicking drawCard while the animation is playing (renderShowCase, stacking, etc...)
-    - fix: Disable ALL actions of the player (except adding cards to PlayHand) when the animations are in progress
-
+- images loads during animation instead of loading all at once
+    - fix: Preload ALL images at once into the client's ram, render a loading indicator meanwhile

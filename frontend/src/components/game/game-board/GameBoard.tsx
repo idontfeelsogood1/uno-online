@@ -15,7 +15,7 @@ export default function GameBoard({
   setHasInitialized,
 }: GameBoardProps) {
   const context = useContext(GameAction);
-  const { actionType, actionSocketId } = context!;
+  const { actionType, actionSocketId, isActionLocked } = context!;
 
   const [animationPhase, setAnimationPhase] = useState<
     "idle" | "showcase" | "stacking"
@@ -196,6 +196,7 @@ export default function GameBoard({
         <button
           onClick={() => socket.emit("draw-card")}
           className="relative h-full shrink-0"
+          disabled={isActionLocked}
         >
           <img
             src={getCardCoverImgPath()}

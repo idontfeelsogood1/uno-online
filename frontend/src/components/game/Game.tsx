@@ -19,6 +19,7 @@ export default function Game({
 }: GameProps) {
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
+  const [isActionLocked, setIsActionLocked] = useState<boolean>(false);
 
   const socket = useContext(GameModeSocket)!;
 
@@ -46,12 +47,29 @@ export default function Game({
     return tmpPlayers;
   }
 
+  function handleActionLockAndUnlock(ms: number): () => void {
+    setIsActionLocked(true);
+
+    const unlockActionTimer = setTimeout(() => {
+      setIsActionLocked(false);
+    }, ms);
+
+    return () => {
+      clearTimeout(unlockActionTimer);
+    };
+  }
+
   useEffect(() => {
+    if (!hasInitialized) {
+      handleActionLockAndUnlock(1000);
+    }
     if (actionType === "played-cards") {
       setPlayers(gameState.playerOrder);
+      return handleActionLockAndUnlock(4000);
     }
     if (actionType === "draw-cards") {
       setPlayers(getPopppedHandPlayers());
+      return handleActionLockAndUnlock(2000);
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -99,13 +117,14 @@ export default function Game({
     const playersHtmlList: React.ReactElement[] = [];
 
     for (let i = 0; i < tmpPlayers.length; i++) {
-      if (i < tmpPlayers.length - 1) {
+      if (tmpPlayers[i].socketId !== socket.id) {
         playersHtmlList.push(
           <OtherPlayer
             otherPlayer={tmpPlayers[i]}
             gridPosition={otherPlayersPlacement[i]}
           />,
         );
+        // THE PLAYER HAS ALREADY WON (REMOVED FROM playerOrder), THIS IF PREVENTS VALUE UNDEFINED CRASH
       } else {
         playersHtmlList.push(
           <CurrentPlayer
@@ -120,8 +139,13 @@ export default function Game({
     return playersHtmlList;
   }
 
+  // TODOS:
+
+  // PRELOAD THE IMAGE
+  // RENDER A LOADING INDICATOR WHILE IMAGES ARE LOADING
+
   return (
-    <GameAction.Provider value={{ actionType, actionSocketId }}>
+    <GameAction.Provider value={{ actionType, actionSocketId, isActionLocked }}>
       <LayoutGroup>
         <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.4fr] gap-4 p-1">
           <GameBoard
