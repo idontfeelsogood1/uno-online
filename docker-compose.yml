@@ -38,7 +38,7 @@ services:
     environment:
       # MUST UPDATE: Replace with your actual GitHub repo URL
       - REPO_URL=https://github.com/idontfeelsogood1/uno-online
-      - RUNNER_TOKEN=${GITHUB_RUNNER_TOKEN}
+      - ACCESS_TOKEN=${ACCESS_TOKEN}
       - RUNNER_NAME=docker-runner
     volumes:
       # The magic key that allows DooD (Docker-out-of-Docker)
