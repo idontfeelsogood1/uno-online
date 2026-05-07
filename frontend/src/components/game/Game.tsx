@@ -11,6 +11,7 @@ import { useEffect, useState } from "react";
 import { LayoutGroup } from "motion/react";
 import { useContext } from "react";
 import { GameModeSocket } from "../../api/GameModeSocket";
+import { generateCardPaths } from "../../api/helper";
 
 export default function Game({
   gameState,
@@ -20,6 +21,8 @@ export default function Game({
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [isActionLocked, setIsActionLocked] = useState<boolean>(false);
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
 
   const socket = useContext(GameModeSocket)!;
 
@@ -59,10 +62,40 @@ export default function Game({
     };
   }
 
+  function preloadCardImages(imagesPath: string[]): Promise<void[]> {
+    const promises: Promise<void>[] = imagesPath.map((src) => {
+      return new Promise((resolve, reject) => {
+        const img = new Image();
+        img.src = src;
+        // When the image finishes downloading to RAM, resolve the promise
+        img.onload = () => resolve();
+        img.onerror = () => reject();
+      });
+    });
+    return Promise.all(promises);
+  }
+
   useEffect(() => {
     if (!hasInitialized) {
-      handleActionLockAndUnlock(1000);
+      async function preloadAssets(): Promise<void> {
+        try {
+          await preloadCardImages(generateCardPaths());
+          setIsLoading(false);
+          console.log("Card's images successfully pre-loaded.");
+        } catch (err) {
+          setLoadError("An error happened while loading component.");
+          setIsLoading(false);
+          console.log(
+            `An error happened while pre-loading card images: ${err}`,
+          );
+        }
+      }
+      preloadAssets();
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
     if (actionType === "played-cards") {
       setPlayers(gameState.playerOrder);
       return handleActionLockAndUnlock(4000);
@@ -71,7 +104,6 @@ export default function Game({
       setPlayers(getPopppedHandPlayers());
       return handleActionLockAndUnlock(2000);
     }
-
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [gameState, actionType]);
 
@@ -139,10 +171,12 @@ export default function Game({
     return playersHtmlList;
   }
 
-  // TODOS:
-
-  // PRELOAD THE IMAGE
-  // RENDER A LOADING INDICATOR WHILE IMAGES ARE LOADING
+  if (isLoading) {
+    return <h1 className="text-center self-center">Loading game...</h1>;
+  }
+  if (loadError) {
+    return <h1 className="text-center self-center">{loadError}</h1>;
+  }
 
   return (
     <GameAction.Provider value={{ actionType, actionSocketId, isActionLocked }}>
