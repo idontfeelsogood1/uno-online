@@ -191,7 +191,7 @@ export default function PlayHand({
             <button
               className={`border ${canUno ? "opacity-50" : "opacity-100"}`}
               onClick={uno}
-              disabled={canUno}
+              disabled={canUno || action!.isActionLocked}
             >
               UNO
             </button>

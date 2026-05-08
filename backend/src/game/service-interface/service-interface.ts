@@ -1,4 +1,5 @@
 import { Card, CardColor } from '../model/card/Card';
+import { TurnEvents } from '../model/game-board/GameBoard';
 
 export class PublicRoomState {
   constructor(
@@ -46,6 +47,7 @@ export class PublicGameState {
   readonly direction: number;
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
+  readonly turnEvents: TurnEvents;
 
   constructor(
     currentPlayerIndex: number,
@@ -53,12 +55,14 @@ export class PublicGameState {
     direction: number,
     topCard: Card,
     enforcedColor: CardColor,
+    turnEvents: TurnEvents,
   ) {
     this.currentPlayerIndex = currentPlayerIndex;
     this.playerOrder = playerOrder;
     this.direction = direction;
     this.topCard = topCard;
     this.enforcedColor = enforcedColor;
+    this.turnEvents = turnEvents;
   }
 }
 

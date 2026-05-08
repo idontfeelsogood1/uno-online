@@ -89,11 +89,11 @@ PlayerVsPlayer COMPONENT:
         - Then setting the hand of player will automatically fly the card
     - When theres an event from each state received:
         - Backend sends back an object containing the required data for frontend
-        - Object shape: {
+        - Object shape: { (INCLUDE turnEvents PROP IN BACKEND'S PublicGameState AND FRONTEND'S DTO )
             socketId (the one who did the action)
             currentPlayerIndex (the current player's turn)
             turnEvents: {
-                cards_to_draw (for the currentPlayer)
+                - Send back properties to compute on the frontend
             }
         }
         - After renderStacking finished:
@@ -105,7 +105,3 @@ PlayerVsPlayer COMPONENT:
                 - Render the hand of the player's WITHOUT the cards_to_draw
                 - Show the cards on top of GameBoard drawPile for a second
                 - Set the full hand for the player
-
-// BUGS TO FIX:
-- images loads during animation instead of loading all at once
-    - fix: Preload ALL images at once into the client's ram, render a loading indicator meanwhile

@@ -1,3 +1,4 @@
+import { useEffect, useState } from "react";
 import type { Card } from "../types/commonTypes";
 
 export function getCardImgPath(card: Card) {
@@ -43,4 +44,43 @@ export function generateCardPaths(): string[] {
   deckPaths.push(`/card-images/${"COVER" + ".jpg"}`);
 
   return deckPaths;
+}
+
+export function preloadCardImages(imagesPath: string[]): Promise<void[]> {
+  const promises: Promise<void>[] = imagesPath.map((src) => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.src = src;
+      // When the image finishes downloading to RAM, resolve the promise
+      img.onload = () => resolve();
+      img.onerror = () => reject();
+    });
+  });
+  return Promise.all(promises);
+}
+
+export function usePreloadCardAssets(): {
+  isLoading: boolean;
+  loadError: string | null;
+} {
+  const [isLoading, setIsLoading] = useState<boolean>(true);
+  const [loadError, setLoadError] = useState<string | null>(null);
+
+  useEffect(() => {
+    async function preloadCardAssets(): Promise<void> {
+      try {
+        await preloadCardImages(generateCardPaths());
+        setIsLoading(false);
+        console.log("Card's images successfully pre-loaded.");
+      } catch (err) {
+        setLoadError("An error happened while loading component.");
+        setIsLoading(false);
+        console.log(`An error happened while pre-loading card images: ${err}`);
+      }
+    }
+
+    preloadCardAssets();
+  }, []);
+
+  return { isLoading, loadError };
 }

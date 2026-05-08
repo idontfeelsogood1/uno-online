@@ -117,8 +117,17 @@ export interface GameData {
   readonly direction: number;
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
-  readonly playedCards: Card[] | undefined;
+  readonly turnEvents: TurnEvents;
+  readonly playedCards: Card[] | undefined; // THESE ARE ACTIONS OF PREVIOUS PLAYERS, ADDED THROUGH THE DTO
   readonly cardDrew: Card | undefined;
+}
+
+export interface TurnEvents {
+  readonly skip_amount: number;
+  readonly reverse_amount: number;
+  readonly draw_two_amount: number;
+  readonly wild_amount: number;
+  readonly wild_draw_four_amount: number;
 }
 
 export interface GamePlayer {

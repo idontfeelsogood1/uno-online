@@ -273,6 +273,7 @@ export class GameEngine {
       room.getDirection(),
       room.getGameBoard().getCurrentTopCard(),
       room.getGameBoard().getEnforcedColor(),
+      room.getGameBoard().getTurnEvents(),
     );
   }
 
