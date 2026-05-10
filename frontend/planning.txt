@@ -105,3 +105,21 @@ PlayerVsPlayer COMPONENT:
                 - Render the hand of the player's WITHOUT the cards_to_draw
                 - Show the cards on top of GameBoard drawPile for a second
                 - Set the full hand for the player
+
+    // GET THE INDEX OF THE PREVIOUS PLAYER WHO DID THE ACTION
+    // GET THE INDEX OF THE CURRENT PLAYER'S TURN
+    // LOOP FROM THE PREVIOUS ACTION PLAYER'S INDEX UNTIL THE CURRENT PLAYER'S INDEX (It will not pass for the current player)
+      // PASS THE DELAY TO RENDER AND REMOVE THE MARKER TO THE COMPONENT
+      // ON RIGHT DIRECTION:
+        // IF currentIndex === 0 WRAP BACK TO THE END
+        // ELSE DECREMENT THE INDEX
+      // ON LEFT DIRECTION
+        // IF currentIndex === endIndex WRAP BACK TO THE START
+        // ELSE INCREMENT THE INDEX
+    // WHEN ITS THE CURRENT PLAYER'S INDEX
+      // PASS THE TRIGGER TO THEM TO RENDER THE MARKER WITHOUT REMOVING IT
+
+BUGS TO FIX:
+    - Maybe consider another approach for render pointer to render from a - b instead of a - b - c - d
+    - If doubling down then fix the delay, or the ordering, maybe thats the problem or maybe its the hook
+    - When bot won against player, it sends back the state with empty playedCards, maybe at a timer before checking if the game has ended to play the rest of the animations

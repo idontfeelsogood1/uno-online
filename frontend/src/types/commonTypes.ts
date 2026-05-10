@@ -77,6 +77,14 @@ export interface GameActionProps {
   readonly isActionLocked: boolean;
 }
 
+export interface RenderTurnProps {
+  currPlayerSocketId: string;
+  turnIndicators: {
+    socketId: string;
+    renderDelay: number;
+  }[];
+}
+
 export interface GameEndProps {
   players: RoomPlayer[];
   ownerSocketId: string;

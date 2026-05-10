@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import type { Card } from "../types/commonTypes";
+import type { Card, GamePlayer, RenderTurnProps } from "../types/commonTypes";
 
 export function getCardImgPath(card: Card) {
   return `/card-images/${card.color + "_" + card.value + ".jpg"}`;
@@ -83,4 +83,50 @@ export function usePreloadCardAssets(): {
   }, []);
 
   return { isLoading, loadError };
+}
+
+export function useRenderIndicator(
+  renderContext: RenderTurnProps,
+  player: GamePlayer,
+): { isIndicatorTurn: boolean } {
+  const [isIndicatorTurn, setIsIndicatorTurn] = useState<boolean>(false);
+
+  function renderIndicator(): (() => void) | null {
+    for (const indicator of renderContext!.turnIndicators) {
+      // IF PLAYER IS IN THE ROTATING TURN CAROUSEL
+      if (indicator.socketId === player.socketId) {
+        // IF PLAYER IS THE CURRENT PLAYER
+        if (player.socketId === renderContext!.currPlayerSocketId) {
+          // RENDER THE BOX AND DONT TURN IT OFF
+          const renderTimeout = setTimeout(() => {
+            setIsIndicatorTurn(true);
+          }, indicator.renderDelay);
+
+          return () => clearTimeout(renderTimeout);
+        } else {
+          // RENDER THE BOX AND TURN IT OFF AFTER 1 SECOND
+          const renderTimeout = setTimeout(() => {
+            setIsIndicatorTurn(true);
+          }, indicator.renderDelay);
+          const renderOffTimeout = setTimeout(() => {
+            setIsIndicatorTurn(false);
+          }, 1000);
+
+          return () => {
+            clearTimeout(renderTimeout);
+            clearTimeout(renderOffTimeout);
+          };
+        }
+      }
+    }
+    return null;
+  }
+
+  useEffect(() => {
+    setIsIndicatorTurn(false);
+    renderIndicator(); // PROCESS THE INDICATOR
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [player]);
+
+  return { isIndicatorTurn };
 }

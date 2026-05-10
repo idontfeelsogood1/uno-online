@@ -1,8 +1,11 @@
+import { useContext } from "react";
 import type {
   GridPosition,
   OtherPlayerProps,
 } from "../../../types/commonTypes";
 import OtherHand from "./other-hand/OtherHand";
+import { RenderTurn } from "../../../api/RenderTurn";
+import { useRenderIndicator } from "../../../api/helper";
 
 export default function OtherPlayer({
   otherPlayer,
@@ -10,6 +13,10 @@ export default function OtherPlayer({
 }: OtherPlayerProps & {
   gridPosition: GridPosition;
 }) {
+  const renderContext = useContext(RenderTurn);
+
+  const { isIndicatorTurn } = useRenderIndicator(renderContext!, otherPlayer);
+
   let textOrientation = "";
 
   if (gridPosition.position === "left") {
@@ -20,9 +27,13 @@ export default function OtherPlayer({
     textOrientation = "";
   }
 
+  function getIndicatorStyle(): string {
+    return isIndicatorTurn ? "border-green-500" : "";
+  }
+
   return (
     <div
-      className={`flex flex-1 ${gridPosition.placement} justify-center align-middle border gap-1 p-1`}
+      className={`flex flex-1 ${gridPosition.placement} ${getIndicatorStyle()} justify-center align-middle border gap-1 p-1`}
     >
       <div className="border flex items-center justify-center text-center">
         <span className={`${textOrientation}`}>{otherPlayer.username}</span>

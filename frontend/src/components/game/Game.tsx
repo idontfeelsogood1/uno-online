@@ -12,6 +12,7 @@ import { LayoutGroup } from "motion/react";
 import { useContext } from "react";
 import { GameModeSocket } from "../../api/GameModeSocket";
 import { usePreloadCardAssets } from "../../api/helper";
+import { RenderTurn } from "../../api/RenderTurn";
 
 export default function Game({
   gameState,
@@ -24,6 +25,9 @@ export default function Game({
   const { isLoading, loadError } = usePreloadCardAssets();
 
   const socket = useContext(GameModeSocket)!;
+
+  const currPlayerSocketId: string =
+    gameState.playerOrder[gameState.currentPlayerIndex].socketId;
 
   function getPopppedHandPlayers(): GamePlayer[] {
     const pseudoPlayers: GamePlayer[] = structuredClone(gameState.playerOrder);
@@ -85,18 +89,77 @@ export default function Game({
 
   const otherPlayersPlacement: GridPosition[] = [
     {
-      placement: topPlacement,
-      position: "top",
-    },
-    {
       placement: leftPlacement,
       position: "left",
+    },
+    {
+      placement: topPlacement,
+      position: "top",
     },
     {
       placement: rightPlacement,
       position: "right",
     },
   ];
+
+  function getTurnIndicatorContext(): {
+    socketId: string;
+    renderDelay: number;
+  }[] {
+    if (!hasInitialized) return []; // ONLY GET INDICATOR WHEN THE gameState has initialized;
+
+    const tmpPlayers: GamePlayer[] = [];
+    const prevPlayerSocketId: string = actionSocketId;
+
+    let prevPlayerIndex: number = 0;
+    let currPlayerIndex: number = 0;
+
+    players.forEach((player) => {
+      if (player.socketId !== socket.id) {
+        tmpPlayers.push(player);
+      }
+    });
+    players.forEach((player) => {
+      if (player.socketId === socket.id) {
+        tmpPlayers.push(player);
+      }
+    });
+
+    for (let i = 0; i < tmpPlayers.length; i++) {
+      if (tmpPlayers[i].socketId === prevPlayerSocketId) prevPlayerIndex = i;
+      if (tmpPlayers[i].socketId === currPlayerSocketId) currPlayerIndex = i;
+    }
+
+    // CONSIDER ANOTHER APPROACH TO PASS THE TIME TO CONTEXT WITH THE INFORMATION WHICH DICTATES THE ORDER
+    // currentTurnSocketId [socketId, renderDelay: number]
+
+    const context: { socketId: string; renderDelay: number }[] = [];
+    let ms: number = 4000; // ACCOUNTS FOR THE played-cards ANIMATION DURATION
+
+    while (prevPlayerIndex !== currPlayerIndex) {
+      context.push({
+        socketId: tmpPlayers[prevPlayerIndex].socketId,
+        renderDelay: ms,
+      });
+      ms += 1000;
+
+      if (gameState.direction === 1) {
+        if (prevPlayerIndex === 0) prevPlayerIndex = tmpPlayers.length - 1;
+        else prevPlayerIndex--;
+      }
+      if (gameState.direction === -1) {
+        if (prevPlayerIndex === tmpPlayers.length - 1) prevPlayerIndex = 0;
+        else prevPlayerIndex++;
+      }
+    }
+
+    context.push({
+      socketId: tmpPlayers[currPlayerIndex].socketId,
+      renderDelay: ms + 1000,
+    });
+
+    return context;
+  }
 
   function renderPlayer(): React.ReactElement[] {
     const tmpPlayers: GamePlayer[] = [];
@@ -122,7 +185,6 @@ export default function Game({
             gridPosition={otherPlayersPlacement[i]}
           />,
         );
-        // THE PLAYER HAS ALREADY WON (REMOVED FROM playerOrder), THIS IF PREVENTS VALUE UNDEFINED CRASH
       } else {
         playersHtmlList.push(
           <CurrentPlayer
@@ -144,6 +206,9 @@ export default function Game({
     return <h1 className="text-center self-center">{loadError}</h1>;
   }
 
+  const turnIndicators: { socketId: string; renderDelay: number }[] =
+    getTurnIndicatorContext();
+
   return (
     <GameAction.Provider value={{ actionType, actionSocketId, isActionLocked }}>
       <LayoutGroup>
@@ -157,7 +222,9 @@ export default function Game({
             hasInitialized={hasInitialized}
             setHasInitialized={setHasInitialized}
           />
-          {renderPlayer()}
+          <RenderTurn.Provider value={{ currPlayerSocketId, turnIndicators }}>
+            {renderPlayer()}
+          </RenderTurn.Provider>
         </div>
       </LayoutGroup>
     </GameAction.Provider>
