@@ -71,6 +71,8 @@ export class GameBotGateway implements OnGatewayDisconnect {
 
     client.emit('game-state-update', {
       actionType: 'create-game',
+      socketId: owner.socketId,
+      username: owner.username,
       gameState: this.engine.generateGameState(room),
     });
   }

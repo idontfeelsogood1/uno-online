@@ -123,7 +123,6 @@ export function useRenderIndicator(
   }
 
   useEffect(() => {
-    setIsIndicatorTurn(false);
     renderIndicator(); // PROCESS THE INDICATOR
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [player]);

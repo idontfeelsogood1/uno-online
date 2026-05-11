@@ -120,6 +120,5 @@ PlayerVsPlayer COMPONENT:
       // PASS THE TRIGGER TO THEM TO RENDER THE MARKER WITHOUT REMOVING IT
 
 BUGS TO FIX:
-    - Maybe consider another approach for render pointer to render from a - b instead of a - b - c - d
-    - If doubling down then fix the delay, or the ordering, maybe thats the problem or maybe its the hook
-    - When bot won against player, it sends back the state with empty playedCards, maybe at a timer before checking if the game has ended to play the rest of the animations
+    - When bot won against player or won against each other (2 players left playing against each other), 
+    it sends back the state with play-cards actionType with empty playedCards and crashed the frontend

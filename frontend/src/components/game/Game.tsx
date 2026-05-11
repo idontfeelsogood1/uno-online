@@ -26,9 +26,6 @@ export default function Game({
 
   const socket = useContext(GameModeSocket)!;
 
-  const currPlayerSocketId: string =
-    gameState.playerOrder[gameState.currentPlayerIndex].socketId;
-
   function getPopppedHandPlayers(): GamePlayer[] {
     const pseudoPlayers: GamePlayer[] = structuredClone(gameState.playerOrder);
     const tmpPlayers: GamePlayer[] = [];
@@ -103,13 +100,21 @@ export default function Game({
   ];
 
   function getTurnIndicatorContext(): {
-    socketId: string;
-    renderDelay: number;
-  }[] {
-    if (!hasInitialized) return []; // ONLY GET INDICATOR WHEN THE gameState has initialized;
+    currPlayerSocketId: string;
+    turnIndicators: { socketId: string; renderDelay: number }[];
+  } {
+    const prevPlayerSocketId: string = actionSocketId;
+    const currPlayerSocketId: string =
+      gameState.playerOrder[gameState.currentPlayerIndex].socketId;
+
+    if (!hasInitialized) {
+      return {
+        currPlayerSocketId: currPlayerSocketId,
+        turnIndicators: [],
+      }; // ONLY GET INDICATOR WHEN THE gameState has initialized
+    }
 
     const tmpPlayers: GamePlayer[] = [];
-    const prevPlayerSocketId: string = actionSocketId;
 
     let prevPlayerIndex: number = 0;
     let currPlayerIndex: number = 0;
@@ -130,35 +135,40 @@ export default function Game({
       if (tmpPlayers[i].socketId === currPlayerSocketId) currPlayerIndex = i;
     }
 
-    // CONSIDER ANOTHER APPROACH TO PASS THE TIME TO CONTEXT WITH THE INFORMATION WHICH DICTATES THE ORDER
-    // currentTurnSocketId [socketId, renderDelay: number]
-
     const context: { socketId: string; renderDelay: number }[] = [];
-    let ms: number = 4000; // ACCOUNTS FOR THE played-cards ANIMATION DURATION
+    let ms: number = 0;
 
     while (prevPlayerIndex !== currPlayerIndex) {
       context.push({
         socketId: tmpPlayers[prevPlayerIndex].socketId,
         renderDelay: ms,
       });
-      ms += 1000;
+      ms += 500;
 
+      // GRID PLACEMENT: [left, top, right, bottom]
+
+      // THESE COULD USE MODULO MATH LATER TO REDUCE COGNITIVE LOAD WHILE DEBUGGING (if theres a bug)
+      // GOES CLOCKWISE (bottom - left - top - right)
       if (gameState.direction === 1) {
-        if (prevPlayerIndex === 0) prevPlayerIndex = tmpPlayers.length - 1;
-        else prevPlayerIndex--;
-      }
-      if (gameState.direction === -1) {
         if (prevPlayerIndex === tmpPlayers.length - 1) prevPlayerIndex = 0;
         else prevPlayerIndex++;
+      }
+      // GOES COUNTER CLOCKWISE (bottom - right - top - left)
+      if (gameState.direction === -1) {
+        if (prevPlayerIndex === 0) prevPlayerIndex = tmpPlayers.length - 1;
+        else prevPlayerIndex--;
       }
     }
 
     context.push({
       socketId: tmpPlayers[currPlayerIndex].socketId,
-      renderDelay: ms + 1000,
+      renderDelay: ms + 500,
     });
 
-    return context;
+    return {
+      currPlayerSocketId: currPlayerSocketId,
+      turnIndicators: context,
+    };
   }
 
   function renderPlayer(): React.ReactElement[] {
@@ -206,8 +216,7 @@ export default function Game({
     return <h1 className="text-center self-center">{loadError}</h1>;
   }
 
-  const turnIndicators: { socketId: string; renderDelay: number }[] =
-    getTurnIndicatorContext();
+  const { currPlayerSocketId, turnIndicators } = getTurnIndicatorContext();
 
   return (
     <GameAction.Provider value={{ actionType, actionSocketId, isActionLocked }}>
