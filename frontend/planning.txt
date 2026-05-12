@@ -120,5 +120,7 @@ PlayerVsPlayer COMPONENT:
       // PASS THE TRIGGER TO THEM TO RENDER THE MARKER WITHOUT REMOVING IT
 
 BUGS TO FIX:
-    - When bot won against player or won against each other (2 players left playing against each other), 
-    it sends back the state with play-cards actionType with empty playedCards and crashed the frontend
+    - Resize observer in the Hand and PlayHand component causes the animation to stutter when the cards
+    fly out of the viewport and it set the state
+    - Tweak initial cards distribution on starting game to be a bit faster to not get stuttering
+    - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
