@@ -218,6 +218,16 @@ export default function Game({
 
   const { currPlayerSocketId, turnIndicators } = getTurnIndicatorContext();
 
+  // If cardsToDraw (computed from TurnEvents) > 0
+  // Set the current player's hand without those cards (pop)
+
+  // In GameBoard
+  // After renderStacking
+  // Set the cards that were popped (do the popping again) on top of drawPile and turn it off a few seconds later
+  // Set the current player's hand with everything in Game
+
+  // Uno
+
   return (
     <GameAction.Provider value={{ actionType, actionSocketId, isActionLocked }}>
       <LayoutGroup>

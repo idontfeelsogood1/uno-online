@@ -32,4 +32,5 @@ export interface GameStateUpdateDto {
   gameState: GameData;
   playedCards: Card[] | undefined;
   cardDrew: Card | undefined;
+  unoPenalty: boolean | undefined;
 }

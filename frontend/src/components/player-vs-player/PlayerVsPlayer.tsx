@@ -67,28 +67,18 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
       const { actionType }: GameStateUpdateDto = data;
       if (actionType === "game-started") {
         setView("GAME");
-        socket.emit("get-room-state", (ack: RoomDto) => {
-          setRoomState(ack.roomState);
-        });
-        setGameState({
-          ...data.gameState,
-          playedCards: data.playedCards,
-          cardDrew: data.cardDrew,
-        });
-        setActionSocketId(socket.id!);
-        setActionType(data.actionType);
-      } else {
-        socket.emit("get-room-state", (ack: RoomDto) => {
-          setRoomState(ack.roomState);
-        });
-        setGameState({
-          ...data.gameState,
-          playedCards: data.playedCards,
-          cardDrew: data.cardDrew,
-        });
-        setActionSocketId(data.socketId!);
-        setActionType(data.actionType);
       }
+      socket.emit("get-room-state", (ack: RoomDto) => {
+        setRoomState(ack.roomState);
+      });
+      setGameState({
+        ...data.gameState,
+        playedCards: data.playedCards,
+        cardDrew: data.cardDrew,
+        unoPenalty: data.unoPenalty,
+      });
+      setActionSocketId(data.socketId!);
+      setActionType(data.actionType);
     });
 
     socket.on("validation-exception", (data) => {

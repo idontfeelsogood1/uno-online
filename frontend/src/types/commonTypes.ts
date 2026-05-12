@@ -128,6 +128,7 @@ export interface GameData {
   readonly turnEvents: TurnEvents;
   readonly playedCards: Card[] | undefined; // THESE ARE ACTIONS OF PREVIOUS PLAYERS, ADDED THROUGH THE DTO
   readonly cardDrew: Card | undefined;
+  readonly unoPenalty: boolean | undefined;
 }
 
 export interface TurnEvents {
