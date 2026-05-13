@@ -14,17 +14,16 @@ import { GameModeSocket } from "../../api/GameModeSocket";
 import { usePreloadCardAssets } from "../../api/helper";
 import { RenderTurn } from "../../api/RenderTurn";
 
-export default function Game({
-  gameState,
-  actionType,
-  actionSocketId,
-}: GameProps) {
+export default function Game({ gameState, actionContext }: GameProps) {
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [isActionLocked, setIsActionLocked] = useState<boolean>(false);
   const { isLoading, loadError } = usePreloadCardAssets();
 
   const socket = useContext(GameModeSocket)!;
+
+  const { actionType, actionSocketId, playedCards, cardDrew, unoPenalty } =
+    actionContext;
 
   function getPopppedHandPlayers(): GamePlayer[] {
     const pseudoPlayers: GamePlayer[] = structuredClone(gameState.playerOrder);
@@ -136,7 +135,7 @@ export default function Game({
     }
 
     const context: { socketId: string; renderDelay: number }[] = [];
-    let ms: number = 0;
+    let ms: number = 1000;
 
     while (prevPlayerIndex !== currPlayerIndex) {
       context.push({
@@ -229,7 +228,16 @@ export default function Game({
   // Uno
 
   return (
-    <GameAction.Provider value={{ actionType, actionSocketId, isActionLocked }}>
+    <GameAction.Provider
+      value={{
+        actionType,
+        actionSocketId,
+        isActionLocked,
+        playedCards,
+        cardDrew,
+        unoPenalty,
+      }}
+    >
       <LayoutGroup>
         <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.4fr] gap-4 p-1">
           <GameBoard

@@ -22,8 +22,7 @@ export interface RoomProps {
 
 export interface GameProps {
   readonly gameState: GameData;
-  readonly actionSocketId: string;
-  readonly actionType: GameStateActionType;
+  readonly actionContext: GameActionProps;
 }
 
 export interface GameBoardProps {
@@ -71,12 +70,6 @@ export interface ChooseColorProps {
   readonly actionCallback: CallableFunction;
 }
 
-export interface GameActionProps {
-  readonly actionType: GameStateActionType;
-  readonly actionSocketId: string;
-  readonly isActionLocked: boolean;
-}
-
 export interface RenderTurnProps {
   currPlayerSocketId: string;
   turnIndicators: {
@@ -119,6 +112,15 @@ export interface RoomPlayer {
   readonly username: string;
 }
 
+export interface GameActionProps {
+  readonly actionType: GameStateActionType;
+  readonly actionSocketId: string;
+  readonly isActionLocked: boolean;
+  readonly playedCards: Card[] | undefined; // THESE ARE ACTIONS OF PREVIOUS PLAYERS, ADDED THROUGH THE DTO
+  readonly cardDrew: Card | undefined;
+  readonly unoPenalty: boolean | undefined;
+}
+
 export interface GameData {
   readonly currentPlayerIndex: number;
   readonly playerOrder: GamePlayer[];
@@ -126,9 +128,6 @@ export interface GameData {
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
   readonly turnEvents: TurnEvents;
-  readonly playedCards: Card[] | undefined; // THESE ARE ACTIONS OF PREVIOUS PLAYERS, ADDED THROUGH THE DTO
-  readonly cardDrew: Card | undefined;
-  readonly unoPenalty: boolean | undefined;
 }
 
 export interface TurnEvents {

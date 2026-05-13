@@ -14,8 +14,15 @@ export default function GameBoard({
   hasInitialized,
   setHasInitialized,
 }: GameBoardProps) {
-  const context = useContext(GameAction);
-  const { actionType, actionSocketId, isActionLocked } = context!;
+  const actionContext = useContext(GameAction);
+  const {
+    actionType,
+    actionSocketId,
+    isActionLocked,
+    playedCards,
+    cardDrew,
+    // unoPenalty,
+  } = actionContext!;
 
   const [animationPhase, setAnimationPhase] = useState<
     "idle" | "showcase" | "stacking"
@@ -29,8 +36,8 @@ export default function GameBoard({
   useEffect(() => {
     if (
       actionType === "played-cards" &&
-      gameState.playedCards &&
-      gameState.playedCards.length > 0
+      playedCards &&
+      playedCards.length > 0
     ) {
       setAnimationPhase("showcase");
 
@@ -63,7 +70,7 @@ export default function GameBoard({
     }
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actionType, gameState]);
+  }, [gameState, actionType]);
 
   useEffect(() => {
     function setCardsForPlayers(): void {
@@ -104,14 +111,13 @@ export default function GameBoard({
 
   function renderShowcase(): React.ReactElement[] {
     const elements: React.ReactElement[] = [];
-    const playedCards: Card[] = gameState.playedCards!;
 
-    for (let i = 0; i < gameState.playedCards!.length; i++) {
+    for (let i = 0; i < playedCards!.length; i++) {
       const dealDelay = i * 0.25;
       elements.push(
         <motion.div
-          key={playedCards[i].id}
-          layoutId={playedCards[i].id}
+          key={playedCards![i].id}
+          layoutId={playedCards![i].id}
           className="shrink h-full max-h-64 aspect-2/3 z-20"
           initial={{ scale: 0.8 }}
           animate={{ scale: 1.2 }}
@@ -137,8 +143,8 @@ export default function GameBoard({
             }}
           >
             <img
-              src={getCardImgPath(playedCards[i])}
-              alt={playedCards[i].name}
+              src={getCardImgPath(playedCards![i])}
+              alt={playedCards![i].name}
               className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
             />
 
@@ -158,13 +164,12 @@ export default function GameBoard({
 
   function renderStacking(): React.ReactElement[] {
     const elements: React.ReactElement[] = [];
-    const playedCards: Card[] = gameState.playedCards!;
 
-    for (let i = 0; i < playedCards.length; i++) {
+    for (let i = 0; i < playedCards!.length; i++) {
       elements.push(
         <motion.div
-          key={playedCards[i].id}
-          layoutId={playedCards[i].id}
+          key={playedCards![i].id}
+          layoutId={playedCards![i].id}
           className="absolute inset-0 w-full h-full z-10"
           initial={{ scale: 1.2 }}
           animate={{ scale: 1 }}
@@ -175,8 +180,8 @@ export default function GameBoard({
         >
           <div className="w-full h-full relative transform-3d">
             <img
-              src={getCardImgPath(playedCards[i])}
-              alt={playedCards[i].name}
+              src={getCardImgPath(playedCards![i])}
+              alt={playedCards![i].name}
               className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
             />
           </div>
@@ -205,8 +210,8 @@ export default function GameBoard({
           />
           {drawCards && (
             <motion.div
-              key={gameState.cardDrew!.id}
-              layoutId={gameState.cardDrew!.id}
+              key={cardDrew!.id}
+              layoutId={cardDrew!.id}
               className="absolute inset-0 w-full h-full shadow-sm"
             >
               <div className="w-full h-full relative transform-3d rotate-y-180">

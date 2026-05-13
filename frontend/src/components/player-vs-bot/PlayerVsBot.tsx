@@ -1,10 +1,9 @@
-import type { PlayerVsBotProps } from "../../types/commonTypes";
-import { useEffect, useState } from "react";
 import type {
-  WrapperViewState,
-  GameData,
-  GameStateActionType,
+  GameActionProps,
+  PlayerVsBotProps,
 } from "../../types/commonTypes";
+import { useEffect, useState } from "react";
+import type { WrapperViewState, GameData } from "../../types/commonTypes";
 import type { GameStateUpdateDto } from "../../types/dtos/commonDtos";
 import CreateGameLobby from "./create-game-lobby/CreateGameLobby";
 import Game from "../game/Game";
@@ -16,11 +15,10 @@ export default function PlayerVsBot({ setHomeView }: PlayerVsBotProps) {
   const [view, setView] = useState<WrapperViewState>("LOBBY");
   // const [errMsg, setErrMsg] = useState<string | null>(null);
   const [gameState, setGameState] = useState<GameData | null>(null);
-  const [actionSocketId, setActionSocketId] = useState<string | null>(null);
-  const [actionType, setActionType] = useState<GameStateActionType | null>(
+  const [maxPlayers, setMaxPlayers] = useState<number | null>(null);
+  const [actionContext, setActionContext] = useState<GameActionProps | null>(
     null,
   );
-  const [maxPlayers, setMaxPlayers] = useState<number | null>(null);
 
   const socket = useContext(GameModeSocket)!;
 
@@ -32,14 +30,15 @@ export default function PlayerVsBot({ setHomeView }: PlayerVsBotProps) {
       if (actionType === "create-game") {
         setView("GAME");
       }
-      setGameState({
-        ...data.gameState,
+      setGameState(data.gameState);
+      setActionContext({
+        actionType: data.actionType,
+        actionSocketId: data.socketId!,
+        isActionLocked: false,
         playedCards: data.playedCards,
         cardDrew: data.cardDrew,
         unoPenalty: data.unoPenalty,
       });
-      setActionSocketId(data.socketId!);
-      setActionType(data.actionType);
     });
 
     socket.on("validation-exception", (data) => {
@@ -80,12 +79,8 @@ export default function PlayerVsBot({ setHomeView }: PlayerVsBotProps) {
   if (view === "GAME") {
     return (
       <>
-        <Game
-          gameState={gameState!}
-          actionType={actionType!}
-          actionSocketId={actionSocketId!}
-        />
-        {actionType === "game-ended" && (
+        <Game gameState={gameState!} actionContext={actionContext!} />
+        {actionContext!.actionType === "game-ended" && (
           <GameEnd setHomeView={setHomeView} continueGame={continueGame} />
         )}
       </>
