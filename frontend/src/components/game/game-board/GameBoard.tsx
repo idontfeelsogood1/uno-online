@@ -1,4 +1,8 @@
-import type { Card, GameBoardProps } from "../../../types/commonTypes";
+import type {
+  Card,
+  GameBoardProps,
+  GamePlayer,
+} from "../../../types/commonTypes";
 import { getCardImgPath, getCardCoverImgPath } from "../../../api/helper";
 import { GameAction } from "../../../api/GameAction";
 import { useContext, useEffect, useState } from "react";
@@ -73,6 +77,7 @@ export default function GameBoard({
   }, [gameState, actionType]);
 
   useEffect(() => {
+    // SET THE PLAYER'S HAND 1 BY 1 WITH A TIMEOUT UNTIL ITS EMPTY
     function setCardsForPlayers(): void {
       setPlayers(gameState.playerOrder);
       setHasInitialized(true);
@@ -81,27 +86,44 @@ export default function GameBoard({
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
+  // THIS RENDERS THE HAND IN A CLOCKWISE ORDER
   function renderTempHand(): React.ReactElement {
     const elements: React.ReactElement[] = [];
-    gameState.playerOrder.map((player) =>
-      player.hand.map((card) =>
-        elements.push(
-          <motion.div
-            key={card.id}
-            layoutId={card.id}
-            className="absolute inset-0 w-full h-full shadow-sm"
-          >
-            <div className="w-full h-full relative transform-3d rotate-y-180">
-              <img
-                src={getCardCoverImgPath()}
-                alt="Card cover"
-                className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
-              />
-            </div>
-          </motion.div>,
-        ),
-      ),
-    );
+    const players: GamePlayer[] = gameState.playerOrder;
+    const clockwiseHand: Card[] = [];
+
+    const cardEndLength = players[0].hand.length; // Number of cards in each hand
+    let cardIndex: number = 0;
+    let playerIndex: number = 0;
+
+    while (cardIndex < cardEndLength) {
+      while ((playerIndex + 1) % players.length !== 0) {
+        clockwiseHand.push(players[playerIndex].hand[cardIndex]);
+        playerIndex = (playerIndex + 1) % players.length;
+      }
+      clockwiseHand.push(players[playerIndex].hand[cardIndex]);
+      cardIndex++;
+      playerIndex = 0;
+    }
+
+    clockwiseHand.forEach((card) => {
+      elements.push(
+        <motion.div
+          key={card.id}
+          layoutId={card.id}
+          className="absolute inset-0 w-full h-full shadow-sm"
+        >
+          <div className="w-full h-full relative transform-3d rotate-y-180">
+            <img
+              src={getCardCoverImgPath()}
+              alt="Card cover"
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
+            />
+          </div>
+        </motion.div>,
+      );
+    });
+
     return (
       <div className="relative shrink h-full max-h-64 aspect-2/3">
         {elements}

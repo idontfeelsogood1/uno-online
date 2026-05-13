@@ -25,43 +25,71 @@ export default function Game({ gameState, actionContext }: GameProps) {
   const { actionType, actionSocketId, playedCards, cardDrew, unoPenalty } =
     actionContext;
 
-  function getPopppedHandPlayers(): GamePlayer[] {
-    const pseudoPlayers: GamePlayer[] = structuredClone(gameState.playerOrder);
-    const tmpPlayers: GamePlayer[] = [];
+  useEffect(() => {
+    function getEmptyHandPlayers(): GamePlayer[] {
+      const pseudoPlayers: GamePlayer[] = structuredClone(
+        gameState.playerOrder,
+      );
+      const tmpPlayers: GamePlayer[] = [];
 
-    pseudoPlayers.forEach((player) => {
-      if (player.socketId !== socket.id) {
-        if (actionSocketId === player.socketId) {
-          player.hand.pop();
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId !== socket.id) {
+          player.hand = [];
+          tmpPlayers.push(player);
         }
-        tmpPlayers.push(player);
-      }
-    });
-    pseudoPlayers.forEach((player) => {
-      if (player.socketId === socket.id) {
-        if (actionSocketId === player.socketId) {
-          player.hand.pop();
+      });
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId === socket.id) {
+          player.hand = [];
+          tmpPlayers.push(player);
         }
-        tmpPlayers.push(player);
-      }
-    });
+      });
 
-    return tmpPlayers;
-  }
+      return tmpPlayers;
+    }
 
-  function handleActionLockAndUnlock(ms: number): () => void {
-    setIsActionLocked(true);
-
-    const unlockActionTimer = setTimeout(() => {
-      setIsActionLocked(false);
-    }, ms);
-
-    return () => {
-      clearTimeout(unlockActionTimer);
-    };
-  }
+    setPlayers(getEmptyHandPlayers());
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
+    function handleActionLockAndUnlock(ms: number): () => void {
+      setIsActionLocked(true);
+
+      const unlockActionTimer = setTimeout(() => {
+        setIsActionLocked(false);
+      }, ms);
+
+      return () => {
+        clearTimeout(unlockActionTimer);
+      };
+    }
+    function getPopppedHandPlayers(): GamePlayer[] {
+      const pseudoPlayers: GamePlayer[] = structuredClone(
+        gameState.playerOrder,
+      );
+      const tmpPlayers: GamePlayer[] = [];
+
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId !== socket.id) {
+          if (actionSocketId === player.socketId) {
+            player.hand.pop();
+          }
+          tmpPlayers.push(player);
+        }
+      });
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId === socket.id) {
+          if (actionSocketId === player.socketId) {
+            player.hand.pop();
+          }
+          tmpPlayers.push(player);
+        }
+      });
+
+      return tmpPlayers;
+    }
+
     if (actionType === "played-cards") {
       setPlayers(gameState.playerOrder);
       return handleActionLockAndUnlock(4000);

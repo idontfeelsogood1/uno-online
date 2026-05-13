@@ -123,5 +123,3 @@ BUGS TO FIX:
     - Resize observer in the Hand and PlayHand component causes the animation to stutter when the cards
     fly out of the viewport and it set the state
     - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
-    - Cards only fly to player's hand when starting game, doesnt work for other. 
-    (Consider implement a timer to distribute the cards 1 by 1 in clockwise order)
