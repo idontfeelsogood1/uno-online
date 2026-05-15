@@ -28,11 +28,12 @@ export interface GameProps {
 export interface GameBoardProps {
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
-  readonly gridPosition: string;
+  readonly gridPosition: GridPosition;
   readonly gameState: GameData;
   readonly setPlayers: CallableFunction;
   readonly hasInitialized: boolean;
   readonly setHasInitialized: CallableFunction;
+  readonly setHasFinishedInitialAnimation: CallableFunction;
 }
 
 export interface OtherPlayerProps {
@@ -43,12 +44,12 @@ export interface OtherPlayerProps {
 export interface OtherHandProps {
   readonly otherHand: Card[];
   readonly position: string;
+  readonly gridPositionIndex: number;
 }
 
 export interface CurrentPlayerProps {
   readonly player: GamePlayer;
-  readonly gridPosition: string;
-  readonly hasInitialized: boolean;
+  readonly gridPosition: GridPosition;
 }
 
 export interface PlayHandProps {
@@ -63,7 +64,7 @@ export interface HandProps {
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
   readonly newStateReceived: boolean;
-  readonly hasInitialized: boolean;
+  readonly gridPositionIndex: number;
 }
 
 export interface ChooseColorProps {
@@ -91,8 +92,14 @@ export interface BotGameEndProps {
 }
 
 export interface GridPosition {
+  index: number;
   placement: string;
   position: string;
+}
+
+export interface GameInitializeProps {
+  hasInitialized: boolean;
+  hasFinishedInitialAnimation: boolean;
 }
 
 export interface RoomData {
