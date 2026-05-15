@@ -41,6 +41,7 @@ export default function OtherPlayer({
       <OtherHand
         otherHand={otherPlayer.hand}
         position={gridPosition.position}
+        gridPositionIndex={gridPosition.index}
       />
     </div>
   );

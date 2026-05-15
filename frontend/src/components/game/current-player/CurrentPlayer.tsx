@@ -8,7 +8,6 @@ import { useRenderIndicator } from "../../../api/helper";
 export default function CurrentPlayer({
   player,
   gridPosition,
-  hasInitialized,
 }: CurrentPlayerProps) {
   const [pseudoPlayHand, setPseudoPlayHand] = useState<Card[]>([]);
   const [newStateReceived, setNewStateReceived] = useState<boolean>(true);
@@ -42,7 +41,7 @@ export default function CurrentPlayer({
 
   return (
     <div
-      className={`${gridPosition} ${getIndicatorStyle()} flex flex-col gap-1 p-1 ml-[25%] mr-[25%] border`}
+      className={`${gridPosition.placement} ${getIndicatorStyle()} flex flex-col gap-1 p-1 ml-[25%] mr-[25%] border`}
     >
       <div className="border flex items-center justify-center text-center">
         <span>{player.username}</span>
@@ -58,7 +57,7 @@ export default function CurrentPlayer({
         pseudoPlayHand={pseudoPlayHand}
         setPseudoPlayHand={setPseudoPlayHand}
         newStateReceived={newStateReceived}
-        hasInitialized={hasInitialized}
+        gridPositionIndex={gridPosition.index}
       />
     </div>
   );
