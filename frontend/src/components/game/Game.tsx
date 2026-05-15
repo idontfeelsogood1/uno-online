@@ -13,9 +13,12 @@ import { useContext } from "react";
 import { GameModeSocket } from "../../api/GameModeSocket";
 import { usePreloadCardAssets } from "../../api/helper";
 import { RenderTurn } from "../../api/RenderTurn";
+import { GameInitialize } from "../../api/GameInitialize";
 
 export default function Game({ gameState, actionContext }: GameProps) {
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
+  const [hasFinishedInitialAnimation, setHasFinishedInitialAnimation] =
+    useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [isActionLocked, setIsActionLocked] = useState<boolean>(false);
   const { isLoading, loadError } = usePreloadCardAssets();
@@ -107,20 +110,33 @@ export default function Game({ gameState, actionContext }: GameProps) {
     "col-start-3 row-start-1 row-span-2 h-full w-full min-h-0 min-w-0";
   const topPlacement: string =
     "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
-  const bottomPlacement: string =
-    "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0";
-  const middlePlacement: string = "col-start-2 row-start-2 min-h-0 min-w-0";
+
+  const middlePlacement: GridPosition = {
+    index: -1,
+    placement: "col-start-2 row-start-2 min-h-0 min-w-0",
+    position: "middle",
+  };
+
+  // CLOCKWISE ORDER
+  const bottomPlacement: GridPosition = {
+    index: 0,
+    placement: "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0",
+    position: "bottom",
+  };
 
   const otherPlayersPlacement: GridPosition[] = [
     {
+      index: 1,
       placement: leftPlacement,
       position: "left",
     },
     {
+      index: 2,
       placement: topPlacement,
       position: "top",
     },
     {
+      index: 3,
       placement: rightPlacement,
       position: "right",
     },
@@ -163,7 +179,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     }
 
     const context: { socketId: string; renderDelay: number }[] = [];
-    let ms: number = 1000;
+    let ms: number = hasFinishedInitialAnimation ? 0 : 9000;
 
     while (prevPlayerIndex !== currPlayerIndex) {
       context.push({
@@ -227,7 +243,6 @@ export default function Game({ gameState, actionContext }: GameProps) {
           <CurrentPlayer
             player={tmpPlayers[i]}
             gridPosition={bottomPlacement}
-            hasInitialized={hasInitialized}
           />,
         );
       }
@@ -276,9 +291,14 @@ export default function Game({ gameState, actionContext }: GameProps) {
             setPlayers={setPlayers}
             hasInitialized={hasInitialized}
             setHasInitialized={setHasInitialized}
+            setHasFinishedInitialAnimation={setHasFinishedInitialAnimation}
           />
           <RenderTurn.Provider value={{ currPlayerSocketId, turnIndicators }}>
-            {renderPlayer()}
+            <GameInitialize.Provider
+              value={{ hasInitialized, hasFinishedInitialAnimation }}
+            >
+              {renderPlayer()}
+            </GameInitialize.Provider>
           </RenderTurn.Provider>
         </div>
       </LayoutGroup>

@@ -17,6 +17,7 @@ export default function GameBoard({
   setPlayers,
   hasInitialized,
   setHasInitialized,
+  setHasFinishedInitialAnimation,
 }: GameBoardProps) {
   const actionContext = useContext(GameAction);
   const {
@@ -77,10 +78,14 @@ export default function GameBoard({
   }, [gameState, actionType]);
 
   useEffect(() => {
-    // SET THE PLAYER'S HAND 1 BY 1 WITH A TIMEOUT UNTIL ITS EMPTY
     function setCardsForPlayers(): void {
-      setPlayers(gameState.playerOrder);
-      setHasInitialized(true);
+      setTimeout(() => {
+        setPlayers(gameState.playerOrder);
+        setHasInitialized(true);
+      }, 50); // WAIT FOR DOM TO LOAD AND ResizeObservers TO SET THE NECCESSARY DATA FOR STYLE
+      setTimeout(() => {
+        setHasFinishedInitialAnimation(true);
+      }, 9000);
     }
     setCardsForPlayers();
     // eslint-disable-next-line react-hooks/exhaustive-deps
@@ -90,38 +95,39 @@ export default function GameBoard({
   function renderTempHand(): React.ReactElement {
     const elements: React.ReactElement[] = [];
     const players: GamePlayer[] = gameState.playerOrder;
-    const clockwiseHand: Card[] = [];
+    // const clockwiseHand: Card[] = [];
 
-    const cardEndLength = players[0].hand.length; // Number of cards in each hand
-    let cardIndex: number = 0;
-    let playerIndex: number = 0;
+    // const cardEndLength = players[0].hand.length; // Number of cards in each hand
+    // let cardIndex: number = 0;
+    // let playerIndex: number = 0;
 
-    while (cardIndex < cardEndLength) {
-      while ((playerIndex + 1) % players.length !== 0) {
-        clockwiseHand.push(players[playerIndex].hand[cardIndex]);
-        playerIndex = (playerIndex + 1) % players.length;
-      }
-      clockwiseHand.push(players[playerIndex].hand[cardIndex]);
-      cardIndex++;
-      playerIndex = 0;
-    }
-
-    clockwiseHand.forEach((card) => {
-      elements.push(
-        <motion.div
-          key={card.id}
-          layoutId={card.id}
-          className="absolute inset-0 w-full h-full shadow-sm"
-        >
-          <div className="w-full h-full relative transform-3d rotate-y-180">
-            <img
-              src={getCardCoverImgPath()}
-              alt="Card cover"
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
-            />
-          </div>
-        </motion.div>,
-      );
+    // while (cardIndex < cardEndLength) {
+    //   while ((playerIndex + 1) % players.length !== 0) {
+    //     clockwiseHand.push(players[playerIndex].hand[cardIndex]);
+    //     playerIndex = (playerIndex + 1) % players.length;
+    //   }
+    //   clockwiseHand.push(players[playerIndex].hand[cardIndex]);
+    //   cardIndex++;
+    //   playerIndex = 0;
+    // }
+    players.forEach((player) => {
+      player.hand.forEach((card) => {
+        elements.push(
+          <motion.div
+            key={card.id}
+            layoutId={card.id}
+            className="absolute inset-0 w-full h-full shadow-sm"
+          >
+            <div className="w-full h-full relative transform-3d rotate-y-180">
+              <img
+                src={getCardCoverImgPath()}
+                alt="Card cover"
+                className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
+              />
+            </div>
+          </motion.div>,
+        );
+      });
     });
 
     return (
@@ -141,6 +147,7 @@ export default function GameBoard({
           key={playedCards![i].id}
           layoutId={playedCards![i].id}
           className="shrink h-full max-h-64 aspect-2/3 z-20"
+          style={{ zIndex: i }}
           initial={{ scale: 0.8 }}
           animate={{ scale: 1.2 }}
           transition={{
@@ -193,6 +200,7 @@ export default function GameBoard({
           key={playedCards![i].id}
           layoutId={playedCards![i].id}
           className="absolute inset-0 w-full h-full z-10"
+          style={{ zIndex: i }}
           initial={{ scale: 1.2 }}
           animate={{ scale: 1 }}
           transition={{
@@ -215,7 +223,7 @@ export default function GameBoard({
 
   return (
     <div
-      className={`${gridPosition} relative flex justify-center items-center gap-1 p-1 text-center border`}
+      className={`${gridPosition.placement} relative flex justify-center items-center gap-1 p-1 text-center border`}
     >
       {!hasInitialized ? (
         renderTempHand()
@@ -264,7 +272,7 @@ export default function GameBoard({
       </div>
 
       {animationPhase === "showcase" && (
-        <div className="absolute inset-0 flex justify-center items-center -space-x-4 pointer-events-none z-50 border">
+        <div className="absolute inset-0 flex justify-center items-center -space-x-2 pointer-events-none z-50 border">
           {renderShowcase()}
         </div>
       )}
