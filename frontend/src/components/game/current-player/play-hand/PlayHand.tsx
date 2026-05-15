@@ -92,10 +92,10 @@ export default function PlayHand({
             removeCardFromPlayHand(pseudoPlayHand[i]);
           }}
           className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer shadow-lg"
-          style={{ zIndex: i, width: dynamicCardWidth }}
+          style={{ zIndex: i, width: dynamicCardWidth, left: leftPosition }}
           whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
           initial={{ scale: 0.8 }}
-          animate={{ scale: 1, left: leftPosition }}
+          animate={{ scale: 1 }}
           transition={{
             layout: {
               type: "spring",

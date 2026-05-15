@@ -1,17 +1,20 @@
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
 import { getCardCoverImgPath, getCardImgPath } from "../../../../api/helper";
 import type { Card, HandProps } from "../../../../types/commonTypes";
 import { motion } from "motion/react";
+import { GameInitialize } from "../../../../api/GameInitialize";
 
 export default function Hand({
   pseudoHand,
   pseudoPlayHand,
   setPseudoPlayHand,
   newStateReceived,
-  hasInitialized,
+  gridPositionIndex,
 }: HandProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  const initializeContext = useContext(GameInitialize);
 
   function addCardToPlayHand(card: Card) {
     setPseudoPlayHand([...pseudoPlayHand, card]);
@@ -56,7 +59,9 @@ export default function Hand({
     const startOffset = (containerSize.width - totalUsedWidth) / 2;
 
     for (let i = 0; i < pseudoHand.length; i++) {
-      const dealDelay = i * (!hasInitialized ? 1.2 : 0.05);
+      const dealDelay = initializeContext!.hasFinishedInitialAnimation
+        ? 0.15
+        : (i * 4 + gridPositionIndex) * 0.25; // THE NUMBER 4 IS THE LENGTH OF THE PLAYERS, INDEX MIGHT NEED SHIFTING LATER
 
       // CALCULATE PIXEL POSITION
       const leftPosition = startOffset + i * step;
@@ -69,10 +74,16 @@ export default function Hand({
             addCardToPlayHand(pseudoHand[i]);
           }}
           className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer"
-          style={{ zIndex: i, width: dynamicCardWidth }}
+          style={{
+            zIndex: i,
+            width: dynamicCardWidth,
+            left: leftPosition,
+          }}
           whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1, left: leftPosition }}
+          initial={{
+            scale: 0.8,
+          }}
+          animate={{ scale: 1 }}
           transition={{
             layout: {
               type: "spring",

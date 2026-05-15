@@ -1,11 +1,18 @@
 import type { OtherHandProps } from "../../../../types/commonTypes";
 import { getCardCoverImgPath } from "../../../../api/helper";
 import { motion } from "motion/react";
-import { useEffect, useRef, useState } from "react";
+import { useContext, useEffect, useRef, useState } from "react";
+import { GameInitialize } from "../../../../api/GameInitialize";
 
-export default function OtherHand({ otherHand, position }: OtherHandProps) {
+export default function OtherHand({
+  otherHand,
+  position,
+  gridPositionIndex,
+}: OtherHandProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+
+  const initializeContext = useContext(GameInitialize);
 
   // Measure the container instantly
   useEffect(() => {
@@ -63,7 +70,9 @@ export default function OtherHand({ otherHand, position }: OtherHandProps) {
     }
 
     for (let i = 0; i < otherHand.length; i++) {
-      const dealDelay = i * 0.05;
+      const dealDelay = initializeContext!.hasFinishedInitialAnimation
+        ? 0.15
+        : (i * 4 + gridPositionIndex) * 0.25; // THE NUMBER 4 IS THE LENGTH OF THE PLAYERS, INDEX MIGHT NEED SHIFTING LATER
 
       const calculatedPosition = startOffset + i * step;
 
@@ -80,12 +89,12 @@ export default function OtherHand({ otherHand, position }: OtherHandProps) {
             zIndex: i,
             width: cardWidth,
             height: cardHeight,
+            left: isHorizontal ? calculatedPosition : "50%",
+            top: !isHorizontal ? calculatedPosition : "50%",
           }}
           initial={{ scale: 0.8 }}
           animate={{
             scale: 1,
-            left: isHorizontal ? calculatedPosition : "50%",
-            top: !isHorizontal ? calculatedPosition : "50%",
           }}
           transition={{
             layout: {
