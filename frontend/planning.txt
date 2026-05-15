@@ -123,3 +123,9 @@ BUGS TO FIX:
     - Resize observer in the Hand and PlayHand component causes the animation to stutter when the cards
     fly out of the viewport and it set the state
     - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
+    - PlayHand's card on game starting card distribution is squashed, initial ActualHeight didnt help
+
+PLAN TO SYNC CLOCKWISE ORDERING:
+    - Game is the source of truth for all clockwise operations
+    - Figure out how to dynamically calculate the position index for each players 
+    - Go to game board and renderTempHand in the order of Game
