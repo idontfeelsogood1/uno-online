@@ -13,6 +13,7 @@ export default function Hand({
 }: HandProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [landedCardIds, setLandedCardIds] = useState<string[]>([]);
 
   const initializeContext = useContext(GameInitialize);
 
@@ -61,10 +62,24 @@ export default function Hand({
     for (let i = 0; i < pseudoHand.length; i++) {
       const dealDelay = initializeContext!.hasFinishedInitialAnimation
         ? 0.15
-        : (i * 4 + gridPositionIndex) * 0.25; // THE NUMBER 4 IS THE LENGTH OF THE PLAYERS, INDEX MIGHT NEED SHIFTING LATER
+        : (i * initializeContext!.playersSize + gridPositionIndex) * 0.25; // THE NUMBER 4 IS THE LENGTH OF THE PLAYERS, INDEX MIGHT NEED SHIFTING LATER
 
       // CALCULATE PIXEL POSITION
       const leftPosition = startOffset + i * step;
+
+      // CALCULATE Z INDEX FOR INITIAL ANIMATION (GLOBAL ROUND ROBIN)
+      const totalCardsInDeck =
+        pseudoHand.length * initializeContext!.playersSize;
+      const globalDeckIndex =
+        i * initializeContext!.playersSize + gridPositionIndex;
+
+      const flightZIndex = totalCardsInDeck - globalDeckIndex;
+
+      const isLanded =
+        landedCardIds.includes(pseudoHand[i].id) ||
+        initializeContext!.hasFinishedInitialAnimation;
+
+      const currentZIndex = isLanded ? i : flightZIndex;
 
       htmlList.push(
         <motion.div
@@ -73,17 +88,25 @@ export default function Hand({
           onClick={() => {
             addCardToPlayHand(pseudoHand[i]);
           }}
+          onAnimationComplete={() => {
+            if (!landedCardIds.includes(pseudoHand[i].id)) {
+              setLandedCardIds([...landedCardIds, pseudoHand[i].id]);
+            }
+          }}
           className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer"
           style={{
-            zIndex: i,
+            zIndex: currentZIndex,
             width: dynamicCardWidth,
             left: leftPosition,
+            pointerEvents: initializeContext!.hasFinishedInitialAnimation
+              ? "auto"
+              : "none",
           }}
           whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
           initial={{
             scale: 0.8,
           }}
-          animate={{ scale: 1 }}
+          animate={{ scale: 1, zIndex: currentZIndex }}
           transition={{
             layout: {
               type: "spring",

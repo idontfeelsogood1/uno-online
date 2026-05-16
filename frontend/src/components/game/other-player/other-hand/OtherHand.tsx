@@ -11,6 +11,7 @@ export default function OtherHand({
 }: OtherHandProps) {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const [landedCardIds, setLandedCardIds] = useState<string[]>([]);
 
   const initializeContext = useContext(GameInitialize);
 
@@ -72,9 +73,23 @@ export default function OtherHand({
     for (let i = 0; i < otherHand.length; i++) {
       const dealDelay = initializeContext!.hasFinishedInitialAnimation
         ? 0.15
-        : (i * 4 + gridPositionIndex) * 0.25; // THE NUMBER 4 IS THE LENGTH OF THE PLAYERS, INDEX MIGHT NEED SHIFTING LATER
+        : (i * initializeContext!.playersSize + gridPositionIndex) * 0.25; // THE NUMBER 4 IS THE LENGTH OF THE PLAYERS, INDEX MIGHT NEED SHIFTING LATER
 
       const calculatedPosition = startOffset + i * step;
+
+      // CALCULATE Z INDEX FOR INITIAL ANIMATION (GLOBAL ROUND ROBIN)
+      const totalCardsInDeck =
+        otherHand.length * initializeContext!.playersSize;
+      const globalDeckIndex =
+        i * initializeContext!.playersSize + gridPositionIndex;
+
+      const flightZIndex = totalCardsInDeck - globalDeckIndex;
+
+      const isLanded =
+        landedCardIds.includes(otherHand[i].id) ||
+        initializeContext!.hasFinishedInitialAnimation;
+
+      const currentZIndex = isLanded ? i : flightZIndex;
 
       elements.push(
         <motion.div
@@ -86,15 +101,21 @@ export default function OtherHand({
               : "left-1/2 -translate-x-1/2"
           } shadow-md rounded-md backface-hidden z-10`}
           style={{
-            zIndex: i,
+            zIndex: currentZIndex,
             width: cardWidth,
             height: cardHeight,
             left: isHorizontal ? calculatedPosition : "50%",
             top: !isHorizontal ? calculatedPosition : "50%",
           }}
+          onAnimationComplete={() => {
+            if (!landedCardIds.includes(otherHand[i].id)) {
+              setLandedCardIds([...landedCardIds, otherHand[i].id]);
+            }
+          }}
           initial={{ scale: 0.8 }}
           animate={{
             scale: 1,
+            zIndex: currentZIndex,
           }}
           transition={{
             layout: {
