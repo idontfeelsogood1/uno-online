@@ -1,8 +1,4 @@
-import type {
-  Card,
-  GameBoardProps,
-  GamePlayer,
-} from "../../../types/commonTypes";
+import type { Card, GameBoardProps } from "../../../types/commonTypes";
 import { getCardImgPath, getCardCoverImgPath } from "../../../api/helper";
 import { GameAction } from "../../../api/GameAction";
 import { useContext, useEffect, useState } from "react";
@@ -94,23 +90,8 @@ export default function GameBoard({
   // THIS RENDERS THE HAND IN A CLOCKWISE ORDER
   function renderTempHand(): React.ReactElement {
     const elements: React.ReactElement[] = [];
-    const players: GamePlayer[] = gameState.playerOrder;
-    // const clockwiseHand: Card[] = [];
 
-    // const cardEndLength = players[0].hand.length; // Number of cards in each hand
-    // let cardIndex: number = 0;
-    // let playerIndex: number = 0;
-
-    // while (cardIndex < cardEndLength) {
-    //   while ((playerIndex + 1) % players.length !== 0) {
-    //     clockwiseHand.push(players[playerIndex].hand[cardIndex]);
-    //     playerIndex = (playerIndex + 1) % players.length;
-    //   }
-    //   clockwiseHand.push(players[playerIndex].hand[cardIndex]);
-    //   cardIndex++;
-    //   playerIndex = 0;
-    // }
-    players.forEach((player) => {
+    gameState.playerOrder.forEach((player) => {
       player.hand.forEach((card) => {
         elements.push(
           <motion.div

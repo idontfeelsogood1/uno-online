@@ -79,7 +79,7 @@ export default function PlayHand({
     const startOffset = (containerSize.width - totalUsedWidth) / 2;
 
     for (let i = 0; i < pseudoPlayHand.length; i++) {
-      const dealDelay = i * 0.05;
+      const dealDelay = 0.15;
 
       // CALCULATE PIXEL POSITION
       const leftPosition = startOffset + i * step;
