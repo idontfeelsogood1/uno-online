@@ -72,18 +72,18 @@ export interface ChooseColorProps {
 }
 
 export interface RenderTurnProps {
-  currPlayerSocketId: string;
-  turnIndicators: {
-    socketId: string;
-    renderDelay: number;
+  readonly currPlayerSocketId: string;
+  readonly turnIndicators: {
+    readonly socketId: string;
+    readonly renderDelay: number;
   }[];
 }
 
 export interface GameEndProps {
-  players: RoomPlayer[];
-  ownerSocketId: string;
-  setHomeView: CallableFunction;
-  continueGame: CallableFunction;
+  readonly players: RoomPlayer[];
+  readonly ownerSocketId: string;
+  readonly setHomeView: CallableFunction;
+  readonly continueGame: CallableFunction;
 }
 
 export interface BotGameEndProps {
@@ -92,14 +92,15 @@ export interface BotGameEndProps {
 }
 
 export interface GridPosition {
-  index: number;
-  placement: string;
-  position: string;
+  readonly index: number;
+  readonly placement: string;
+  readonly position: string;
 }
 
 export interface GameInitializeProps {
-  hasInitialized: boolean;
-  hasFinishedInitialAnimation: boolean;
+  readonly hasInitialized: boolean;
+  readonly playersSize: number;
+  readonly hasFinishedInitialAnimation: boolean;
 }
 
 export interface RoomData {
