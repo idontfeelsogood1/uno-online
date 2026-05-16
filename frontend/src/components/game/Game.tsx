@@ -110,6 +110,8 @@ export default function Game({ gameState, actionContext }: GameProps) {
     "col-start-3 row-start-1 row-span-2 h-full w-full min-h-0 min-w-0";
   const topPlacement: string =
     "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
+  const bottomPlacement: string =
+    "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0";
 
   const middlePlacement: GridPosition = {
     index: -1,
@@ -118,13 +120,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
   };
 
   // CLOCKWISE ORDER
-  const bottomPlacement: GridPosition = {
-    index: 0,
-    placement: "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0",
-    position: "bottom",
-  };
-
-  const otherPlayersPlacement: GridPosition[] = [
+  const playersPlacement: GridPosition[] = [
     {
       index: 1,
       placement: leftPlacement,
@@ -139,6 +135,11 @@ export default function Game({ gameState, actionContext }: GameProps) {
       index: 3,
       placement: rightPlacement,
       position: "right",
+    },
+    {
+      index: 0,
+      placement: bottomPlacement,
+      position: "bottom",
     },
   ];
 
@@ -188,19 +189,10 @@ export default function Game({ gameState, actionContext }: GameProps) {
       });
       ms += 500;
 
-      // GRID PLACEMENT: [left, top, right, bottom]
-
-      // THESE COULD USE MODULO MATH LATER TO REDUCE COGNITIVE LOAD WHILE DEBUGGING (if theres a bug)
-      // GOES CLOCKWISE (bottom - left - top - right)
-      if (gameState.direction === 1) {
-        if (prevPlayerIndex === tmpPlayers.length - 1) prevPlayerIndex = 0;
-        else prevPlayerIndex++;
-      }
-      // GOES COUNTER CLOCKWISE (bottom - right - top - left)
-      if (gameState.direction === -1) {
-        if (prevPlayerIndex === 0) prevPlayerIndex = tmpPlayers.length - 1;
-        else prevPlayerIndex--;
-      }
+      // GRID PLACEMENT: [bottom, left, top, right]
+      // Direction is either 1 (clockwise) or -1 (counter-clockwise)
+      prevPlayerIndex =
+        (prevPlayerIndex + gameState.direction) % players.length;
     }
 
     context.push({
@@ -230,19 +222,20 @@ export default function Game({ gameState, actionContext }: GameProps) {
 
     const playersHtmlList: React.ReactElement[] = [];
 
+    // This keeps the gridPosition index to be in order
     for (let i = 0; i < tmpPlayers.length; i++) {
       if (tmpPlayers[i].socketId !== socket.id) {
         playersHtmlList.push(
           <OtherPlayer
             otherPlayer={tmpPlayers[i]}
-            gridPosition={otherPlayersPlacement[i]}
+            gridPosition={playersPlacement[i]}
           />,
         );
       } else {
         playersHtmlList.push(
           <CurrentPlayer
             player={tmpPlayers[i]}
-            gridPosition={bottomPlacement}
+            gridPosition={playersPlacement[playersPlacement.length - 1]}
           />,
         );
       }
@@ -295,7 +288,11 @@ export default function Game({ gameState, actionContext }: GameProps) {
           />
           <RenderTurn.Provider value={{ currPlayerSocketId, turnIndicators }}>
             <GameInitialize.Provider
-              value={{ hasInitialized, hasFinishedInitialAnimation }}
+              value={{
+                hasInitialized,
+                playersSize: players.length,
+                hasFinishedInitialAnimation,
+              }}
             >
               {renderPlayer()}
             </GameInitialize.Provider>
