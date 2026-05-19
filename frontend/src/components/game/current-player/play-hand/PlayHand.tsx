@@ -37,6 +37,7 @@ export default function PlayHand({
         return card.id !== pseudoCard.id;
       }),
     );
+    setCanUno(false);
   }
 
   function playCondition(action: CallableFunction) {
@@ -65,6 +66,7 @@ export default function PlayHand({
       });
 
       setPseudoPlayHand([]);
+      setCanUno(false);
       setShowChooseColor(false);
     };
     playCondition(callback);
