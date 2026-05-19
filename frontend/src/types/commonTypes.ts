@@ -56,14 +56,12 @@ export interface PlayHandProps {
   readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly setNewStateReceived: CallableFunction;
 }
 
 export interface HandProps {
   readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly newStateReceived: boolean;
   readonly gridPositionIndex: number;
 }
 
@@ -124,6 +122,7 @@ export interface GameActionProps {
   readonly actionType: GameStateActionType;
   readonly actionSocketId: string;
   readonly isActionLocked: boolean;
+  readonly newStateReceived: boolean;
   readonly playedCards: Card[] | undefined; // THESE ARE ACTIONS OF PREVIOUS PLAYERS, ADDED THROUGH THE DTO
   readonly cardDrew: Card | undefined;
   readonly unoPenalty: boolean | undefined;

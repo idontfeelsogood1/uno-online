@@ -21,6 +21,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [isActionLocked, setIsActionLocked] = useState<boolean>(false);
+  const [newStateReceived, setNewStateReceived] = useState<boolean>(false);
   const { isLoading, loadError } = usePreloadCardAssets();
 
   const socket = useContext(GameModeSocket)!;
@@ -58,9 +59,11 @@ export default function Game({ gameState, actionContext }: GameProps) {
   useEffect(() => {
     function handleActionLockAndUnlock(ms: number): () => void {
       setIsActionLocked(true);
+      setNewStateReceived(true);
 
       const unlockActionTimer = setTimeout(() => {
         setIsActionLocked(false);
+        setNewStateReceived(false);
       }, ms);
 
       return () => {
@@ -92,7 +95,9 @@ export default function Game({ gameState, actionContext }: GameProps) {
 
       return tmpPlayers;
     }
-
+    if (actionType === "create-game") {
+      return handleActionLockAndUnlock(9000);
+    }
     if (actionType === "played-cards") {
       setPlayers(gameState.playerOrder);
       return handleActionLockAndUnlock(4000);
@@ -269,13 +274,14 @@ export default function Game({ gameState, actionContext }: GameProps) {
         actionType,
         actionSocketId,
         isActionLocked,
+        newStateReceived,
         playedCards,
         cardDrew,
         unoPenalty,
       }}
     >
       <LayoutGroup>
-        <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.4fr] gap-4 p-1">
+        <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.5fr] gap-4 p-1">
           <GameBoard
             topCard={gameState.topCard}
             enforcedColor={gameState.enforcedColor}

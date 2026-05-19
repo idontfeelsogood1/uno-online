@@ -123,7 +123,8 @@ BUGS TO FIX:
     - Resize observer in the Hand and PlayHand component causes the animation to stutter when the cards
     fly out of the viewport and it set the state
     - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
-    - PlayHand's card on game starting card distribution is squashed, initial ActualHeight didnt help
+    - Removing cards from playHand or from Hand to playHand while the mouse is still at the same place makes it still hover
+    - CurrentPlayer's cards images width needs tweaking (doesnt work right)
 
 PLAN TO SYNC CLOCKWISE ORDERING:
     - Game is the source of truth for all clockwise operations
