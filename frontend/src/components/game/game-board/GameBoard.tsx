@@ -1,23 +1,21 @@
-import type { Card, GameBoardProps } from "../../../types/commonTypes";
+import type { GameBoardProps } from "../../../types/commonTypes";
 import { getCardImgPath, getCardCoverImgPath } from "../../../api/helper";
 import { GameAction } from "../../../api/GameAction";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { motion } from "motion/react";
 import { GameModeSocket } from "../../../api/GameModeSocket";
 
 export default function GameBoard({
-  topCard,
   enforcedColor,
   gridPosition,
   gameState,
-  setPlayers,
   hasInitialized,
-  setHasInitialized,
-  setHasFinishedInitialAnimation,
+  animationPhase,
+  drawCards,
+  prevTopCard,
 }: GameBoardProps) {
   const actionContext = useContext(GameAction);
   const {
-    actionType,
     actionSocketId,
     isActionLocked,
     playedCards,
@@ -25,67 +23,7 @@ export default function GameBoard({
     // unoPenalty,
   } = actionContext!;
 
-  const [animationPhase, setAnimationPhase] = useState<
-    "idle" | "showcase" | "stacking"
-  >("idle");
-
-  const [drawCards, setDrawCards] = useState<boolean>(false);
-  const [prevTopCard, setPrevTopCard] = useState<Card>(topCard);
-
   const socket = useContext(GameModeSocket)!;
-
-  useEffect(() => {
-    if (
-      actionType === "played-cards" &&
-      playedCards &&
-      playedCards.length > 0
-    ) {
-      setAnimationPhase("showcase");
-
-      const stackTimer = setTimeout(() => {
-        setAnimationPhase("stacking");
-      }, 2000);
-
-      const cleanupTimer = setTimeout(() => {
-        setPrevTopCard(topCard);
-        setAnimationPhase("idle");
-      }, 3000);
-
-      return () => {
-        clearTimeout(stackTimer);
-        clearTimeout(cleanupTimer);
-      };
-    }
-
-    if (actionType === "draw-cards") {
-      setDrawCards(true);
-
-      const disappearTimer = setTimeout(() => {
-        setDrawCards(false);
-        setPlayers(gameState.playerOrder);
-      }, 50);
-
-      return () => {
-        clearTimeout(disappearTimer);
-      };
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState, actionType]);
-
-  useEffect(() => {
-    function setCardsForPlayers(): void {
-      setTimeout(() => {
-        setPlayers(gameState.playerOrder);
-        setHasInitialized(true);
-      }, 50); // WAIT FOR DOM TO LOAD AND ResizeObservers TO SET THE NECCESSARY DATA FOR STYLE
-      setTimeout(() => {
-        setHasFinishedInitialAnimation(true);
-      }, 9000);
-    }
-    setCardsForPlayers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
 
   // THIS RENDERS THE HAND IN A CLOCKWISE ORDER
   function renderTempHand(): React.ReactElement {
@@ -249,7 +187,7 @@ export default function GameBoard({
       <div className="border">{prevTopCard!.color}</div>
 
       <div className="border">
-        {topCard.color === "BLACK" ? enforcedColor : "No enforced color"}
+        {prevTopCard.color === "BLACK" ? enforcedColor : "No enforced color"}
       </div>
 
       {animationPhase === "showcase" && (

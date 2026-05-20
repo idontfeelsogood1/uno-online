@@ -487,6 +487,8 @@ export function useAnimationsOrchestrator(
       setPlayers(getPopppedHandPlayers());
       handleActionLockAndUnlock(2000);
 
+      setDrawCards(true);
+
       const disappearTimer = setTimeout(() => {
         setDrawCards(false);
         setPlayers(gameState.playerOrder);

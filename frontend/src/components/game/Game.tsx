@@ -7,21 +7,17 @@ import CurrentPlayer from "./current-player/CurrentPlayer";
 import GameBoard from "./game-board/GameBoard";
 import OtherPlayer from "./other-player/OtherPlayer";
 import { GameAction } from "../../api/GameAction";
-import { useEffect, useState } from "react";
 import { LayoutGroup } from "motion/react";
 import { useContext } from "react";
 import { GameModeSocket } from "../../api/GameModeSocket";
-import { usePreloadCardAssets } from "../../api/helper";
+import {
+  useAnimationsOrchestrator,
+  usePreloadCardAssets,
+} from "../../api/helper";
 import { RenderTurn } from "../../api/RenderTurn";
 import { GameInitialize } from "../../api/GameInitialize";
 
 export default function Game({ gameState, actionContext }: GameProps) {
-  const [hasInitialized, setHasInitialized] = useState<boolean>(false);
-  const [hasFinishedInitialAnimation, setHasFinishedInitialAnimation] =
-    useState<boolean>(false);
-  const [players, setPlayers] = useState<GamePlayer[]>([]);
-  const [isActionLocked, setIsActionLocked] = useState<boolean>(false);
-  const [newStateReceived, setNewStateReceived] = useState<boolean>(false);
   const { isLoading, loadError } = usePreloadCardAssets();
 
   const socket = useContext(GameModeSocket)!;
@@ -29,85 +25,16 @@ export default function Game({ gameState, actionContext }: GameProps) {
   const { actionType, actionSocketId, playedCards, cardDrew, unoPenalty } =
     actionContext;
 
-  useEffect(() => {
-    function getEmptyHandPlayers(): GamePlayer[] {
-      const pseudoPlayers: GamePlayer[] = structuredClone(
-        gameState.playerOrder,
-      );
-      const tmpPlayers: GamePlayer[] = [];
-
-      pseudoPlayers.forEach((player) => {
-        if (player.socketId !== socket.id) {
-          player.hand = [];
-          tmpPlayers.push(player);
-        }
-      });
-      pseudoPlayers.forEach((player) => {
-        if (player.socketId === socket.id) {
-          player.hand = [];
-          tmpPlayers.push(player);
-        }
-      });
-
-      return tmpPlayers;
-    }
-
-    setPlayers(getEmptyHandPlayers());
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
-  useEffect(() => {
-    function handleActionLockAndUnlock(ms: number): () => void {
-      setIsActionLocked(true);
-      setNewStateReceived(true);
-
-      const unlockActionTimer = setTimeout(() => {
-        setIsActionLocked(false);
-        setNewStateReceived(false);
-      }, ms);
-
-      return () => {
-        clearTimeout(unlockActionTimer);
-      };
-    }
-    function getPopppedHandPlayers(): GamePlayer[] {
-      const pseudoPlayers: GamePlayer[] = structuredClone(
-        gameState.playerOrder,
-      );
-      const tmpPlayers: GamePlayer[] = [];
-
-      pseudoPlayers.forEach((player) => {
-        if (player.socketId !== socket.id) {
-          if (actionSocketId === player.socketId) {
-            player.hand.pop();
-          }
-          tmpPlayers.push(player);
-        }
-      });
-      pseudoPlayers.forEach((player) => {
-        if (player.socketId === socket.id) {
-          if (actionSocketId === player.socketId) {
-            player.hand.pop();
-          }
-          tmpPlayers.push(player);
-        }
-      });
-
-      return tmpPlayers;
-    }
-    if (actionType === "create-game") {
-      return handleActionLockAndUnlock(9000);
-    }
-    if (actionType === "played-cards") {
-      setPlayers(gameState.playerOrder);
-      return handleActionLockAndUnlock(4000);
-    }
-    if (actionType === "draw-cards") {
-      setPlayers(getPopppedHandPlayers());
-      return handleActionLockAndUnlock(2000);
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [gameState, actionType]);
+  const {
+    hasInitialized,
+    hasFinishedInitialAnimation,
+    players,
+    isActionLocked,
+    animationPhase,
+    drawCards,
+    prevTopCard,
+    newStateReceived,
+  } = useAnimationsOrchestrator(gameState, socket, actionContext);
 
   const leftPlacement: string =
     "col-start-1 row-start-1 row-span-2 flex-row-reverse h-full w-full min-h-0 min-w-0";
@@ -283,14 +210,13 @@ export default function Game({ gameState, actionContext }: GameProps) {
       <LayoutGroup>
         <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.5fr] gap-4 p-1">
           <GameBoard
-            topCard={gameState.topCard}
             enforcedColor={gameState.enforcedColor}
             gridPosition={middlePlacement}
             gameState={gameState}
-            setPlayers={setPlayers}
             hasInitialized={hasInitialized}
-            setHasInitialized={setHasInitialized}
-            setHasFinishedInitialAnimation={setHasFinishedInitialAnimation}
+            animationPhase={animationPhase}
+            drawCards={drawCards}
+            prevTopCard={prevTopCard}
           />
           <RenderTurn.Provider value={{ currPlayerSocketId, turnIndicators }}>
             <GameInitialize.Provider

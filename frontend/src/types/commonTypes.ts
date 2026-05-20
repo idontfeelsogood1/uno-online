@@ -26,14 +26,13 @@ export interface GameProps {
 }
 
 export interface GameBoardProps {
-  readonly topCard: Card;
   readonly enforcedColor: CardColor;
   readonly gridPosition: GridPosition;
   readonly gameState: GameData;
-  readonly setPlayers: CallableFunction;
   readonly hasInitialized: boolean;
-  readonly setHasInitialized: CallableFunction;
-  readonly setHasFinishedInitialAnimation: CallableFunction;
+  readonly animationPhase: "idle" | "showcase" | "stacking";
+  readonly drawCards: boolean;
+  readonly prevTopCard: Card;
 }
 
 export interface OtherPlayerProps {
