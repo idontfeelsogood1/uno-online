@@ -173,10 +173,10 @@ export function useCardsAnimation(
     let cardHeight = 0;
 
     if (isHorizontal) {
-      cardHeight = Math.min(containerSize.height - 10, 160);
+      cardHeight = Math.min(containerSize.height, 256);
       cardWidth = cardHeight * (2 / 3);
     } else {
-      cardWidth = Math.min(containerSize.width - 10, 130);
+      cardWidth = Math.min(containerSize.width, 170);
       cardHeight = cardWidth * (3 / 2);
     }
 
@@ -185,7 +185,7 @@ export function useCardsAnimation(
     if (hand.length > 1) {
       if (isHorizontal && containerSize.width > 0) {
         step = (containerSize.width - cardWidth) / (hand.length - 1);
-        step = Math.min(step, cardWidth);
+        step = Math.min(step, cardWidth * 0.8);
         step = Math.max(step, 10);
       } else if (!isHorizontal && containerSize.height > 0) {
         step = (containerSize.height - cardHeight) / (hand.length - 1);

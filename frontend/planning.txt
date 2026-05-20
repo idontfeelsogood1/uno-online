@@ -121,12 +121,7 @@ PlayerVsPlayer COMPONENT:
 
 BUGS TO FIX:
     - Resize observer in the Hand and PlayHand component causes the animation to stutter when the cards
-    fly out of the viewport and it set the state
+    fly out of the viewport and it set the state (might not need to fix)
     - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
     - Removing cards from playHand or from Hand to playHand while the mouse is still at the same place makes it still hover
-    - CurrentPlayer's cards images width needs tweaking (doesnt work right)
-
-PLAN TO SYNC CLOCKWISE ORDERING:
-    - Game is the source of truth for all clockwise operations
-    - Figure out how to dynamically calculate the position index for each players 
-    - Go to game board and renderTempHand in the order of Game
+    - Clicking a card to add or remove to or from PlayHand to Hand during newStateReceived causes it to turn
