@@ -121,9 +121,14 @@ export default function Game({ gameState, actionContext }: GameProps) {
       ms += 500;
 
       // GRID PLACEMENT: [bottom, left, top, right]
-      // Direction is either 1 (clockwise) or -1 (counter-clockwise)
-      prevPlayerIndex =
-        (prevPlayerIndex + gameState.direction) % players.length;
+      if (gameState.direction === -1) {
+        if (prevPlayerIndex <= 0) prevPlayerIndex = players.length - 1;
+        else prevPlayerIndex--;
+      }
+      if (gameState.direction === 1) {
+        if (prevPlayerIndex === players.length - 1) prevPlayerIndex = 0;
+        else prevPlayerIndex++;
+      }
     }
 
     context.push({
