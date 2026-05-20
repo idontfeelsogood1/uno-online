@@ -1,11 +1,14 @@
 import { useEffect, useRef, useState } from "react";
 import type {
   Card,
+  GameActionProps,
+  GameData,
   GameInitializeProps,
   GamePlayer,
   RenderTurnProps,
 } from "../types/commonTypes";
 import { motion } from "motion/react";
+import type { Socket } from "socket.io-client";
 
 export function getCardImgPath(card: Card) {
   return `/card-images/${card.color + "_" + card.value + ".jpg"}`;
@@ -355,4 +358,155 @@ export function useCardsAnimation(
   }
 
   return { renderHandContainer };
+}
+
+export function useAnimationsOrchestrator(
+  gameState: GameData,
+  socket: Socket,
+  actionContext: GameActionProps,
+) {
+  const [hasInitialized, setHasInitialized] = useState<boolean>(false);
+  const [hasFinishedInitialAnimation, setHasFinishedInitialAnimation] =
+    useState<boolean>(false);
+  const [players, setPlayers] = useState<GamePlayer[]>([]);
+  const [isActionLocked, setIsActionLocked] = useState<boolean>(false);
+  const [newStateReceived, setNewStateReceived] = useState<boolean>(false);
+
+  const [animationPhase, setAnimationPhase] = useState<
+    "idle" | "showcase" | "stacking"
+  >("idle");
+
+  const [drawCards, setDrawCards] = useState<boolean>(false);
+  const [prevTopCard, setPrevTopCard] = useState<Card>(gameState.topCard);
+
+  const { actionType, actionSocketId } = actionContext;
+
+  useEffect(() => {
+    function getEmptyHandPlayers(): GamePlayer[] {
+      const pseudoPlayers: GamePlayer[] = structuredClone(
+        gameState.playerOrder,
+      );
+      const tmpPlayers: GamePlayer[] = [];
+
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId !== socket.id) {
+          player.hand = [];
+          tmpPlayers.push(player);
+        }
+      });
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId === socket.id) {
+          player.hand = [];
+          tmpPlayers.push(player);
+        }
+      });
+
+      return tmpPlayers;
+    }
+
+    function setCardsForPlayers(): void {
+      setTimeout(() => {
+        setPlayers(gameState.playerOrder);
+        setHasInitialized(true);
+      }, 50); // WAIT FOR DOM TO LOAD AND ResizeObservers TO SET THE NECCESSARY DATA FOR STYLE
+      setTimeout(() => {
+        setHasFinishedInitialAnimation(true);
+      }, 9000);
+    }
+
+    setPlayers(getEmptyHandPlayers());
+    setCardsForPlayers();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  useEffect(() => {
+    function handleActionLockAndUnlock(ms: number): () => void {
+      setIsActionLocked(true);
+      setNewStateReceived(true);
+
+      const unlockActionTimer = setTimeout(() => {
+        setIsActionLocked(false);
+        setNewStateReceived(false);
+      }, ms);
+
+      return () => {
+        clearTimeout(unlockActionTimer);
+      };
+    }
+    function getPopppedHandPlayers(): GamePlayer[] {
+      const pseudoPlayers: GamePlayer[] = structuredClone(
+        gameState.playerOrder,
+      );
+      const tmpPlayers: GamePlayer[] = [];
+
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId !== socket.id) {
+          if (actionSocketId === player.socketId) {
+            player.hand.pop();
+          }
+          tmpPlayers.push(player);
+        }
+      });
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId === socket.id) {
+          if (actionSocketId === player.socketId) {
+            player.hand.pop();
+          }
+          tmpPlayers.push(player);
+        }
+      });
+
+      return tmpPlayers;
+    }
+
+    if (actionType === "create-game") {
+      return handleActionLockAndUnlock(9000);
+    }
+
+    if (actionType === "played-cards") {
+      setPlayers(gameState.playerOrder);
+      handleActionLockAndUnlock(4000);
+
+      setAnimationPhase("showcase");
+
+      const stackTimer = setTimeout(() => {
+        setAnimationPhase("stacking");
+      }, 2000);
+
+      const cleanupTimer = setTimeout(() => {
+        setPrevTopCard(gameState.topCard);
+        setAnimationPhase("idle");
+      }, 3000);
+
+      return () => {
+        clearTimeout(stackTimer);
+        clearTimeout(cleanupTimer);
+      };
+    }
+    if (actionType === "draw-cards") {
+      setPlayers(getPopppedHandPlayers());
+      handleActionLockAndUnlock(2000);
+
+      const disappearTimer = setTimeout(() => {
+        setDrawCards(false);
+        setPlayers(gameState.playerOrder);
+      }, 50);
+
+      return () => {
+        clearTimeout(disappearTimer);
+      };
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [gameState, actionType]);
+
+  return {
+    hasInitialized,
+    hasFinishedInitialAnimation,
+    players,
+    isActionLocked,
+    animationPhase,
+    drawCards,
+    prevTopCard,
+    newStateReceived,
+  };
 }
