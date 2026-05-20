@@ -26,7 +26,7 @@ export default function PlayHand({
     0,
     pseudoPlayHand,
     initializeContext!,
-    action!.newStateReceived,
+    action!,
     removeCardFromPlayHand,
     true,
   );

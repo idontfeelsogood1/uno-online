@@ -144,7 +144,7 @@ export function useCardsAnimation(
   gridPositionIndex: number,
   hand: Card[],
   initializeContext: GameInitializeProps,
-  newStateReceived: boolean = false,
+  actionContext: GameActionProps,
   actionCallback: CallableFunction,
   isCurrentPlayerHand: boolean,
 ): { renderHandContainer: CallableFunction } {
@@ -241,10 +241,10 @@ export function useCardsAnimation(
               width: cardWidth + 10,
               left: calculatedPosition,
               pointerEvents:
-                initializeContext!.hasFinishedInitialAnimation ||
-                !newStateReceived
-                  ? "auto"
-                  : "none",
+                !initializeContext!.hasFinishedInitialAnimation ||
+                actionContext.isActionLocked
+                  ? "none"
+                  : "auto",
             }}
             whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
             initial={{ scale: 0.8 }}
@@ -262,7 +262,7 @@ export function useCardsAnimation(
           >
             <motion.div
               className="absolute w-full h-full transform-3d"
-              initial={{ rotateY: newStateReceived ? 180 : 0 }}
+              initial={{ rotateY: actionContext.isActionLocked ? 180 : 0 }}
               animate={{ rotateY: 0 }}
               transition={{
                 type: "tween",
@@ -370,7 +370,6 @@ export function useAnimationsOrchestrator(
     useState<boolean>(false);
   const [players, setPlayers] = useState<GamePlayer[]>([]);
   const [isActionLocked, setIsActionLocked] = useState<boolean>(false);
-  const [newStateReceived, setNewStateReceived] = useState<boolean>(false);
 
   const [animationPhase, setAnimationPhase] = useState<
     "idle" | "showcase" | "stacking"
@@ -422,11 +421,9 @@ export function useAnimationsOrchestrator(
   useEffect(() => {
     function handleActionLockAndUnlock(ms: number): () => void {
       setIsActionLocked(true);
-      setNewStateReceived(true);
 
       const unlockActionTimer = setTimeout(() => {
         setIsActionLocked(false);
-        setNewStateReceived(false);
       }, ms);
 
       return () => {
@@ -509,6 +506,5 @@ export function useAnimationsOrchestrator(
     animationPhase,
     drawCards,
     prevTopCard,
-    newStateReceived,
   };
 }

@@ -33,7 +33,6 @@ export default function Game({ gameState, actionContext }: GameProps) {
     animationPhase,
     drawCards,
     prevTopCard,
-    newStateReceived,
   } = useAnimationsOrchestrator(gameState, socket, actionContext);
 
   const leftPlacement: string =
@@ -201,7 +200,6 @@ export default function Game({ gameState, actionContext }: GameProps) {
         actionType,
         actionSocketId,
         isActionLocked,
-        newStateReceived,
         playedCards,
         cardDrew,
         unoPenalty,

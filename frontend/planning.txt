@@ -125,4 +125,4 @@ BUGS TO FIX:
     - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
     - Removing cards from playHand or from Hand to playHand while the mouse is still at the same place makes it still hover
     - Clicking a card to add or remove to or from PlayHand to Hand during newStateReceived causes it to turn
-    - socketId: tmpPlayers[prevPlayerIndex].socketI of getTurnIndicatorContext resulted to undefined after playing for a while
+    - socketId: tmpPlayers[prevPlayerIndex].socketI of getTurnIndicatorContext resulted to undefined after playing for a while (Maybe because the player has won and got removed)

@@ -35,7 +35,6 @@ export default function PlayerVsBot({ setHomeView }: PlayerVsBotProps) {
         actionType: data.actionType,
         actionSocketId: data.socketId!,
         isActionLocked: undefined,
-        newStateReceived: undefined,
         playedCards: data.playedCards,
         cardDrew: data.cardDrew,
         unoPenalty: data.unoPenalty,

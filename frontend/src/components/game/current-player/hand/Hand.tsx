@@ -17,7 +17,7 @@ export default function Hand({
     gridPositionIndex,
     pseudoHand,
     initializeContext!,
-    action!.newStateReceived,
+    action!,
     addCardToPlayHand,
     true,
   );

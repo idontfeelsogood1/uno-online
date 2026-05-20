@@ -16,7 +16,7 @@ export default function OtherHand({
     gridPositionIndex,
     otherHand,
     initializeContext!,
-    action!.newStateReceived,
+    action!,
     () => {},
     false,
   );
