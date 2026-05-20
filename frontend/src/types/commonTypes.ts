@@ -121,8 +121,8 @@ export interface RoomPlayer {
 export interface GameActionProps {
   readonly actionType: GameStateActionType;
   readonly actionSocketId: string;
-  readonly isActionLocked: boolean;
-  readonly newStateReceived: boolean;
+  readonly isActionLocked: boolean | undefined;
+  readonly newStateReceived: boolean | undefined;
   readonly playedCards: Card[] | undefined; // THESE ARE ACTIONS OF PREVIOUS PLAYERS, ADDED THROUGH THE DTO
   readonly cardDrew: Card | undefined;
   readonly unoPenalty: boolean | undefined;
