@@ -237,7 +237,7 @@ export function useCardsAnimation(
             }}
             className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer shadow-lg"
             style={{
-              zIndex: i,
+              zIndex: currentZIndex,
               width: cardWidth + 10,
               left: calculatedPosition,
               pointerEvents:
@@ -247,6 +247,11 @@ export function useCardsAnimation(
                   : "auto",
             }}
             whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
+            onAnimationComplete={() => {
+              if (!landedCardIds.includes(hand[i].id)) {
+                setLandedCardIds([...landedCardIds, hand[i].id]);
+              }
+            }}
             initial={{ scale: 0.8 }}
             animate={{ scale: 1 }}
             transition={{
