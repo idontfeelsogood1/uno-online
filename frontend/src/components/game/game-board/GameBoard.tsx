@@ -11,17 +11,11 @@ export default function GameBoard({
   gameState,
   hasInitialized,
   animationPhase,
-  drawCards,
+  cardsToDraw,
   prevTopCard,
 }: GameBoardProps) {
   const actionContext = useContext(GameAction);
-  const {
-    actionSocketId,
-    isActionLocked,
-    playedCards,
-    cardDrew,
-    // unoPenalty,
-  } = actionContext!;
+  const { actionSocketId, isActionLocked, playedCards } = actionContext!;
 
   const socket = useContext(GameModeSocket)!;
 
@@ -157,21 +151,25 @@ export default function GameBoard({
             alt="Draw cards"
             className="w-full h-full max-h-64 aspect-2/3 object-cover rounded-md shadow-md"
           />
-          {drawCards && (
-            <motion.div
-              key={cardDrew!.id}
-              layoutId={cardDrew!.id}
-              className="absolute inset-0 w-full h-full shadow-sm"
-            >
-              <div className="w-full h-full relative transform-3d rotate-y-180">
-                <img
-                  src={getCardCoverImgPath()}
-                  alt="Card cover"
-                  className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
-                />
-              </div>
-            </motion.div>
-          )}
+          {cardsToDraw.length > 0 &&
+            cardsToDraw.map((card, i) => {
+              return (
+                <motion.div
+                  key={card.id}
+                  layoutId={card.id}
+                  className="absolute inset-0 w-full h-full shadow-sm"
+                  style={{ zIndex: i }}
+                >
+                  <div className="w-full h-full relative transform-3d rotate-y-180">
+                    <img
+                      src={getCardCoverImgPath()}
+                      alt="Card cover"
+                      className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
+                    />
+                  </div>
+                </motion.div>
+              );
+            })}
         </button>
       )}
 

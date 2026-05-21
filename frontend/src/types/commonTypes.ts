@@ -31,7 +31,7 @@ export interface GameBoardProps {
   readonly gameState: GameData;
   readonly hasInitialized: boolean;
   readonly animationPhase: "idle" | "showcase" | "stacking";
-  readonly drawCards: boolean;
+  readonly cardsToDraw: Card[];
   readonly prevTopCard: Card;
 }
 

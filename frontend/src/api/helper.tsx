@@ -380,7 +380,7 @@ export function useAnimationsOrchestrator(
     "idle" | "showcase" | "stacking"
   >("idle");
 
-  const [drawCards, setDrawCards] = useState<boolean>(false);
+  const [cardsToDraw, setCardsToDraw] = useState<Card[]>([]);
   const [prevTopCard, setPrevTopCard] = useState<Card>(gameState.topCard);
 
   const { actionType, actionSocketId } = actionContext;
@@ -460,13 +460,61 @@ export function useAnimationsOrchestrator(
 
       return tmpPlayers;
     }
+    function getPopppedHandCurrentTurnPlayers(amount: number): {
+      tmpPlayers: GamePlayer[];
+      cardsToDraw: Card[];
+    } {
+      const pseudoPlayers: GamePlayer[] = structuredClone(
+        gameState.playerOrder,
+      );
+      const currentPlayer: GamePlayer =
+        gameState.playerOrder[gameState.currentPlayerIndex];
+      const tmpPlayers: GamePlayer[] = [];
+      const cardsToDraw: Card[] = [];
+
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId !== socket.id) {
+          if (player.socketId === currentPlayer.socketId) {
+            for (let i = 0; i < amount; i++)
+              cardsToDraw.push(player.hand.pop()!);
+          }
+          tmpPlayers.push(player);
+        }
+      });
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId === socket.id) {
+          if (player.socketId === currentPlayer.socketId) {
+            for (let i = 0; i < amount; i++)
+              cardsToDraw.push(player.hand.pop()!);
+          }
+          tmpPlayers.push(player);
+        }
+      });
+
+      return {
+        tmpPlayers: tmpPlayers,
+        cardsToDraw: cardsToDraw,
+      };
+    }
 
     if (actionType === "create-game") {
       return handleActionLockAndUnlock(9000);
     }
 
     if (actionType === "played-cards") {
-      setPlayers(gameState.playerOrder);
+      const { draw_two_amount, wild_draw_four_amount } = gameState.turnEvents;
+      const cardsToDrawAmount: number =
+        draw_two_amount * 2 + wild_draw_four_amount * 4;
+
+      if (cardsToDrawAmount > 0) {
+        const { tmpPlayers, cardsToDraw } =
+          getPopppedHandCurrentTurnPlayers(cardsToDrawAmount);
+        setPlayers(tmpPlayers);
+        setCardsToDraw(cardsToDraw);
+      } else {
+        setPlayers(gameState.playerOrder);
+      }
+
       handleActionLockAndUnlock(4000);
 
       setAnimationPhase("showcase");
@@ -478,6 +526,8 @@ export function useAnimationsOrchestrator(
       const cleanupTimer = setTimeout(() => {
         setPrevTopCard(gameState.topCard);
         setAnimationPhase("idle");
+        setCardsToDraw([]);
+        setPlayers(gameState.playerOrder);
       }, 3000);
 
       return () => {
@@ -489,10 +539,10 @@ export function useAnimationsOrchestrator(
       setPlayers(getPopppedHandPlayers());
       handleActionLockAndUnlock(2000);
 
-      setDrawCards(true);
+      setCardsToDraw([actionContext.cardDrew!]);
 
       const disappearTimer = setTimeout(() => {
-        setDrawCards(false);
+        setCardsToDraw([]);
         setPlayers(gameState.playerOrder);
       }, 50);
 
@@ -509,7 +559,7 @@ export function useAnimationsOrchestrator(
     players,
     isActionLocked,
     animationPhase,
-    drawCards,
+    cardsToDraw,
     prevTopCard,
   };
 }

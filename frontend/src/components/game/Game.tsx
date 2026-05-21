@@ -31,7 +31,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     players,
     isActionLocked,
     animationPhase,
-    drawCards,
+    cardsToDraw,
     prevTopCard,
   } = useAnimationsOrchestrator(gameState, socket, actionContext);
 
@@ -191,8 +191,6 @@ export default function Game({ gameState, actionContext }: GameProps) {
 
   // If cardsToDraw (computed from TurnEvents) > 0
   // Set the current player's hand without those cards (pop)
-
-  // In GameBoard
   // After renderStacking
   // Set the cards that were popped (do the popping again) on top of drawPile and turn it off a few seconds later
   // Set the current player's hand with everything in Game
@@ -218,7 +216,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
             gameState={gameState}
             hasInitialized={hasInitialized}
             animationPhase={animationPhase}
-            drawCards={drawCards}
+            cardsToDraw={cardsToDraw}
             prevTopCard={prevTopCard}
           />
           <RenderTurn.Provider value={{ currPlayerSocketId, turnIndicators }}>
