@@ -365,6 +365,8 @@ export function useCardsAnimation(
   return { renderHandContainer };
 }
 
+// ANIMATIONS GOTTA BE IN THE SAME RENDERING CYCLE FOR THEM TO WORK CORRECTLY
+// (BEING CALLED IN THE CALLSTACK AT THE SAME TIME)
 export function useAnimationsOrchestrator(
   gameState: GameData,
   socket: Socket,
@@ -513,6 +515,19 @@ export function useAnimationsOrchestrator(
     }
 
     if (actionType === "played-cards") {
+      if (actionContext.unoPenalty) {
+        const { tmpPlayers, cardsToDraw } = getPopppedHandPlayers(2);
+        // INSTANTLY PENALIZE THE PLAYER FOR NOT UNOING
+        setTimeout(() => {
+          setPlayers(tmpPlayers);
+          setCardsToDraw(cardsToDraw);
+        }, 50);
+        setTimeout(() => {
+          setPlayers(gameState.playerOrder);
+          setCardsToDraw([]);
+        }, 100);
+      }
+
       const { draw_two_amount, wild_draw_four_amount } = gameState.turnEvents;
       const cardsToDrawAmount: number =
         draw_two_amount * 2 + wild_draw_four_amount * 4;
@@ -520,25 +535,28 @@ export function useAnimationsOrchestrator(
       if (cardsToDrawAmount > 0) {
         const { tmpPlayers, cardsToDraw } =
           getPopppedHandCurrentTurnPlayers(cardsToDrawAmount);
-        setPlayers(tmpPlayers);
-        setCardsToDraw(cardsToDraw);
-      } else if (actionContext.unoPenalty) {
-        // DOESNT WORK, REQUIRE FURTHER TESTING
-        const { tmpPlayers, cardsToDraw } = getPopppedHandPlayers(2);
-        setPlayers(tmpPlayers);
-        setCardsToDraw(cardsToDraw);
-        // INSTANTLY PENALIZE THE PLAYER FOR NOT UNOING
+
+        // WAIT FOR UNO PENALTY ANIMATION TO FINISH BEFORE PLAYING DRAWING CARDS FOR THE CURRENT PLAYER
+        setTimeout(() => {
+          setPlayers(tmpPlayers);
+          setCardsToDraw(cardsToDraw);
+
+          handleActionLockAndUnlock(4000);
+          setAnimationPhase("showcase");
+        }, 150);
         setTimeout(() => {
           setPlayers(gameState.playerOrder);
           setCardsToDraw([]);
-        }, 200);
+        }, 3000);
       } else {
-        setPlayers(gameState.playerOrder);
+        // NORMAL CASE
+        // AVOID SETTING INITIAL PLAYERS IF THERES ANIMATIONS IN PROGRESS
+        if (!actionContext.unoPenalty && cardsToDrawAmount === 0) {
+          setPlayers(gameState.playerOrder);
+        }
+        handleActionLockAndUnlock(4000);
+        setAnimationPhase("showcase");
       }
-
-      handleActionLockAndUnlock(4000);
-
-      setAnimationPhase("showcase");
 
       const stackTimer = setTimeout(() => {
         setAnimationPhase("stacking");
@@ -547,8 +565,6 @@ export function useAnimationsOrchestrator(
       const cleanupTimer = setTimeout(() => {
         setPrevTopCard(gameState.topCard);
         setAnimationPhase("idle");
-        setCardsToDraw([]);
-        setPlayers(gameState.playerOrder);
       }, 3000);
 
       return () => {
