@@ -33,7 +33,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     animationPhase,
     cardsToDraw,
     prevTopCard,
-  } = useAnimationsOrchestrator(gameState, socket, actionContext);
+  } = useAnimationsOrchestrator(gameState, actionContext);
 
   const leftPlacement: string =
     "col-start-1 row-start-1 row-span-2 flex-row-reverse h-full w-full min-h-0 min-w-0";
@@ -74,6 +74,25 @@ export default function Game({ gameState, actionContext }: GameProps) {
     },
   ];
 
+  // REFACTOR THE tmpPlayers INTO A FUNCTION THAT RETURNS THE PLAYER FOLLOWING THE GRID OTHER
+
+  function getGridPlayerOrder(): GamePlayer[] {
+    const gridPlayerOrder: GamePlayer[] = [];
+
+    players.forEach((player) => {
+      if (player.socketId !== socket.id) {
+        gridPlayerOrder.push(player);
+      }
+    });
+    players.forEach((player) => {
+      if (player.socketId === socket.id) {
+        gridPlayerOrder.push(player);
+      }
+    });
+
+    return gridPlayerOrder;
+  }
+
   function getTurnIndicatorContext(): {
     currPlayerSocketId: string;
     turnIndicators: { socketId: string; renderDelay: number }[];
@@ -89,25 +108,16 @@ export default function Game({ gameState, actionContext }: GameProps) {
       }; // ONLY GET INDICATOR WHEN THE gameState has initialized
     }
 
-    const tmpPlayers: GamePlayer[] = [];
+    const gridPlayerOrder: GamePlayer[] = getGridPlayerOrder();
 
     let prevPlayerIndex: number = 0;
     let currPlayerIndex: number = 0;
 
-    players.forEach((player) => {
-      if (player.socketId !== socket.id) {
-        tmpPlayers.push(player);
-      }
-    });
-    players.forEach((player) => {
-      if (player.socketId === socket.id) {
-        tmpPlayers.push(player);
-      }
-    });
-
-    for (let i = 0; i < tmpPlayers.length; i++) {
-      if (tmpPlayers[i].socketId === prevPlayerSocketId) prevPlayerIndex = i;
-      if (tmpPlayers[i].socketId === currPlayerSocketId) currPlayerIndex = i;
+    for (let i = 0; i < gridPlayerOrder.length; i++) {
+      if (gridPlayerOrder[i].socketId === prevPlayerSocketId)
+        prevPlayerIndex = i;
+      if (gridPlayerOrder[i].socketId === currPlayerSocketId)
+        currPlayerIndex = i;
     }
 
     const context: { socketId: string; renderDelay: number }[] = [];
@@ -115,7 +125,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
 
     while (prevPlayerIndex !== currPlayerIndex) {
       context.push({
-        socketId: tmpPlayers[prevPlayerIndex].socketId,
+        socketId: gridPlayerOrder[prevPlayerIndex].socketId,
         renderDelay: ms,
       });
       ms += 500;
@@ -132,7 +142,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     }
 
     context.push({
-      socketId: tmpPlayers[currPlayerIndex].socketId,
+      socketId: gridPlayerOrder[currPlayerIndex].socketId,
       renderDelay: ms + 500,
     });
 
@@ -142,35 +152,24 @@ export default function Game({ gameState, actionContext }: GameProps) {
     };
   }
 
+  // DEPENDS ON playersPlacement AND getGridPlayerOrder
   function renderPlayer(): React.ReactElement[] {
-    const tmpPlayers: GamePlayer[] = [];
-
-    players.forEach((player) => {
-      if (player.socketId !== socket.id) {
-        tmpPlayers.push(player);
-      }
-    });
-    players.forEach((player) => {
-      if (player.socketId === socket.id) {
-        tmpPlayers.push(player);
-      }
-    });
-
+    const gridPlayerOrder: GamePlayer[] = getGridPlayerOrder();
     const playersHtmlList: React.ReactElement[] = [];
 
     // This keeps the gridPosition index to be in order
-    for (let i = 0; i < tmpPlayers.length; i++) {
-      if (tmpPlayers[i].socketId !== socket.id) {
+    for (let i = 0; i < gridPlayerOrder.length; i++) {
+      if (gridPlayerOrder[i].socketId !== socket.id) {
         playersHtmlList.push(
           <OtherPlayer
-            otherPlayer={tmpPlayers[i]}
+            otherPlayer={gridPlayerOrder[i]}
             gridPosition={playersPlacement[i]}
           />,
         );
       } else {
         playersHtmlList.push(
           <CurrentPlayer
-            player={tmpPlayers[i]}
+            player={gridPlayerOrder[i]}
             gridPosition={playersPlacement[playersPlacement.length - 1]}
           />,
         );
@@ -188,14 +187,6 @@ export default function Game({ gameState, actionContext }: GameProps) {
   }
 
   const { currPlayerSocketId, turnIndicators } = getTurnIndicatorContext();
-
-  // If cardsToDraw (computed from TurnEvents) > 0
-  // Set the current player's hand without those cards (pop)
-  // After renderStacking
-  // Set the cards that were popped (do the popping again) on top of drawPile and turn it off a few seconds later
-  // Set the current player's hand with everything in Game
-
-  // Uno
 
   return (
     <GameAction.Provider
