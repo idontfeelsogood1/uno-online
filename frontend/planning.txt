@@ -126,3 +126,4 @@ BUGS TO FIX:
     - Removing cards from playHand or from Hand to playHand while the mouse is still at the same place makes it still hover
     - Clicking a card to add or remove to or from PlayHand to Hand during newStateReceived causes it to turn
     - Long card patterns cause renderShowCase to not render long enough (consider calculating the time based on the cards)
+    - Locking the animation at the start of the game should be calculated based on the amount of players and not be constant
