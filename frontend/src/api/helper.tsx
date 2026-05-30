@@ -8,7 +8,6 @@ import type {
   RenderTurnProps,
 } from "../types/commonTypes";
 import { motion } from "motion/react";
-import type { Socket } from "socket.io-client";
 
 export function getCardImgPath(card: Card) {
   return `/card-images/${card.color + "_" + card.value + ".jpg"}`;
@@ -170,6 +169,8 @@ export function useCardsAnimation(
   function renderHand(): React.ReactElement[] {
     const isHorizontal = position === "top" || position === "bottom";
     const elements: React.ReactElement[] = [];
+
+    // DECOUPLE THE DOM FROM THE MAIN LOGIC
 
     //  DYNAMIC DIMENSIONS
     let cardWidth = 0;
@@ -369,7 +370,6 @@ export function useCardsAnimation(
 // (BEING CALLED IN THE CALLSTACK AT THE SAME TIME)
 export function useAnimationsOrchestrator(
   gameState: GameData,
-  socket: Socket,
   actionContext: GameActionProps,
 ) {
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
@@ -395,16 +395,8 @@ export function useAnimationsOrchestrator(
       const tmpPlayers: GamePlayer[] = [];
 
       pseudoPlayers.forEach((player) => {
-        if (player.socketId !== socket.id) {
-          player.hand = [];
-          tmpPlayers.push(player);
-        }
-      });
-      pseudoPlayers.forEach((player) => {
-        if (player.socketId === socket.id) {
-          player.hand = [];
-          tmpPlayers.push(player);
-        }
+        player.hand = [];
+        tmpPlayers.push(player);
       });
 
       return tmpPlayers;
@@ -437,8 +429,9 @@ export function useAnimationsOrchestrator(
         clearTimeout(unlockActionTimer);
       };
     }
+
     // THIS IS FOR THE PREVIOUS PLAYER WHO DID THE ACTION
-    function getPopppedHandPlayers(amount: number): {
+    function popPreviousTurnPlayerHand(amount: number): {
       tmpPlayers: GamePlayer[];
       cardsToDraw: Card[];
     } {
@@ -449,22 +442,10 @@ export function useAnimationsOrchestrator(
       const cardsToDraw: Card[] = [];
 
       pseudoPlayers.forEach((player) => {
-        if (player.socketId !== socket.id) {
-          if (actionSocketId === player.socketId) {
-            for (let i = 0; i < amount; i++)
-              cardsToDraw.push(player.hand.pop()!);
-          }
-          tmpPlayers.push(player);
+        if (actionSocketId === player.socketId) {
+          for (let i = 0; i < amount; i++) cardsToDraw.push(player.hand.pop()!);
         }
-      });
-      pseudoPlayers.forEach((player) => {
-        if (player.socketId === socket.id) {
-          if (actionSocketId === player.socketId) {
-            for (let i = 0; i < amount; i++)
-              cardsToDraw.push(player.hand.pop()!);
-          }
-          tmpPlayers.push(player);
-        }
+        tmpPlayers.push(player);
       });
 
       return {
@@ -472,8 +453,9 @@ export function useAnimationsOrchestrator(
         cardsToDraw: cardsToDraw,
       };
     }
+
     // THIS IS FOR THE CURRENT PLAYER THE ACTION AFFECTS
-    function getPopppedHandCurrentTurnPlayers(amount: number): {
+    function popCurrentTurnPlayerHand(amount: number): {
       tmpPlayers: GamePlayer[];
       cardsToDraw: Card[];
     } {
@@ -486,22 +468,10 @@ export function useAnimationsOrchestrator(
       const cardsToDraw: Card[] = [];
 
       pseudoPlayers.forEach((player) => {
-        if (player.socketId !== socket.id) {
-          if (player.socketId === currentPlayer.socketId) {
-            for (let i = 0; i < amount; i++)
-              cardsToDraw.push(player.hand.pop()!);
-          }
-          tmpPlayers.push(player);
+        if (player.socketId === currentPlayer.socketId) {
+          for (let i = 0; i < amount; i++) cardsToDraw.push(player.hand.pop()!);
         }
-      });
-      pseudoPlayers.forEach((player) => {
-        if (player.socketId === socket.id) {
-          if (player.socketId === currentPlayer.socketId) {
-            for (let i = 0; i < amount; i++)
-              cardsToDraw.push(player.hand.pop()!);
-          }
-          tmpPlayers.push(player);
-        }
+        tmpPlayers.push(player);
       });
 
       return {
@@ -510,53 +480,98 @@ export function useAnimationsOrchestrator(
       };
     }
 
+    // THIS IS FOR THE PREVIOUS AND CURRENT PLAYER
+    function popPrevAndCurrentPlayerHand(
+      prevAmount: number,
+      currAmount: number,
+    ): {
+      tmpPlayers: GamePlayer[];
+      prevCardsToDraw: Card[];
+      currCardsToDraw: Card[];
+    } {
+      const pseudoPlayers: GamePlayer[] = structuredClone(
+        gameState.playerOrder,
+      );
+      const currentPlayer: GamePlayer =
+        gameState.playerOrder[gameState.currentPlayerIndex];
+      const tmpPlayers: GamePlayer[] = [];
+
+      const prevCardsToDraw: Card[] = [];
+      const currCardsToDraw: Card[] = [];
+
+      pseudoPlayers.forEach((player) => {
+        if (player.socketId === actionSocketId) {
+          for (let i = 0; i < prevAmount; i++)
+            prevCardsToDraw.push(player.hand.pop()!);
+        }
+        if (player.socketId === currentPlayer.socketId) {
+          for (let i = 0; i < currAmount; i++)
+            currCardsToDraw.push(player.hand.pop()!);
+        }
+        tmpPlayers.push(player);
+      });
+
+      return {
+        tmpPlayers: tmpPlayers,
+        prevCardsToDraw: prevCardsToDraw,
+        currCardsToDraw: currCardsToDraw,
+      };
+    }
+
     if (actionType === "create-game") {
       return handleActionLockAndUnlock(9000);
     }
 
     if (actionType === "played-cards") {
-      if (actionContext.unoPenalty) {
-        const { tmpPlayers, cardsToDraw } = getPopppedHandPlayers(2);
-        // INSTANTLY PENALIZE THE PLAYER FOR NOT UNOING
-        setTimeout(() => {
-          setPlayers(tmpPlayers);
-          setCardsToDraw(cardsToDraw);
-        }, 50);
-        setTimeout(() => {
-          setPlayers(gameState.playerOrder);
-          setCardsToDraw([]);
-        }, 100);
-      }
-
       const { draw_two_amount, wild_draw_four_amount } = gameState.turnEvents;
       const cardsToDrawAmount: number =
         draw_two_amount * 2 + wild_draw_four_amount * 4;
 
-      if (cardsToDrawAmount > 0) {
-        const { tmpPlayers, cardsToDraw } =
-          getPopppedHandCurrentTurnPlayers(cardsToDrawAmount);
+      if (actionContext.unoPenalty && cardsToDrawAmount > 0) {
+        const { tmpPlayers, prevCardsToDraw, currCardsToDraw } =
+          popPrevAndCurrentPlayerHand(2, cardsToDrawAmount);
 
-        // WAIT FOR UNO PENALTY ANIMATION TO FINISH BEFORE PLAYING DRAWING CARDS FOR THE CURRENT PLAYER
+        // Get the initial state with both player's hand missing the cards
+        setPlayers(tmpPlayers);
+        setCardsToDraw(prevCardsToDraw);
+
+        // Get the final state for unoPenalty (missing draw cards)
         setTimeout(() => {
-          setPlayers(tmpPlayers);
-          setCardsToDraw(cardsToDraw);
+          setPlayers(popCurrentTurnPlayerHand(cardsToDrawAmount).tmpPlayers);
+          setCardsToDraw(currCardsToDraw);
+        }, 50);
 
-          handleActionLockAndUnlock(4000);
-          setAnimationPhase("showcase");
-        }, 150);
+        // Get the final state for drawCards (default state)
         setTimeout(() => {
           setPlayers(gameState.playerOrder);
           setCardsToDraw([]);
-        }, 3000);
-      } else {
-        // NORMAL CASE
-        // AVOID SETTING INITIAL PLAYERS IF THERES ANIMATIONS IN PROGRESS
-        if (!actionContext.unoPenalty && cardsToDrawAmount === 0) {
+        }, 3500);
+      } else if (actionContext.unoPenalty) {
+        const { tmpPlayers, cardsToDraw } = popPreviousTurnPlayerHand(2);
+        setPlayers(tmpPlayers);
+        setCardsToDraw(cardsToDraw);
+        // INSTANTLY PENALIZE THE PLAYER FOR NOT UNOING
+        setTimeout(() => {
           setPlayers(gameState.playerOrder);
-        }
-        handleActionLockAndUnlock(4000);
-        setAnimationPhase("showcase");
+          setCardsToDraw([]);
+        }, 50);
+      } else if (cardsToDrawAmount > 0) {
+        const { tmpPlayers, cardsToDraw } =
+          popCurrentTurnPlayerHand(cardsToDrawAmount);
+        setPlayers(tmpPlayers);
+        setCardsToDraw(cardsToDraw);
+        // DRAW CARDS FOR PLAYER AFTER CLEANUP ANIMATION
+        setTimeout(() => {
+          setPlayers(gameState.playerOrder);
+          setCardsToDraw([]);
+        }, 3050);
+      } else {
+        // BASE CASE
+        setPlayers(gameState.playerOrder);
       }
+
+      setAnimationPhase("showcase");
+      handleActionLockAndUnlock(3000);
 
       const stackTimer = setTimeout(() => {
         setAnimationPhase("stacking");
@@ -573,7 +588,7 @@ export function useAnimationsOrchestrator(
       };
     }
     if (actionType === "draw-cards") {
-      const { tmpPlayers, cardsToDraw } = getPopppedHandPlayers(1);
+      const { tmpPlayers, cardsToDraw } = popPreviousTurnPlayerHand(1);
       setPlayers(tmpPlayers);
       setCardsToDraw(cardsToDraw);
 
