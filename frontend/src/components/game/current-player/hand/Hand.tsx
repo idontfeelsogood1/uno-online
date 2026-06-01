@@ -8,6 +8,7 @@ import type { Card, HandProps } from "../../../../types/commonTypes";
 import { GameInitialize } from "../../../../api/GameInitialize";
 import { GameAction } from "../../../../api/GameAction";
 import { motion } from "motion/react";
+import { StateReceivedBetweenHands } from "../../../../api/StateReceivedBetweenHand";
 
 export default function Hand({
   pseudoHand,
@@ -28,8 +29,21 @@ export default function Hand({
     initializeContext!,
   );
 
+  const stateReceivedBetweenHandContext = useContext(
+    StateReceivedBetweenHands,
+  )!;
+  const { isStateReceivedBetweenHands, setIsStateReceivedBetweenHands } =
+    stateReceivedBetweenHandContext;
+
   function addCardToPlayHand(card: Card) {
     setPseudoPlayHand([...pseudoPlayHand, card]);
+    setIsStateReceivedBetweenHands(true);
+  }
+
+  function resetSetStateReceivedDelayed(ms: number) {
+    setTimeout(() => {
+      setIsStateReceivedBetweenHands(false);
+    }, ms);
   }
 
   function renderHandContainer(): React.ReactElement {
@@ -49,8 +63,7 @@ export default function Hand({
             width: cardStyle.width + 10,
             left: cardStyle.calculatedPosition,
             pointerEvents:
-              !initializeContext!.hasFinishedInitialAnimation ||
-              actionContext!.isActionLocked
+              isStateReceivedBetweenHands || actionContext!.isActionLocked
                 ? "none"
                 : "auto",
           }}
@@ -73,8 +86,16 @@ export default function Hand({
         >
           <motion.div
             className="absolute w-full h-full transform-3d"
-            initial={{ rotateY: actionContext!.isActionLocked ? 180 : 0 }}
+            initial={{
+              rotateY:
+                isStateReceivedBetweenHands || !actionContext!.isActionLocked
+                  ? 0
+                  : 180,
+            }}
             animate={{ rotateY: 0 }}
+            onAnimationComplete={() => {
+              resetSetStateReceivedDelayed(50);
+            }}
             transition={{
               type: "tween",
               duration: 0.6,

@@ -76,6 +76,11 @@ export interface RenderTurnProps {
   }[];
 }
 
+export interface StateReceivedBetweenHandsProps {
+  readonly isStateReceivedBetweenHands: boolean;
+  readonly setIsStateReceivedBetweenHands: CallableFunction;
+}
+
 export interface GameEndProps {
   readonly players: RoomPlayer[];
   readonly ownerSocketId: string;

@@ -243,7 +243,8 @@ export function useCardsAnimation(
   }
 
   function updateStyleOnInitialAnimationComplete(cardId: string): void {
-    setLandedCardIds([...landedCardIds, cardId]);
+    if (!landedCardIds.includes(cardId))
+      setLandedCardIds([...landedCardIds, cardId]);
   }
 
   return {
@@ -406,7 +407,11 @@ export function useAnimationsOrchestrator(
     }
 
     if (actionType === "create-game") {
-      return handleActionLockAndUnlock(9000);
+      let ms: number = 0;
+      gameState.playerOrder.forEach(() => {
+        ms += 2500;
+      });
+      return handleActionLockAndUnlock(ms);
     }
 
     if (actionType === "played-cards") {

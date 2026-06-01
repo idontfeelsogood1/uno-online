@@ -4,14 +4,19 @@ import Hand from "./hand/Hand";
 import PlayHand from "./play-hand/PlayHand";
 import { RenderTurn } from "../../../api/RenderTurn";
 import { useRenderIndicator } from "../../../api/helper";
+import { StateReceivedBetweenHands } from "../../../api/StateReceivedBetweenHand";
+// import { GameAction } from "../../../api/GameAction";
 
 export default function CurrentPlayer({
   player,
   gridPosition,
 }: CurrentPlayerProps) {
   const [pseudoPlayHand, setPseudoPlayHand] = useState<Card[]>([]);
+  const [isStateReceivedBetweenHands, setIsStateReceivedBetweenHands] =
+    useState<boolean>(false);
 
   const renderContext = useContext(RenderTurn);
+  // const actionContext = useContext(GameAction);
 
   const { isIndicatorTurn } = useRenderIndicator(renderContext!, player);
 
@@ -40,17 +45,21 @@ export default function CurrentPlayer({
       <div className="border flex items-center justify-center text-center">
         <span>{player.username}</span>
       </div>
-      <PlayHand
-        pseudoHand={pseudoHand}
-        pseudoPlayHand={pseudoPlayHand}
-        setPseudoPlayHand={setPseudoPlayHand}
-      />
-      <Hand
-        pseudoHand={pseudoHand}
-        pseudoPlayHand={pseudoPlayHand}
-        setPseudoPlayHand={setPseudoPlayHand}
-        gridPositionIndex={gridPosition.index}
-      />
+      <StateReceivedBetweenHands.Provider
+        value={{ isStateReceivedBetweenHands, setIsStateReceivedBetweenHands }}
+      >
+        <PlayHand
+          pseudoHand={pseudoHand}
+          pseudoPlayHand={pseudoPlayHand}
+          setPseudoPlayHand={setPseudoPlayHand}
+        />
+        <Hand
+          pseudoHand={pseudoHand}
+          pseudoPlayHand={pseudoPlayHand}
+          setPseudoPlayHand={setPseudoPlayHand}
+          gridPositionIndex={gridPosition.index}
+        />
+      </StateReceivedBetweenHands.Provider>
     </div>
   );
 }

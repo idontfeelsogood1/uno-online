@@ -10,6 +10,7 @@ import { GameAction } from "../../../../api/GameAction";
 import { GameModeSocket } from "../../../../api/GameModeSocket";
 import { GameInitialize } from "../../../../api/GameInitialize";
 import { motion } from "motion/react";
+import { StateReceivedBetweenHands } from "../../../../api/StateReceivedBetweenHand";
 
 export default function PlayHand({
   pseudoHand,
@@ -26,6 +27,12 @@ export default function PlayHand({
   const socket = useContext(GameModeSocket)!;
   const initializeContext = useContext(GameInitialize);
 
+  const stateReceivedBetweenHandContext = useContext(
+    StateReceivedBetweenHands,
+  )!;
+  const { setIsStateReceivedBetweenHands, isStateReceivedBetweenHands } =
+    stateReceivedBetweenHandContext;
+
   const { cardContainerRef, cardPhysics } = useCardsAnimation(
     "bottom",
     0,
@@ -39,6 +46,7 @@ export default function PlayHand({
         return card.id !== pseudoCard.id;
       }),
     );
+    setIsStateReceivedBetweenHands(true);
     setCanUno(false);
   }
 
@@ -80,6 +88,12 @@ export default function PlayHand({
     }
   }
 
+  function resetSetStateReceivedDelayed(ms: number) {
+    setTimeout(() => {
+      setIsStateReceivedBetweenHands(false);
+    }, ms);
+  }
+
   function renderHandContainer(): React.ReactElement {
     const cardElements: React.ReactElement[] = [];
 
@@ -98,7 +112,7 @@ export default function PlayHand({
             left: cardStyle.calculatedPosition,
             pointerEvents:
               !initializeContext!.hasFinishedInitialAnimation ||
-              actionContext!.isActionLocked
+              isStateReceivedBetweenHands
                 ? "none"
                 : "auto",
           }}
@@ -118,8 +132,11 @@ export default function PlayHand({
         >
           <motion.div
             className="absolute w-full h-full transform-3d"
-            initial={{ rotateY: actionContext!.isActionLocked ? 180 : 0 }}
+            initial={{ rotateY: 0 }}
             animate={{ rotateY: 0 }}
+            onAnimationComplete={() => {
+              resetSetStateReceivedDelayed(50);
+            }}
             transition={{
               type: "tween",
               duration: 0.6,

@@ -123,8 +123,5 @@ BUGS TO FIX:
     - Resize observer in the Hand and PlayHand component causes the animation to stutter when the cards
     fly out of the viewport and it set the state (might not need to fix)
     - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
-    - Removing cards from playHand or from Hand to playHand while the mouse is still at the same place makes it still hover
-    - Clicking a card to add or remove to or from PlayHand to Hand during newStateReceived causes it to turn
     - Long card patterns cause renderShowCase to not render long enough (consider calculating the time based on the cards)
-    - Locking the animation at the start of the game should be calculated based on the amount of players and not be constant
     - Card distribution animation snaps from below to top at the end
