@@ -1,13 +1,13 @@
-import { useEffect, useRef, useState } from "react";
+import { useEffect, useRef, useState, type RefObject } from "react";
 import type {
   Card,
+  CardStyle,
   GameActionProps,
   GameData,
   GameInitializeProps,
   GamePlayer,
   RenderTurnProps,
 } from "../types/commonTypes";
-import { motion } from "motion/react";
 
 export function getCardImgPath(card: Card) {
   return `/card-images/${card.color + "_" + card.value + ".jpg"}`;
@@ -143,13 +143,16 @@ export function useCardsAnimation(
   gridPositionIndex: number,
   hand: Card[],
   initializeContext: GameInitializeProps,
-  actionContext: GameActionProps,
-  actionCallback: CallableFunction,
-  isCurrentPlayerHand: boolean,
-): { renderHandContainer: CallableFunction } {
+): {
+  cardContainerRef: RefObject<HTMLDivElement | null>;
+  cardPhysics: CardStyle[];
+  updateStyleOnInitialAnimationComplete: CallableFunction;
+} {
   const containerRef = useRef<HTMLDivElement>(null);
   const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
   const [landedCardIds, setLandedCardIds] = useState<string[]>([]);
+
+  // PLANNING:
 
   useEffect(() => {
     if (!containerRef.current) return;
@@ -166,11 +169,9 @@ export function useCardsAnimation(
     return () => observer.disconnect();
   }, []);
 
-  function renderHand(): React.ReactElement[] {
+  function getCardStyles(): CardStyle[] {
     const isHorizontal = position === "top" || position === "bottom";
-    const elements: React.ReactElement[] = [];
-
-    // DECOUPLE THE DOM FROM THE MAIN LOGIC
+    const cardStyle: CardStyle[] = [];
 
     //  DYNAMIC DIMENSIONS
     let cardWidth = 0;
@@ -180,7 +181,7 @@ export function useCardsAnimation(
       cardHeight = Math.min(containerSize.height, 256);
       cardWidth = cardHeight * (2 / 3);
     } else {
-      cardWidth = Math.min(containerSize.width, 170);
+      cardWidth = Math.min(containerSize.width, 160);
       cardHeight = cardWidth * (3 / 2);
     }
 
@@ -228,142 +229,28 @@ export function useCardsAnimation(
 
       const currentZIndex = isLanded ? i : flightZIndex;
 
-      if (isCurrentPlayerHand) {
-        elements.push(
-          <motion.div
-            key={hand[i].id}
-            layoutId={hand[i].id}
-            onClick={() => {
-              actionCallback(hand[i]);
-            }}
-            className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer shadow-lg"
-            style={{
-              zIndex: currentZIndex,
-              width: cardWidth + 10,
-              left: calculatedPosition,
-              pointerEvents:
-                !initializeContext!.hasFinishedInitialAnimation ||
-                actionContext.isActionLocked
-                  ? "none"
-                  : "auto",
-            }}
-            whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
-            onAnimationComplete={() => {
-              if (!landedCardIds.includes(hand[i].id)) {
-                setLandedCardIds([...landedCardIds, hand[i].id]);
-              }
-            }}
-            initial={{ scale: 0.8 }}
-            animate={{ scale: 1 }}
-            transition={{
-              layout: {
-                type: "spring",
-                stiffness: 80,
-                damping: 14,
-                delay: dealDelay,
-              },
-              scale: { type: "tween", duration: 0.6, delay: dealDelay },
-              left: { type: "spring", stiffness: 200, damping: 20 },
-            }}
-          >
-            <motion.div
-              className="absolute w-full h-full transform-3d"
-              initial={{ rotateY: actionContext.isActionLocked ? 180 : 0 }}
-              animate={{ rotateY: 0 }}
-              transition={{
-                type: "tween",
-                duration: 0.6,
-                ease: "easeInOut",
-                delay: dealDelay,
-              }}
-            >
-              <img
-                src={getCardImgPath(hand[i])}
-                alt={hand[i].name}
-                className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-lg"
-              />
-              <img
-                src={getCardCoverImgPath()}
-                alt="Card cover"
-                className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-lg"
-              />
-            </motion.div>
-          </motion.div>,
-        );
-      } else {
-        elements.push(
-          <motion.div
-            key={hand[i].id}
-            layoutId={hand[i].id}
-            className={`absolute ${
-              isHorizontal
-                ? "top-1/2 -translate-y-1/2"
-                : "left-1/2 -translate-x-1/2"
-            } shadow-md rounded-md backface-hidden z-10`}
-            style={{
-              zIndex: currentZIndex,
-              width: cardWidth,
-              height: cardHeight,
-              left: isHorizontal ? calculatedPosition : "50%",
-              top: !isHorizontal ? calculatedPosition : "50%",
-              pointerEvents: "none",
-            }}
-            onAnimationComplete={() => {
-              if (!landedCardIds.includes(hand[i].id)) {
-                setLandedCardIds([...landedCardIds, hand[i].id]);
-              }
-            }}
-            initial={{ scale: 0.8 }}
-            animate={{
-              scale: 1,
-              zIndex: currentZIndex,
-            }}
-            transition={{
-              layout: {
-                type: "spring",
-                stiffness: 80,
-                damping: 14,
-                delay: dealDelay,
-              },
-              scale: { type: "tween", duration: 0.6, delay: dealDelay },
-              left: { type: "spring", stiffness: 200, damping: 20 },
-              top: { type: "spring", stiffness: 200, damping: 20 },
-            }}
-          >
-            <motion.div
-              className="absolute w-full h-full transform-3d"
-              transition={{
-                type: "tween",
-                duration: 0.6,
-                ease: "easeInOut",
-                delay: dealDelay,
-              }}
-            >
-              <img
-                src={getCardCoverImgPath()}
-                alt="Card cover"
-                className="absolute inset-0 w-full h-full object-cover rounded-md shadow-lg"
-              />
-            </motion.div>
-          </motion.div>,
-        );
-      }
+      cardStyle.push({
+        card: hand[i],
+        zIndex: currentZIndex,
+        width: cardWidth,
+        height: cardHeight,
+        calculatedPosition: calculatedPosition,
+        dealDelay: dealDelay,
+      });
     }
-    return elements;
+
+    return cardStyle;
   }
 
-  function renderHandContainer(): React.ReactElement {
-    return (
-      <div
-        ref={containerRef}
-        className="relative flex-1 w-full h-full min-h-0 min-w-0 border"
-      >
-        {renderHand()}
-      </div>
-    );
+  function updateStyleOnInitialAnimationComplete(cardId: string): void {
+    setLandedCardIds([...landedCardIds, cardId]);
   }
 
-  return { renderHandContainer };
+  return {
+    cardContainerRef: containerRef,
+    cardPhysics: getCardStyles(),
+    updateStyleOnInitialAnimationComplete,
+  };
 }
 
 // ANIMATIONS GOTTA BE IN THE SAME RENDERING CYCLE FOR THEM TO WORK CORRECTLY

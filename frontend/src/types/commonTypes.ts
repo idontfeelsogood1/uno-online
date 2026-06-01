@@ -150,6 +150,15 @@ export interface GamePlayer {
   readonly uno: boolean;
 }
 
+export interface CardStyle {
+  readonly card: Card;
+  readonly zIndex: number;
+  readonly width: number;
+  readonly height: number;
+  readonly calculatedPosition: number;
+  readonly dealDelay: number;
+}
+
 export interface Card {
   readonly id: string;
   readonly name: string;
