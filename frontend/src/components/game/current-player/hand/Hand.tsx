@@ -62,10 +62,7 @@ export default function Hand({
             zIndex: cardStyle.zIndex,
             width: cardStyle.width + 10,
             left: cardStyle.calculatedPosition,
-            pointerEvents:
-              isStateReceivedBetweenHands || actionContext!.isActionLocked
-                ? "none"
-                : "auto",
+            pointerEvents: isStateReceivedBetweenHands ? "none" : "auto",
           }}
           whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
           onAnimationComplete={() => {
