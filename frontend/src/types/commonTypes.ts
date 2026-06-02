@@ -37,7 +37,8 @@ export interface GameBoardProps {
 
 export interface OtherPlayerProps {
   readonly otherPlayer: GamePlayer;
-  readonly gridPosition: object;
+  readonly gridPosition: GridPosition;
+  readonly carouselSlot: CarouselSlot;
 }
 
 export interface OtherHandProps {
@@ -49,6 +50,7 @@ export interface OtherHandProps {
 export interface CurrentPlayerProps {
   readonly player: GamePlayer;
   readonly gridPosition: GridPosition;
+  readonly carouselSlot: CarouselSlot;
 }
 
 export interface PlayHandProps {
@@ -97,6 +99,13 @@ export interface GridPosition {
   readonly index: number;
   readonly placement: string;
   readonly position: string;
+}
+
+export interface CarouselSlot {
+  readonly x: string;
+  readonly scale: number;
+  readonly opacity: number;
+  readonly zIndex: number;
 }
 
 export interface GameInitializeProps {

@@ -508,3 +508,52 @@ export function useAnimationsOrchestrator(
     prevTopCard,
   };
 }
+
+export function useMediaQuery(query: string): boolean {
+  const [matches, setMatches] = useState<boolean>(false);
+
+  useEffect(() => {
+    // 1. Ask the browser to evaluate the media query
+    const mediaQueryList = window.matchMedia(query);
+
+    // 2. Set the initial state on first load
+    // eslint-disable-next-line react-hooks/set-state-in-effect
+    setMatches(mediaQueryList.matches);
+
+    // 3. Create a callback to fire whenever the screen crosses the breakpoint
+    const documentChangeHandler = (event: MediaQueryListEvent) => {
+      setMatches(event.matches);
+    };
+
+    // 4. Attach the listener
+    mediaQueryList.addEventListener("change", documentChangeHandler);
+
+    // 5. Clean up the listener when the component unmounts
+    return () => {
+      mediaQueryList.removeEventListener("change", documentChangeHandler);
+    };
+  }, [query]);
+
+  return matches;
+}
+
+export function getCarouselSlot(
+  otherIndex: number,
+  currentTurnIndex: number,
+  totalPlayers: number,
+): { x: string; scale: number; opacity: number; zIndex: number } {
+  // How many turns away is this bot from the active turn?
+  // We use the wrapping formula you already mastered to prevent negative numbers
+  const offset = (otherIndex - currentTurnIndex + totalPlayers) % totalPlayers;
+
+  switch (offset) {
+    case 0:
+      return { x: "0%", scale: 1, opacity: 1, zIndex: 10 }; // Active (Front)
+    case 1:
+      return { x: "40%", scale: 0.7, opacity: 0.5, zIndex: 5 }; // Next (Right)
+    case totalPlayers - 1:
+      return { x: "-40%", scale: 0.7, opacity: 0.5, zIndex: 5 }; // Previous (Left)
+    default:
+      return { x: "0%", scale: 0.5, opacity: 0.3, zIndex: 1 }; // Hidden (Back)
+  }
+}

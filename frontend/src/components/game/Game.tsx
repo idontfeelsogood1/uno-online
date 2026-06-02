@@ -11,14 +11,18 @@ import { LayoutGroup } from "motion/react";
 import { useContext } from "react";
 import { GameModeSocket } from "../../api/GameModeSocket";
 import {
+  getCarouselSlot,
   useAnimationsOrchestrator,
+  useMediaQuery,
   usePreloadCardAssets,
 } from "../../api/helper";
 import { RenderTurn } from "../../api/RenderTurn";
 import { GameInitialize } from "../../api/GameInitialize";
+import { IsMobileView } from "../../api/IsMobileView";
 
 export default function Game({ gameState, actionContext }: GameProps) {
   const { isLoading, loadError } = usePreloadCardAssets();
+  const isMobileView = useMediaQuery("(max-width: 1122px)");
 
   const socket = useContext(GameModeSocket)!;
 
@@ -35,18 +39,23 @@ export default function Game({ gameState, actionContext }: GameProps) {
     prevTopCard,
   } = useAnimationsOrchestrator(gameState, actionContext);
 
-  const leftPlacement: string =
-    "col-start-1 row-start-1 row-span-2 flex-row-reverse h-full w-full min-h-0 min-w-0";
-  const rightPlacement: string =
-    "col-start-3 row-start-1 row-span-2 h-full w-full min-h-0 min-w-0";
-  const topPlacement: string =
-    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
+  const leftPlacement: string = !isMobileView
+    ? "col-start-1 row-start-1 row-span-2 flex-row-reverse h-full w-full min-h-0 min-w-0"
+    : "col-start-1 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0";
+  const rightPlacement: string = !isMobileView
+    ? "col-start-3 row-start-1 row-span-2 h-full w-full min-h-0 min-w-0"
+    : "col-start-3 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0";
+  const topPlacement: string = !isMobileView
+    ? "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0"
+    : "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
   const bottomPlacement: string =
     "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0";
 
   const middlePlacement: GridPosition = {
     index: -1,
-    placement: "col-start-2 row-start-2 min-h-0 min-w-0",
+    placement: !isMobileView
+      ? "col-start-2 row-start-2 min-h-0 min-w-0"
+      : "col-start-1 col-span-3 row-start-2 min-h-0 min-w-0",
     position: "middle",
   };
 
@@ -55,7 +64,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     {
       index: 1,
       placement: leftPlacement,
-      position: "left",
+      position: !isMobileView ? "left" : "top",
     },
     {
       index: 2,
@@ -65,7 +74,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     {
       index: 3,
       placement: rightPlacement,
-      position: "right",
+      position: !isMobileView ? "right" : "top",
     },
     {
       index: 0,
@@ -74,7 +83,20 @@ export default function Game({ gameState, actionContext }: GameProps) {
     },
   ];
 
-  // REFACTOR THE tmpPlayers INTO A FUNCTION THAT RETURNS THE PLAYER FOLLOWING THE GRID OTHER
+  function getCurrentTurnGridIndex(): number | null {
+    const gridPlayerOrder: GamePlayer[] = getGridPlayerOrder();
+
+    for (let i = 0; i < gridPlayerOrder.length; i++) {
+      if (
+        gridPlayerOrder[i].socketId ===
+        gameState.playerOrder[gameState.currentPlayerIndex].socketId
+      ) {
+        return i;
+      }
+    }
+
+    return null;
+  }
 
   function getGridPlayerOrder(): GamePlayer[] {
     const gridPlayerOrder: GamePlayer[] = [];
@@ -159,11 +181,17 @@ export default function Game({ gameState, actionContext }: GameProps) {
 
     // This keeps the gridPosition index to be in order
     for (let i = 0; i < gridPlayerOrder.length; i++) {
+      const carouselSlot = getCarouselSlot(
+        playersPlacement[i].index,
+        getCurrentTurnGridIndex()!,
+        gameState.playerOrder.length,
+      );
       if (gridPlayerOrder[i].socketId !== socket.id) {
         playersHtmlList.push(
           <OtherPlayer
             otherPlayer={gridPlayerOrder[i]}
             gridPosition={playersPlacement[i]}
+            carouselSlot={carouselSlot}
           />,
         );
       } else {
@@ -171,6 +199,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
           <CurrentPlayer
             player={gridPlayerOrder[i]}
             gridPosition={playersPlacement[playersPlacement.length - 1]}
+            carouselSlot={carouselSlot}
           />,
         );
       }
@@ -189,40 +218,42 @@ export default function Game({ gameState, actionContext }: GameProps) {
   const { currPlayerSocketId, turnIndicators } = getTurnIndicatorContext();
 
   return (
-    <GameAction.Provider
-      value={{
-        actionType,
-        actionSocketId,
-        isActionLocked,
-        playedCards,
-        cardDrew,
-        unoPenalty,
-      }}
-    >
-      <LayoutGroup>
-        <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.5fr] gap-4 p-1">
-          <GameBoard
-            enforcedColor={gameState.enforcedColor}
-            gridPosition={middlePlacement}
-            gameState={gameState}
-            hasInitialized={hasInitialized}
-            animationPhase={animationPhase}
-            cardsToDraw={cardsToDraw}
-            prevTopCard={prevTopCard}
-          />
-          <RenderTurn.Provider value={{ currPlayerSocketId, turnIndicators }}>
-            <GameInitialize.Provider
-              value={{
-                hasInitialized,
-                playersSize: players.length,
-                hasFinishedInitialAnimation,
-              }}
-            >
-              {renderPlayer()}
-            </GameInitialize.Provider>
-          </RenderTurn.Provider>
-        </div>
-      </LayoutGroup>
-    </GameAction.Provider>
+    <IsMobileView.Provider value={isMobileView}>
+      <GameAction.Provider
+        value={{
+          actionType,
+          actionSocketId,
+          isActionLocked,
+          playedCards,
+          cardDrew,
+          unoPenalty,
+        }}
+      >
+        <LayoutGroup>
+          <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.5fr] gap-4 p-1">
+            <GameBoard
+              enforcedColor={gameState.enforcedColor}
+              gridPosition={middlePlacement}
+              gameState={gameState}
+              hasInitialized={hasInitialized}
+              animationPhase={animationPhase}
+              cardsToDraw={cardsToDraw}
+              prevTopCard={prevTopCard}
+            />
+            <RenderTurn.Provider value={{ currPlayerSocketId, turnIndicators }}>
+              <GameInitialize.Provider
+                value={{
+                  hasInitialized,
+                  playersSize: players.length,
+                  hasFinishedInitialAnimation,
+                }}
+              >
+                {renderPlayer()}
+              </GameInitialize.Provider>
+            </RenderTurn.Provider>
+          </div>
+        </LayoutGroup>
+      </GameAction.Provider>
+    </IsMobileView.Provider>
   );
 }

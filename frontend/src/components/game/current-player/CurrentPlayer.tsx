@@ -5,7 +5,6 @@ import PlayHand from "./play-hand/PlayHand";
 import { RenderTurn } from "../../../api/RenderTurn";
 import { useRenderIndicator } from "../../../api/helper";
 import { StateReceivedBetweenHands } from "../../../api/StateReceivedBetweenHand";
-// import { GameAction } from "../../../api/GameAction";
 
 export default function CurrentPlayer({
   player,
@@ -16,7 +15,6 @@ export default function CurrentPlayer({
     useState<boolean>(false);
 
   const renderContext = useContext(RenderTurn);
-  // const actionContext = useContext(GameAction);
 
   const { isIndicatorTurn } = useRenderIndicator(renderContext!, player);
 
@@ -40,7 +38,7 @@ export default function CurrentPlayer({
 
   return (
     <div
-      className={`${gridPosition.placement} ${getIndicatorStyle()} flex flex-col gap-1 p-1 ml-[15%] mr-[15%] border`}
+      className={`${gridPosition.placement} ${getIndicatorStyle()} flex flex-col gap-1 p-1 border`}
     >
       <div className="border flex items-center justify-center text-center">
         <span>{player.username}</span>

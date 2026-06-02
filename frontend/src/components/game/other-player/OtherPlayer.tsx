@@ -1,19 +1,18 @@
 import { useContext } from "react";
-import type {
-  GridPosition,
-  OtherPlayerProps,
-} from "../../../types/commonTypes";
+import type { OtherPlayerProps } from "../../../types/commonTypes";
 import OtherHand from "./other-hand/OtherHand";
 import { RenderTurn } from "../../../api/RenderTurn";
 import { useRenderIndicator } from "../../../api/helper";
+import { motion } from "motion/react";
+import { IsMobileView } from "../../../api/IsMobileView";
 
 export default function OtherPlayer({
   otherPlayer,
   gridPosition,
-}: OtherPlayerProps & {
-  gridPosition: GridPosition;
-}) {
+  carouselSlot,
+}: OtherPlayerProps) {
   const renderContext = useContext(RenderTurn);
+  const isMobileView = useContext(IsMobileView);
 
   const { isIndicatorTurn } = useRenderIndicator(renderContext!, otherPlayer);
 
@@ -32,8 +31,34 @@ export default function OtherPlayer({
   }
 
   return (
-    <div
+    <motion.div
+      key={"carousel-layout"}
+      layoutId={"carousel-layout"}
       className={`flex flex-1 ${gridPosition.placement} ${getIndicatorStyle()} justify-center align-middle border gap-1 p-1`}
+      style={{
+        zIndex: isMobileView ? carouselSlot.zIndex : "",
+      }}
+      onAnimationComplete={() => {
+        // empty for now
+      }}
+      animate={
+        isMobileView
+          ? { scale: carouselSlot.scale, opacity: carouselSlot.opacity }
+          : {}
+      }
+      transition={
+        isMobileView
+          ? {
+              layout: {
+                type: "spring",
+                stiffness: 80,
+                damping: 14,
+                // delay: , COMPUTE LATER WITH useAnimationOrchestrator
+              },
+              scale: { type: "tween", duration: 0.6 },
+            }
+          : {}
+      }
     >
       <div className="border flex items-center justify-center text-center">
         <span className={`${textOrientation}`}>{otherPlayer.username}</span>
@@ -43,6 +68,6 @@ export default function OtherPlayer({
         position={gridPosition.position}
         gridPositionIndex={gridPosition.index}
       />
-    </div>
+    </motion.div>
   );
 }
