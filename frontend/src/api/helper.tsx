@@ -550,23 +550,14 @@ export function getCarouselSlot(
   gridPlacement: string;
 } {
   // How many turns away is this bot from the active turn?
-  // We use the wrapping formula you already mastered to prevent negative numbers
-  const offset = (otherIndex - currentTurnIndex + totalPlayers) % totalPlayers;
+  let offset = (otherIndex - currentTurnIndex + totalPlayers) % totalPlayers;
 
-  console.log({
-    otherIndex: otherIndex,
-    currentTurnIndex: currentTurnIndex,
-    offset: offset,
-  });
-
-  // CURRENT PLAYER'S TURN
-  // BOT 1: RIGHT
-  // BOT 2: BOTTOM
-  // BOT 3: LEFT
-
-  // DONT WANT IT TO ROTATE TO THE HIDDEN SLOT AND THEN TO RIGHT WHEN ITS NOT THE PLAYER'S TURN
-  // LEFT - BOTTOM - RIGHT - TOP
-  // LEFT - RIGHT - TOP
+  // IF NOT PLAYER'S TURN AND THE BOT WAS PLACED AT THE BOTTOM
+  // THE MATH WILL PLACE THE BOT AT THE EMPTY SPOT WHERE THE PLAYER SHOULD BELONG
+  if (currentTurnIndex !== 0 && offset === 2) {
+    const emptyUserSlot = (0 - currentTurnIndex + totalPlayers) % totalPlayers;
+    offset = emptyUserSlot;
+  }
 
   switch (offset) {
     case 0:
