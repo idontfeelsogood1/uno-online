@@ -87,14 +87,14 @@ export default function GameBoard({
             <img
               src={getCardImgPath(playedCards![i])}
               alt={playedCards![i].name}
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
+              className="absolute inset-0 w-full h-full object-contain backface-hidden rounded-md shadow-md"
             />
 
             {actionSocketId !== socket.id! && (
               <img
                 src={getCardCoverImgPath()}
                 alt="Card cover"
-                className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-md"
+                className="absolute inset-0 w-full h-full object-contain backface-hidden rotate-y-180 rounded-md shadow-md"
               />
             )}
           </motion.div>
@@ -125,7 +125,7 @@ export default function GameBoard({
             <img
               src={getCardImgPath(playedCards![i])}
               alt={playedCards![i].name}
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
+              className="absolute inset-0 w-full h-full object-contain backface-hidden rounded-md shadow-md"
             />
           </div>
         </motion.div>,
@@ -136,60 +136,67 @@ export default function GameBoard({
 
   return (
     <div
-      className={`${gridPosition.placement} relative flex justify-center items-center gap-1 p-1 text-center border`}
+      className={`${gridPosition.placement} relative flex flex-col justify-center items-center gap-2 p-1 text-center border w-full h-full min-h-0 min-w-0`}
     >
-      {!hasInitialized ? (
-        renderTempHand()
-      ) : (
-        <button
-          onClick={() => socket.emit("draw-card")}
-          className="relative h-full shrink-0"
-          disabled={isActionLocked}
-        >
+      <div className="flex flex-row justify-center items-center gap-2 w-full h-full min-h-0 min-w-0 shrink">
+        {!hasInitialized ? (
+          renderTempHand()
+        ) : (
+          <button
+            onClick={() => socket.emit("draw-card")}
+            className="relative h-full max-h-64 aspect-2/3 min-h-0 min-w-0 shrink"
+            disabled={isActionLocked}
+          >
+            <img
+              src={getCardCoverImgPath()}
+              alt="Draw cards"
+              className="absolute inset-0 w-full h-full object-contain rounded-md shadow-md"
+            />
+            {cardsToDraw &&
+              cardsToDraw.length > 0 &&
+              cardsToDraw.map((card, i) => {
+                return (
+                  <motion.div
+                    key={card.id}
+                    layoutId={card.id}
+                    className="absolute inset-0 w-full h-full shadow-sm"
+                    style={{ zIndex: i }}
+                  >
+                    <div className="w-full h-full relative transform-3d rotate-y-180">
+                      <img
+                        src={getCardCoverImgPath()}
+                        alt="Card cover"
+                        className="absolute inset-0 w-full h-full object-contain backface-hidden rounded-md"
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })}
+          </button>
+        )}
+
+        <div className="relative h-full max-h-64 aspect-2/3 min-h-0 min-w-0 shrink">
           <img
-            src={getCardCoverImgPath()}
-            alt="Draw cards"
-            className="w-full h-full max-h-64 aspect-2/3 object-cover rounded-md shadow-md"
+            src={getCardImgPath(prevTopCard!)}
+            alt={prevTopCard!.color + " " + prevTopCard!.value}
+            className="absolute inset-0 w-full h-full object-contain rounded-md shadow-md"
           />
-          {cardsToDraw.length > 0 &&
-            cardsToDraw.map((card, i) => {
-              return (
-                <motion.div
-                  key={card.id}
-                  layoutId={card.id}
-                  className="absolute inset-0 w-full h-full shadow-sm"
-                  style={{ zIndex: i }}
-                >
-                  <div className="w-full h-full relative transform-3d rotate-y-180">
-                    <img
-                      src={getCardCoverImgPath()}
-                      alt="Card cover"
-                      className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
-                    />
-                  </div>
-                </motion.div>
-              );
-            })}
-        </button>
-      )}
-
-      <div className="relative shrink h-full max-h-64 aspect-2/3">
-        <img
-          src={getCardImgPath(prevTopCard!)}
-          alt={prevTopCard!.color + " " + prevTopCard!.value}
-          className="absolute inset-0 w-full h-full object-cover rounded-md shadow-md"
-        />
-        {animationPhase === "stacking" && renderStacking()}
+          {animationPhase === "stacking" && renderStacking()}
+        </div>
       </div>
 
-      <div className="border">{prevTopCard!.color}</div>
-
-      <div className="border">
-        {prevTopCard.color === "BLACK" ? enforcedColor : "No enforced color"}
+      <div className="flex flex-row justify-center items-center gap-2 w-full shrink-0 text-xs sm:text-sm font-semibold">
+        <div className="border px-2 py-1 rounded bg-white/50 truncate">
+          {prevTopCard!.color}
+        </div>
+        <div className="border px-2 py-1 rounded bg-white/50 truncate">
+          {prevTopCard.color === "BLACK" ? enforcedColor : "No enforced color"}
+        </div>
       </div>
 
+      {/* Showcase */}
       {animationPhase === "showcase" && (
-        <div className="absolute inset-0 flex justify-center items-center -space-x-2 pointer-events-none z-50 border">
+        <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-50 p-2">
           {renderShowcase()}
         </div>
       )}

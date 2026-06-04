@@ -170,7 +170,8 @@ export function useCardsAnimation(
   }, []);
 
   function getCardStyles(): CardStyle[] {
-    const isHorizontal = position === "top" || position === "bottom";
+    const isHorizontal =
+      position === "top" || position === "bottom" || position === "middle";
     const cardStyle: CardStyle[] = [];
 
     //  DYNAMIC DIMENSIONS

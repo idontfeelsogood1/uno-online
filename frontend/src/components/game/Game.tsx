@@ -229,30 +229,32 @@ export default function Game({ gameState, actionContext }: GameProps) {
           unoPenalty,
         }}
       >
-        <LayoutGroup>
-          <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.5fr] gap-4 p-1">
-            <GameBoard
-              enforcedColor={gameState.enforcedColor}
-              gridPosition={middlePlacement}
-              gameState={gameState}
-              hasInitialized={hasInitialized}
-              animationPhase={animationPhase}
-              cardsToDraw={cardsToDraw}
-              prevTopCard={prevTopCard}
-            />
-            <RenderTurn.Provider value={{ currPlayerSocketId, turnIndicators }}>
-              <GameInitialize.Provider
-                value={{
-                  hasInitialized,
-                  playersSize: players.length,
-                  hasFinishedInitialAnimation,
-                }}
+        <GameInitialize.Provider
+          value={{
+            hasInitialized,
+            playersSize: players.length,
+            hasFinishedInitialAnimation,
+          }}
+        >
+          <LayoutGroup>
+            <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.5fr] gap-4 p-1">
+              <GameBoard
+                enforcedColor={gameState.enforcedColor}
+                gridPosition={middlePlacement}
+                gameState={gameState}
+                hasInitialized={hasInitialized}
+                animationPhase={animationPhase}
+                cardsToDraw={cardsToDraw}
+                prevTopCard={prevTopCard}
+              />
+              <RenderTurn.Provider
+                value={{ currPlayerSocketId, turnIndicators }}
               >
                 {renderPlayer()}
-              </GameInitialize.Provider>
-            </RenderTurn.Provider>
-          </div>
-        </LayoutGroup>
+              </RenderTurn.Provider>
+            </div>
+          </LayoutGroup>
+        </GameInitialize.Provider>
       </GameAction.Provider>
     </IsMobileView.Provider>
   );
