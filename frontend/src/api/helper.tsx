@@ -542,19 +542,68 @@ export function getCarouselSlot(
   otherIndex: number,
   currentTurnIndex: number,
   totalPlayers: number,
-): { x: string; scale: number; opacity: number; zIndex: number } {
+): {
+  x: string;
+  scale: number;
+  opacity: number;
+  zIndex: number;
+  gridPlacement: string;
+} {
   // How many turns away is this bot from the active turn?
   // We use the wrapping formula you already mastered to prevent negative numbers
   const offset = (otherIndex - currentTurnIndex + totalPlayers) % totalPlayers;
 
+  console.log({
+    otherIndex: otherIndex,
+    currentTurnIndex: currentTurnIndex,
+    offset: offset,
+  });
+
+  // CURRENT PLAYER'S TURN
+  // BOT 1: RIGHT
+  // BOT 2: BOTTOM
+  // BOT 3: LEFT
+
+  // DONT WANT IT TO ROTATE TO THE HIDDEN SLOT AND THEN TO RIGHT WHEN ITS NOT THE PLAYER'S TURN
+  // LEFT - BOTTOM - RIGHT - TOP
+  // LEFT - RIGHT - TOP
+
   switch (offset) {
     case 0:
-      return { x: "0%", scale: 1, opacity: 1, zIndex: 10 }; // Active (Front)
+      return {
+        x: "0%",
+        scale: 1,
+        opacity: 1,
+        zIndex: 10,
+        gridPlacement:
+          "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0",
+      }; // Active (Front)
     case 1:
-      return { x: "40%", scale: 0.7, opacity: 0.5, zIndex: 5 }; // Next (Right)
+      return {
+        x: "20%",
+        scale: 0.7,
+        opacity: 0.5,
+        zIndex: 5,
+        gridPlacement:
+          "col-start-3 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0",
+      }; // Next (Right)
     case totalPlayers - 1:
-      return { x: "-40%", scale: 0.7, opacity: 0.5, zIndex: 5 }; // Previous (Left)
+      return {
+        x: "-20%",
+        scale: 0.7,
+        opacity: 0.5,
+        zIndex: 5,
+        gridPlacement:
+          "col-start-1 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0",
+      }; // Previous (Left)
     default:
-      return { x: "0%", scale: 0.5, opacity: 0.3, zIndex: 1 }; // Hidden (Back)
+      return {
+        x: "0%",
+        scale: 0.5,
+        opacity: 0.3,
+        zIndex: 1,
+        gridPlacement:
+          "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0",
+      }; // Hidden (Back)
   }
 }

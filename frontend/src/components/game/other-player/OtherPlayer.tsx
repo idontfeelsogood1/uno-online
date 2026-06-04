@@ -32,9 +32,9 @@ export default function OtherPlayer({
 
   return (
     <motion.div
-      key={"carousel-layout"}
-      layoutId={"carousel-layout"}
-      className={`flex flex-1 ${gridPosition.placement} ${getIndicatorStyle()} justify-center align-middle border gap-1 p-1`}
+      key={otherPlayer.socketId}
+      layoutId={otherPlayer.socketId}
+      className={`flex flex-1 ${isMobileView ? carouselSlot.gridPlacement : gridPosition.placement} ${getIndicatorStyle()} justify-center align-middle border gap-1 p-1`}
       style={{
         zIndex: isMobileView ? carouselSlot.zIndex : "",
       }}

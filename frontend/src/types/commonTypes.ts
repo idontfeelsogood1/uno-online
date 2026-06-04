@@ -106,6 +106,7 @@ export interface CarouselSlot {
   readonly scale: number;
   readonly opacity: number;
   readonly zIndex: number;
+  readonly gridPlacement: string;
 }
 
 export interface GameInitializeProps {

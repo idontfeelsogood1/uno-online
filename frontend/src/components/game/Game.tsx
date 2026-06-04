@@ -39,15 +39,12 @@ export default function Game({ gameState, actionContext }: GameProps) {
     prevTopCard,
   } = useAnimationsOrchestrator(gameState, actionContext);
 
-  const leftPlacement: string = !isMobileView
-    ? "col-start-1 row-start-1 row-span-2 flex-row-reverse h-full w-full min-h-0 min-w-0"
-    : "col-start-1 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0";
-  const rightPlacement: string = !isMobileView
-    ? "col-start-3 row-start-1 row-span-2 h-full w-full min-h-0 min-w-0"
-    : "col-start-3 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0";
-  const topPlacement: string = !isMobileView
-    ? "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0"
-    : "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
+  const leftPlacement: string =
+    "col-start-1 row-start-1 row-span-2 flex-row-reverse h-full w-full min-h-0 min-w-0";
+  const rightPlacement: string =
+    "col-start-3 row-start-1 row-span-2 h-full w-full min-h-0 min-w-0";
+  const topPlacement: string =
+    "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0";
   const bottomPlacement: string =
     "col-start-1 col-span-3 row-start-3 min-h-0 min-w-0";
 
@@ -91,7 +88,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
         gridPlayerOrder[i].socketId ===
         gameState.playerOrder[gameState.currentPlayerIndex].socketId
       ) {
-        return i;
+        return playersPlacement[i].index;
       }
     }
 
