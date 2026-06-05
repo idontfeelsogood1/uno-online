@@ -192,7 +192,7 @@ export function useCardsAnimation(
       if (isHorizontal && containerSize.width > 0) {
         step = (containerSize.width - cardWidth) / (hand.length - 1);
         step = Math.min(step, cardWidth * 0.8);
-        step = Math.max(step, 10);
+        step = Math.max(step, 8);
       } else if (!isHorizontal && containerSize.height > 0) {
         step = (containerSize.height - cardHeight) / (hand.length - 1);
         step = Math.min(step, cardHeight * 0.8);
@@ -213,7 +213,7 @@ export function useCardsAnimation(
     for (let i = 0; i < hand.length; i++) {
       const dealDelay = initializeContext!.hasFinishedInitialAnimation
         ? 0.15
-        : (i * initializeContext!.playersSize + gridPositionIndex) * 0.25; // THE NUMBER 4 IS THE LENGTH OF THE PLAYERS, INDEX MIGHT NEED SHIFTING LATER
+        : (i * initializeContext!.playersSize + gridPositionIndex) * 0.25;
 
       const calculatedPosition = startOffset + i * step;
 
@@ -295,7 +295,7 @@ export function useAnimationsOrchestrator(
       setTimeout(() => {
         setPlayers(gameState.playerOrder);
         setHasInitialized(true);
-      }, 50); // WAIT FOR DOM TO LOAD AND ResizeObservers TO SET THE NECCESSARY DATA FOR STYLE
+      }, 150); // WAIT FOR DOM TO LOAD AND ResizeObservers TO SET THE NECCESSARY DATA FOR STYLE
       setTimeout(() => {
         setHasFinishedInitialAnimation(true);
       }, 9000);
@@ -542,6 +542,7 @@ export function getCarouselSlot(
   otherIndex: number,
   currentTurnIndex: number,
   totalPlayers: number,
+  hasFinishedInitialAnimation: boolean,
 ): {
   x: string;
   scale: number;
@@ -559,42 +560,84 @@ export function getCarouselSlot(
     offset = emptyUserSlot;
   }
 
-  switch (offset) {
-    case 0:
-      return {
-        x: "0%",
-        scale: 1,
-        opacity: 1,
-        zIndex: 10,
-        gridPlacement:
-          "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0",
-      }; // Active (Front)
-    case 1:
-      return {
-        x: "20%",
-        scale: 0.7,
-        opacity: 0.5,
-        zIndex: 5,
-        gridPlacement:
-          "col-start-3 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0",
-      }; // Next (Right)
-    case totalPlayers - 1:
-      return {
-        x: "-20%",
-        scale: 0.7,
-        opacity: 0.5,
-        zIndex: 5,
-        gridPlacement:
-          "col-start-1 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0",
-      }; // Previous (Left)
-    default:
-      return {
-        x: "0%",
-        scale: 0.5,
-        opacity: 0.3,
-        zIndex: 1,
-        gridPlacement:
-          "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0",
-      }; // Hidden (Back)
+  if (hasFinishedInitialAnimation) {
+    switch (offset) {
+      case 0:
+        return {
+          x: "0%",
+          scale: 1,
+          opacity: 1,
+          zIndex: 10,
+          gridPlacement:
+            "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0",
+        }; // Active (Front)
+      case 1:
+        return {
+          x: "-20%",
+          scale: 0.7,
+          opacity: 0.5,
+          zIndex: 5,
+          gridPlacement:
+            "col-start-3 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0",
+        }; // Next (Right)
+      case totalPlayers - 1:
+        return {
+          x: "20%",
+          scale: 0.7,
+          opacity: 0.5,
+          zIndex: 5,
+          gridPlacement:
+            "col-start-1 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0",
+        }; // Previous (Left)
+      default:
+        return {
+          x: "0%",
+          scale: 0.5,
+          opacity: 0.3,
+          zIndex: 1,
+          gridPlacement:
+            "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0",
+        }; // Hidden (Back)
+    }
+  } else {
+    // RETURN THE DEFAULT STATE WHEN THE DISTRIBUTION ANIMTION IS PLAYING
+    switch (offset) {
+      case 0:
+        return {
+          x: "0%",
+          scale: 1,
+          opacity: 1,
+          zIndex: 10,
+          gridPlacement:
+            "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0",
+        }; // Active (Front)
+      case 1:
+        return {
+          x: "-20%",
+          scale: 1,
+          opacity: 1,
+          zIndex: 10,
+          gridPlacement:
+            "col-start-3 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0",
+        }; // Next (Right)
+      case totalPlayers - 1:
+        return {
+          x: "20%",
+          scale: 1,
+          opacity: 1,
+          zIndex: 10,
+          gridPlacement:
+            "col-start-1 row-start-1 row-span-1 flex-col-reverse h-full w-full min-h-0 min-w-0",
+        }; // Previous (Left)
+      default:
+        return {
+          x: "0%",
+          scale: 1,
+          opacity: 1,
+          zIndex: 10,
+          gridPlacement:
+            "col-start-2 row-start-1 flex-col-reverse min-h-0 min-w-0",
+        }; // Hidden (Back)
+    }
   }
 }

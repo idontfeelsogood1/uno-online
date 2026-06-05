@@ -8,7 +8,7 @@ import GameBoard from "./game-board/GameBoard";
 import OtherPlayer from "./other-player/OtherPlayer";
 import { GameAction } from "../../api/GameAction";
 import { LayoutGroup } from "motion/react";
-import { useContext } from "react";
+import { useContext, useState } from "react";
 import { GameModeSocket } from "../../api/GameModeSocket";
 import {
   getCarouselSlot,
@@ -23,6 +23,7 @@ import { IsMobileView } from "../../api/IsMobileView";
 export default function Game({ gameState, actionContext }: GameProps) {
   const { isLoading, loadError } = usePreloadCardAssets();
   const isMobileView = useMediaQuery("(max-width: 1122px)");
+  const [initialPlayerOrderLength] = useState(gameState.playerOrder.length);
 
   const socket = useContext(GameModeSocket)!;
 
@@ -80,7 +81,9 @@ export default function Game({ gameState, actionContext }: GameProps) {
     },
   ];
 
-  function getCurrentTurnGridIndex(): number | null {
+  // GET THE INDEX AS IF THE PLAYER IS IN THE CAROUSEL
+  // (CurrentPlayer usually at index 0 but they can be at index 3 2 1 to ensure the math works)
+  function getCurrentCarouselTurnGridIndex(): number | null {
     const gridPlayerOrder: GamePlayer[] = getGridPlayerOrder();
 
     for (let i = 0; i < gridPlayerOrder.length; i++) {
@@ -171,7 +174,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     };
   }
 
-  // DEPENDS ON playersPlacement AND getGridPlayerOrder
+  // DEPENDS ON playersPlacement, getGridPlayerOrder, getCurrentCarouselTurnGridIndex, initialPlayerOrderLength
   function renderPlayer(): React.ReactElement[] {
     const gridPlayerOrder: GamePlayer[] = getGridPlayerOrder();
     const playersHtmlList: React.ReactElement[] = [];
@@ -180,8 +183,9 @@ export default function Game({ gameState, actionContext }: GameProps) {
     for (let i = 0; i < gridPlayerOrder.length; i++) {
       const carouselSlot = getCarouselSlot(
         playersPlacement[i].index,
-        getCurrentTurnGridIndex()!,
-        gameState.playerOrder.length,
+        getCurrentCarouselTurnGridIndex()!,
+        initialPlayerOrderLength,
+        hasFinishedInitialAnimation,
       );
       if (gridPlayerOrder[i].socketId !== socket.id) {
         playersHtmlList.push(
@@ -234,7 +238,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
           }}
         >
           <LayoutGroup>
-            <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.5fr] gap-4 p-1">
+            <div className="grow h-full grid grid-cols-[1fr_1fr_1fr] grid-rows-[1fr_1fr_1.5fr] gap-1 p-1">
               <GameBoard
                 enforcedColor={gameState.enforcedColor}
                 gridPosition={middlePlacement}

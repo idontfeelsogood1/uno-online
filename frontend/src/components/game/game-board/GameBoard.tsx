@@ -1,9 +1,14 @@
 import type { GameBoardProps } from "../../../types/commonTypes";
-import { getCardImgPath, getCardCoverImgPath } from "../../../api/helper";
+import {
+  getCardImgPath,
+  getCardCoverImgPath,
+  useCardsAnimation,
+} from "../../../api/helper";
 import { GameAction } from "../../../api/GameAction";
 import { useContext } from "react";
 import { motion } from "motion/react";
 import { GameModeSocket } from "../../../api/GameModeSocket";
+import { GameInitialize } from "../../../api/GameInitialize";
 
 export default function GameBoard({
   enforcedColor,
@@ -15,7 +20,14 @@ export default function GameBoard({
   prevTopCard,
 }: GameBoardProps) {
   const actionContext = useContext(GameAction);
+  const initializeContext = useContext(GameInitialize);
   const { actionSocketId, isActionLocked, playedCards } = actionContext!;
+  const { cardContainerRef, cardPhysics } = useCardsAnimation(
+    gridPosition.position,
+    gridPosition.index,
+    playedCards ? playedCards : [],
+    initializeContext!,
+  );
 
   const socket = useContext(GameModeSocket)!;
 
@@ -53,14 +65,17 @@ export default function GameBoard({
   function renderShowcase(): React.ReactElement[] {
     const elements: React.ReactElement[] = [];
 
-    for (let i = 0; i < playedCards!.length; i++) {
+    for (let i = 0; i < cardPhysics.length; i++) {
       const dealDelay = i * 0.25;
       elements.push(
         <motion.div
-          key={playedCards![i].id}
-          layoutId={playedCards![i].id}
-          className="shrink h-full max-h-64 aspect-2/3 z-20"
-          style={{ zIndex: i }}
+          key={cardPhysics[i].card.id}
+          layoutId={cardPhysics[i].card.id}
+          className="absolute shrink h-full max-h-64 aspect-2/3 z-20"
+          style={{
+            zIndex: cardPhysics[i].zIndex,
+            left: cardPhysics[i].calculatedPosition,
+          }}
           initial={{ scale: 0.8 }}
           animate={{ scale: 1.2 }}
           transition={{
@@ -74,7 +89,7 @@ export default function GameBoard({
           }}
         >
           <motion.div
-            className="w-full h-full relative transform-3d"
+            className="relative w-full h-full transform-3d"
             initial={{ rotateY: actionSocketId !== socket.id! ? 180 : 0 }}
             animate={{ rotateY: 0 }}
             transition={{
@@ -175,6 +190,7 @@ export default function GameBoard({
           </button>
         )}
 
+        {/* Stacking */}
         <div className="relative h-full max-h-64 aspect-2/3 min-h-0 min-w-0 shrink">
           <img
             src={getCardImgPath(prevTopCard!)}
@@ -187,19 +203,22 @@ export default function GameBoard({
 
       <div className="flex flex-row justify-center items-center gap-2 w-full shrink-0 text-xs sm:text-sm font-semibold">
         <div className="border px-2 py-1 rounded bg-white/50 truncate">
-          {prevTopCard!.color}
+          {prevTopCard.color === "BLACK"
+            ? `Choosen color: ${enforcedColor}`
+            : "No choosen color"}
         </div>
         <div className="border px-2 py-1 rounded bg-white/50 truncate">
-          {prevTopCard.color === "BLACK" ? enforcedColor : "No enforced color"}
+          {prevTopCard!.color}
         </div>
       </div>
 
       {/* Showcase */}
-      {animationPhase === "showcase" && (
-        <div className="absolute inset-0 flex justify-center items-center pointer-events-none z-50 p-2">
-          {renderShowcase()}
-        </div>
-      )}
+      <div
+        ref={cardContainerRef}
+        className={`absolute inset-0 pointer-events-none z-50 p-2`}
+      >
+        {animationPhase === "showcase" && renderShowcase()}
+      </div>
     </div>
   );
 }

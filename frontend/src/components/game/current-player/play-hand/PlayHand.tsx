@@ -5,7 +5,7 @@ import {
 } from "../../../../api/helper";
 import type { Card, PlayHandProps } from "../../../../types/commonTypes";
 import ChooseColor from "../choose-color/ChooseColor";
-import { useContext, useState } from "react";
+import { useContext, useEffect, useState } from "react";
 import { GameAction } from "../../../../api/GameAction";
 import { GameModeSocket } from "../../../../api/GameModeSocket";
 import { GameInitialize } from "../../../../api/GameInitialize";
@@ -22,6 +22,7 @@ export default function PlayHand({
   const [showChooseColorActionCb, setShowChooseColorActionCb] =
     useState<CallableFunction | null>(null);
 
+  const [isUno, setIsUno] = useState<boolean>(false);
   const [canUno, setCanUno] = useState<boolean>(false);
 
   const socket = useContext(GameModeSocket)!;
@@ -40,6 +41,14 @@ export default function PlayHand({
     initializeContext!,
   );
 
+  // CHECK IF THE PLAYER CAN UNO ON HAND CHANGE
+  useEffect(() => {
+    if (pseudoHand.length <= 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCanUno(true);
+    }
+  }, [pseudoHand, pseudoPlayHand]);
+
   function removeCardFromPlayHand(card: Card) {
     setPseudoPlayHand(
       pseudoPlayHand.filter((pseudoCard) => {
@@ -48,6 +57,7 @@ export default function PlayHand({
     );
     setIsStateReceivedBetweenHands(true);
     setCanUno(false);
+    setIsUno(false);
   }
 
   function playCondition(action: CallableFunction) {
@@ -77,6 +87,7 @@ export default function PlayHand({
 
       setPseudoPlayHand([]);
       setCanUno(false);
+      setIsUno(false);
       setShowChooseColor(false);
     };
     playCondition(callback);
@@ -84,7 +95,8 @@ export default function PlayHand({
 
   function uno() {
     if (pseudoHand.length <= 1) {
-      setCanUno(true);
+      setCanUno(false);
+      setIsUno(true);
     }
   }
 
@@ -177,15 +189,15 @@ export default function PlayHand({
           <div className="flex justify-center border p-1 gap-1 shrink-0">
             <button
               onClick={playCards}
-              className="border"
+              className={`border ${!actionContext!.isActionLocked ? "opacity-100" : "opacity-50"}`}
               disabled={actionContext!.isActionLocked}
             >
               PLAY CARDS
             </button>
             <button
-              className={`border ${canUno ? "opacity-50" : "opacity-100"}`}
+              className={`border ${canUno && !isUno ? "opacity-100" : "opacity-50"}`}
               onClick={uno}
-              disabled={canUno || actionContext!.isActionLocked}
+              disabled={(canUno && isUno) || actionContext!.isActionLocked}
             >
               UNO
             </button>

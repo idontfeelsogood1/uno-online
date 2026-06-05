@@ -4,6 +4,7 @@ import { useContext } from "react";
 import { GameInitialize } from "../../../../api/GameInitialize";
 // import { GameAction } from "../../../../api/GameAction";
 import { motion } from "motion/react";
+import { IsMobileView } from "../../../../api/IsMobileView";
 
 export default function OtherHand({
   otherHand,
@@ -11,6 +12,7 @@ export default function OtherHand({
   gridPositionIndex,
 }: OtherHandProps) {
   const initializeContext = useContext(GameInitialize);
+  const isMobileView = useContext(IsMobileView);
   // const actionContext = useContext(GameAction);
   const {
     cardContainerRef,
@@ -41,8 +43,18 @@ export default function OtherHand({
             zIndex: cardStyle.zIndex,
             width: cardStyle.width,
             height: cardStyle.height,
-            left: isHorizontal ? cardStyle.calculatedPosition : "50%",
-            top: !isHorizontal ? cardStyle.calculatedPosition : "50%",
+            left:
+              initializeContext!.hasFinishedInitialAnimation || !isMobileView
+                ? isHorizontal
+                  ? cardStyle.calculatedPosition
+                  : "50%"
+                : "-10%",
+            top:
+              initializeContext!.hasFinishedInitialAnimation || !isMobileView
+                ? !isHorizontal
+                  ? cardStyle.calculatedPosition
+                  : "50%"
+                : "",
             pointerEvents: "none",
           }}
           onAnimationComplete={() => {

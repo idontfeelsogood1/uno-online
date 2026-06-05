@@ -34,7 +34,7 @@ export default function OtherPlayer({
     <motion.div
       key={otherPlayer.socketId}
       layoutId={otherPlayer.socketId}
-      className={`flex flex-1 ${isMobileView ? carouselSlot.gridPlacement : gridPosition.placement} ${getIndicatorStyle()} justify-center align-middle border gap-1 p-1`}
+      className={`flex flex-1 ${isMobileView ? carouselSlot.gridPlacement : gridPosition.placement} ${getIndicatorStyle()} justify-center align-middle border p-1`}
       style={{
         zIndex: isMobileView ? carouselSlot.zIndex : "",
       }}
@@ -43,7 +43,10 @@ export default function OtherPlayer({
       }}
       animate={
         isMobileView
-          ? { scale: carouselSlot.scale, opacity: carouselSlot.opacity }
+          ? {
+              scale: carouselSlot.scale,
+              opacity: carouselSlot.opacity,
+            }
           : {}
       }
       transition={
