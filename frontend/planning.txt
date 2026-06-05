@@ -125,7 +125,6 @@ BUGS TO FIX:
     - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
     - Long card patterns cause renderShowCase to not render long enough (consider calculating the time based on the cards)
     - Card distribution animation snaps from below to top at the end
-    - Mobile view card distribution animation inherited the final state of the container so it flew from below 
 
 // MOBILE VIEW:
     - TODOs:
