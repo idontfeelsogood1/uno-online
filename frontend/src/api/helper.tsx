@@ -302,13 +302,13 @@ export function useAnimationsOrchestrator(
       }, 9000);
     }
 
-    if (isPresetLoading) return;
+    if (isPresetLoading) return; // Prevent anymation plays before preset has loaded
 
     setPlayers(getEmptyHandPlayers());
     setCardsForPlayers();
 
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
+  }, [isPresetLoading]);
 
   useEffect(() => {
     function handleActionLockAndUnlock(ms: number): () => void {
