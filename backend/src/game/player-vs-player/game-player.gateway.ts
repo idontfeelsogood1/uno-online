@@ -221,13 +221,15 @@ export class GamePlayerGateway implements OnGatewayDisconnect {
     }
 
     if (room.hasStarted() && this.engine.hasGameEnded(room)) {
+      this.engine.emitGameEvents(
+        'game-ended',
+        this.server,
+        room,
+        player,
+        null,
+        null,
+      );
       this.service.resetRoom(room);
-      this.server.to(room.id).emit('game-state-update', {
-        actionType: 'game-ended',
-        socketId: player.socketId,
-        username: player.username,
-        gameState: gameState,
-      });
     }
   }
 
@@ -267,13 +269,14 @@ export class GamePlayerGateway implements OnGatewayDisconnect {
     this.engine.isPlayerTurn(room, player);
     this.engine.drawCards(room, player, 1);
 
-    this.server.to(room.id).emit('game-state-update', {
-      actionType: 'draw-cards',
-      socketId: player.socketId,
-      username: player.username,
-      gameState: this.engine.generateGameState(room),
-      cardDrew: player.getHand()[player.getHand().length - 1],
-    });
+    this.engine.emitGameEvents(
+      'draw-cards',
+      this.server,
+      room,
+      player,
+      null,
+      null,
+    );
   }
 
   // THIS ROUTE SHOULD STOP THE GAME WHEN A PLAYER HAS WON AND HANDLE CLEANUP OPERATIONS
@@ -291,28 +294,35 @@ export class GamePlayerGateway implements OnGatewayDisconnect {
     this.service.hasRoomNotStarted(room);
     this.engine.isPlayerTurn(room, player);
     this.engine.playCards(room, player, cardsToPlayIds, wildColor);
+
     if (uno) player.setIsUno(true);
+    const isUnoPenalty: boolean = this.engine.checkUnoPenalty(
+      player.getHand(),
+      player.isUno(),
+    );
+
     this.engine.processCurrentTurn(room);
     this.engine.processNextTurn(room);
 
-    const gameState: PublicGameState = this.engine.generateGameState(room);
-
     if (this.engine.hasGameEnded(room)) {
+      this.engine.emitGameEvents(
+        'game-ended',
+        this.server,
+        room,
+        player,
+        null,
+        null,
+      );
       this.service.resetRoom(room);
-      this.server.to(room.id).emit('game-state-update', {
-        actionType: 'game-ended',
-        socketId: player.socketId,
-        username: player.username,
-        gameState: gameState,
-      });
     } else {
-      this.server.to(room.id).emit('game-state-update', {
-        actionType: 'played-cards',
-        socketId: player.socketId,
-        username: player.username,
-        gameState: gameState,
-        playedCards: playedCards,
-      });
+      this.engine.emitGameEvents(
+        'played-cards',
+        this.server,
+        room,
+        player,
+        playedCards,
+        isUnoPenalty,
+      );
     }
   }
 }

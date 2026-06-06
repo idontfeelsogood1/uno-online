@@ -8,7 +8,7 @@ import type {
   WrapperViewState,
   RoomData,
   GameData,
-  GameStateActionType,
+  GameActionProps,
 } from "../../types/commonTypes";
 import type {
   RoomStateUpdateDto,
@@ -24,8 +24,7 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   const [lobbyState, setLobbyState] = useState<RoomData[]>([]);
   const [roomState, setRoomState] = useState<RoomData | null>(null);
   const [gameState, setGameState] = useState<GameData | null>(null);
-  const [actionSocketId, setActionSocketId] = useState<string | null>(null);
-  const [actionType, setActionType] = useState<GameStateActionType | null>(
+  const [actionContext, setActionContext] = useState<GameActionProps | null>(
     null,
   );
 
@@ -67,28 +66,19 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
       const { actionType }: GameStateUpdateDto = data;
       if (actionType === "game-started") {
         setView("GAME");
-        socket.emit("get-room-state", (ack: RoomDto) => {
-          setRoomState(ack.roomState);
-        });
-        setGameState({
-          ...data.gameState,
-          playedCards: data.playedCards,
-          cardDrew: data.cardDrew,
-        });
-        setActionSocketId(socket.id!);
-        setActionType(data.actionType);
-      } else {
-        socket.emit("get-room-state", (ack: RoomDto) => {
-          setRoomState(ack.roomState);
-        });
-        setGameState({
-          ...data.gameState,
-          playedCards: data.playedCards,
-          cardDrew: data.cardDrew,
-        });
-        setActionSocketId(data.socketId!);
-        setActionType(data.actionType);
       }
+      socket.emit("get-room-state", (ack: RoomDto) => {
+        setRoomState(ack.roomState);
+      });
+      setGameState(data.gameState);
+      setActionContext({
+        actionType: data.actionType,
+        actionSocketId: data.socketId!,
+        isActionLocked: false,
+        playedCards: data.playedCards,
+        cardDrew: data.cardDrew,
+        unoPenalty: data.unoPenalty,
+      });
     });
 
     socket.on("validation-exception", (data) => {
@@ -125,12 +115,8 @@ export default function PlayerVsPlayer({ setHomeView }: PlayerVsPlayerProps) {
   if (view === "GAME") {
     return (
       <>
-        <Game
-          gameState={gameState!}
-          actionType={actionType!}
-          actionSocketId={actionSocketId!}
-        />
-        {actionType === "game-ended" && (
+        <Game gameState={gameState!} actionContext={actionContext!} />
+        {actionContext!.actionType === "game-ended" && (
           <GameEnd
             players={roomState!.currentPlayers}
             ownerSocketId={roomState!.ownerSocketId}

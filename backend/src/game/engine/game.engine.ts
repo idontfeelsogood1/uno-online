@@ -18,6 +18,7 @@ import {
   PublicGamePlayer,
   PublicGameState,
 } from '../service-interface/service-interface';
+import { Server } from 'socket.io';
 
 @Injectable()
 export class GameEngine {
@@ -182,12 +183,16 @@ export class GameEngine {
     }
   }
 
+  public checkUnoPenalty(hand: Card[], isUno: boolean): boolean {
+    const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
+    return zeroOrOneCardLeftOnHand && isUno === false;
+  }
+
   public processCurrentTurn(room: GameRoom): boolean {
     const currentPlayer: Player = room.getPlayerFromOrder();
     const hand: Card[] = currentPlayer.getHand();
-    const zeroOrOneCardLeftOnHand = hand.length === 0 || hand.length === 1;
 
-    if (zeroOrOneCardLeftOnHand && currentPlayer.isUno() === false) {
+    if (this.checkUnoPenalty(hand, currentPlayer.isUno())) {
       this.processTurnDrawCards(room, currentPlayer, 2);
     }
     if (hand.length === 0 && currentPlayer.isUno() === true) {
@@ -273,6 +278,7 @@ export class GameEngine {
       room.getDirection(),
       room.getGameBoard().getCurrentTopCard(),
       room.getGameBoard().getEnforcedColor(),
+      room.getGameBoard().getTurnEvents(),
     );
   }
 
@@ -292,5 +298,42 @@ export class GameEngine {
     }
 
     return publicGamePlayers;
+  }
+
+  public emitGameEvents(
+    event: 'played-cards' | 'draw-cards' | 'game-ended',
+    server: Server,
+    room: GameRoom,
+    player: Player,
+    playedCards: Card[] | null,
+    unoPenalty: boolean | null,
+  ): void {
+    if (event === 'played-cards') {
+      server.to(room.id).emit('game-state-update', {
+        actionType: 'played-cards',
+        socketId: player.socketId,
+        username: player.username,
+        gameState: this.generateGameState(room),
+        playedCards: playedCards,
+        unoPenalty: unoPenalty,
+      });
+    }
+    if (event === 'draw-cards') {
+      server.to(room.id).emit('game-state-update', {
+        actionType: 'draw-cards',
+        socketId: player.socketId,
+        username: player.username,
+        gameState: this.generateGameState(room),
+        cardDrew: player.getHand()[player.getHand().length - 1],
+      });
+    }
+    if (event === 'game-ended') {
+      server.to(room.id).emit('game-state-update', {
+        actionType: 'game-ended',
+        socketId: player.socketId,
+        username: player.username,
+        gameState: this.generateGameState(room),
+      });
+    }
   }
 }

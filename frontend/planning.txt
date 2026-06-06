@@ -89,11 +89,11 @@ PlayerVsPlayer COMPONENT:
         - Then setting the hand of player will automatically fly the card
     - When theres an event from each state received:
         - Backend sends back an object containing the required data for frontend
-        - Object shape: {
+        - Object shape: { (INCLUDE turnEvents PROP IN BACKEND'S PublicGameState AND FRONTEND'S DTO )
             socketId (the one who did the action)
             currentPlayerIndex (the current player's turn)
             turnEvents: {
-                cards_to_draw (for the currentPlayer)
+                - Send back properties to compute on the frontend
             }
         }
         - After renderStacking finished:
@@ -106,7 +106,35 @@ PlayerVsPlayer COMPONENT:
                 - Show the cards on top of GameBoard drawPile for a second
                 - Set the full hand for the player
 
-// BUGS TO FIX:
-- cardDrew and playCards length property is not defined when clicking drawCard while the animation is playing (renderShowCase, stacking, etc...)
-    - fix: Disable ALL actions of the player (except adding cards to PlayHand) when the animations are in progress
+    // GET THE INDEX OF THE PREVIOUS PLAYER WHO DID THE ACTION
+    // GET THE INDEX OF THE CURRENT PLAYER'S TURN
+    // LOOP FROM THE PREVIOUS ACTION PLAYER'S INDEX UNTIL THE CURRENT PLAYER'S INDEX (It will not pass for the current player)
+      // PASS THE DELAY TO RENDER AND REMOVE THE MARKER TO THE COMPONENT
+      // ON RIGHT DIRECTION:
+        // IF currentIndex === 0 WRAP BACK TO THE END
+        // ELSE DECREMENT THE INDEX
+      // ON LEFT DIRECTION
+        // IF currentIndex === endIndex WRAP BACK TO THE START
+        // ELSE INCREMENT THE INDEX
+    // WHEN ITS THE CURRENT PLAYER'S INDEX
+      // PASS THE TRIGGER TO THEM TO RENDER THE MARKER WITHOUT REMOVING IT
 
+BUGS TO FIX:
+    - Resize observer in the Hand and PlayHand component causes the animation to stutter when the cards
+    fly out of the viewport and it set the state (might not need to fix)
+    - GameEnd components for both bot and player continuing the game doesnt work (maybe state not rerendering)
+    - Long card patterns cause renderShowCase to not render long enough (consider calculating the time based on the cards)
+    - Card distribution animation snaps from below to top at the end
+
+// MOBILE VIEW:
+    - TODOs:
+        - Verify the getCarouselSlot logic actually follows the grid order 
+        - Understand what its doing
+        - Write down the cases
+        - Change the physical location of where the players are in the top grid on turn changes
+
+
+// TODOs AFTER RETURNING TO THIS PROJECT TO REFINE FOR INTERNSHIPS:
+- Weight based sorting system for Hand (red - blue - green - yellow you get the point)
+- Announcing errors (Which card is invalid to play, what action cause the error, etc...)
+- Refining the UI

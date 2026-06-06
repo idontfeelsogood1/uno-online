@@ -71,6 +71,8 @@ export class GameBotGateway implements OnGatewayDisconnect {
 
     client.emit('game-state-update', {
       actionType: 'create-game',
+      socketId: owner.socketId,
+      username: owner.username,
       gameState: this.engine.generateGameState(room),
     });
   }
@@ -89,13 +91,14 @@ export class GameBotGateway implements OnGatewayDisconnect {
     this.engine.isPlayerTurn(room, player);
     this.engine.drawCards(room, player, 1); // TRIGGERS CLEARING THE discardPile, KEEPING THE TOP CARD, PUSHING AND SHUFFLING CARDS TO drawPile WHEN drawPile is 0
 
-    this.server.to(room.id).emit('game-state-update', {
-      actionType: 'draw-cards',
-      socketId: player.socketId,
-      username: player.username,
-      gameState: this.engine.generateGameState(room),
-      cardDrew: player.getHand()[player.getHand().length - 1],
-    });
+    this.engine.emitGameEvents(
+      'draw-cards',
+      this.server,
+      room,
+      player,
+      null,
+      null,
+    );
   }
 
   @SubscribeMessage('play-cards')
@@ -111,22 +114,32 @@ export class GameBotGateway implements OnGatewayDisconnect {
 
     this.engine.isPlayerTurn(room, player);
     this.engine.playCards(room, player, cardsToPlayIds, wildColor);
+
     if (uno) player.setIsUno(true);
+    const isUnoPenalty: boolean = this.engine.checkUnoPenalty(
+      player.getHand(),
+      player.isUno(),
+    );
+
     this.engine.processCurrentTurn(room); // REMEMBER TO SET ISUNO = FALSE
     this.engine.processNextTurn(room);
 
-    this.server.to(room.id).emit('game-state-update', {
-      actionType: 'played-cards',
-      socketId: player.socketId,
-      username: player.username,
-      gameState: this.engine.generateGameState(room),
-      playedCards: playedCards,
-    });
+    this.engine.emitGameEvents(
+      'played-cards',
+      this.server,
+      room,
+      player,
+      playedCards,
+      isUnoPenalty,
+    );
 
     await this.handleBotMoves(room, client);
   }
 
   public async handleBotMoves(room: GameRoom, client: Socket): Promise<void> {
+    // THIS IS UPDATED TO KNOW WHO ENDED THE GAME
+    let actionPlayer: Player = room.getCurrentPlayer(client.id);
+
     const sleep = (ms: number) =>
       new Promise((resolve) => setTimeout(resolve, ms));
 
@@ -134,56 +147,76 @@ export class GameBotGateway implements OnGatewayDisconnect {
     while (true) {
       // BREAKS WHEN GAME ENDED
       if (this.engine.hasGameEnded(room)) {
+        await sleep(5000);
+
+        this.engine.emitGameEvents(
+          'game-ended',
+          this.server,
+          room,
+          actionPlayer,
+          null,
+          null,
+        );
+
         this.service.destroyRoom(client.id);
-        this.server.to(room.id).emit('game-state-update', {
-          actionType: 'game-ended',
-          gameState: this.engine.generateGameState(room),
-        });
         break;
       }
 
       // BREAKS WHEN ITS THE PLAYER'S TURN
       if (this.service.isBotTurn(room, client.id)) {
         const bot: Player = room.getPlayerFromOrder();
+        actionPlayer = bot;
 
         while (
           this.engine.getPlayableCards(bot.getHand(), room.getGameBoard())
             .length === 0
         ) {
           await sleep(4000);
+
           this.engine.drawCards(room, bot, 1);
-          this.server.to(room.id).emit('game-state-update', {
-            actionType: 'draw-cards',
-            socketId: bot.socketId,
-            username: bot.username,
-            gameState: this.engine.generateGameState(room),
-            cardDrew: bot.getHand()[bot.getHand().length - 1],
-          });
+          this.engine.emitGameEvents(
+            'draw-cards',
+            this.server,
+            room,
+            bot,
+            null,
+            null,
+          );
         }
 
         await sleep(5000);
+
         const longestPattern: Card[] = this.service.getLongestPattern(
           room,
           bot,
         );
         const cardPatternIds: string[] =
           this.service.getCardIds(longestPattern);
+
         bot.setIsUno(true);
+
         this.engine.playCards(
           room,
           bot,
           cardPatternIds,
           this.service.generateRandomWildColor(),
         );
+
+        const isUnoPenalty: boolean = this.engine.checkUnoPenalty(
+          bot.getHand(),
+          bot.isUno(),
+        );
+
         this.engine.processCurrentTurn(room);
         this.engine.processNextTurn(room);
-        this.server.to(room.id).emit('game-state-update', {
-          actionType: 'played-cards',
-          socketId: bot.socketId,
-          username: bot.username,
-          gameState: this.engine.generateGameState(room),
-          playedCards: longestPattern,
-        });
+        this.engine.emitGameEvents(
+          'played-cards',
+          this.server,
+          room,
+          bot,
+          longestPattern,
+          isUnoPenalty,
+        );
       } else break;
     }
   }

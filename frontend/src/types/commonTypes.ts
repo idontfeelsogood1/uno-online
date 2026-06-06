@@ -22,65 +22,72 @@ export interface RoomProps {
 
 export interface GameProps {
   readonly gameState: GameData;
-  readonly actionSocketId: string;
-  readonly actionType: GameStateActionType;
+  readonly actionContext: GameActionProps;
 }
 
 export interface GameBoardProps {
-  readonly topCard: Card;
   readonly enforcedColor: CardColor;
-  readonly gridPosition: string;
+  readonly gridPosition: GridPosition;
   readonly gameState: GameData;
-  readonly setPlayers: CallableFunction;
   readonly hasInitialized: boolean;
-  readonly setHasInitialized: CallableFunction;
+  readonly animationPhase: "idle" | "showcase" | "stacking";
+  readonly cardsToDraw: Card[];
+  readonly prevTopCard: Card;
 }
 
 export interface OtherPlayerProps {
   readonly otherPlayer: GamePlayer;
-  readonly gridPosition: object;
+  readonly gridPosition: GridPosition;
+  readonly carouselSlot: CarouselSlot;
 }
 
 export interface OtherHandProps {
   readonly otherHand: Card[];
   readonly position: string;
+  readonly gridPositionIndex: number;
 }
 
 export interface CurrentPlayerProps {
   readonly player: GamePlayer;
-  readonly gridPosition: string;
-  readonly hasInitialized: boolean;
+  readonly gridPosition: GridPosition;
+  readonly carouselSlot: CarouselSlot;
 }
 
 export interface PlayHandProps {
   readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly setNewStateReceived: CallableFunction;
 }
 
 export interface HandProps {
   readonly pseudoHand: Card[];
   readonly pseudoPlayHand: Card[];
   readonly setPseudoPlayHand: CallableFunction;
-  readonly newStateReceived: boolean;
-  readonly hasInitialized: boolean;
+  readonly gridPositionIndex: number;
 }
 
 export interface ChooseColorProps {
   readonly actionCallback: CallableFunction;
 }
 
-export interface GameActionProps {
-  readonly actionType: GameStateActionType;
-  readonly actionSocketId: string;
+export interface RenderTurnProps {
+  readonly currPlayerSocketId: string;
+  readonly turnIndicators: {
+    readonly socketId: string;
+    readonly renderDelay: number;
+  }[];
+}
+
+export interface StateReceivedBetweenHandsProps {
+  readonly isStateReceivedBetweenHands: boolean;
+  readonly setIsStateReceivedBetweenHands: CallableFunction;
 }
 
 export interface GameEndProps {
-  players: RoomPlayer[];
-  ownerSocketId: string;
-  setHomeView: CallableFunction;
-  continueGame: CallableFunction;
+  readonly players: RoomPlayer[];
+  readonly ownerSocketId: string;
+  readonly setHomeView: CallableFunction;
+  readonly continueGame: CallableFunction;
 }
 
 export interface BotGameEndProps {
@@ -89,8 +96,23 @@ export interface BotGameEndProps {
 }
 
 export interface GridPosition {
-  placement: string;
-  position: string;
+  readonly index: number;
+  readonly placement: string;
+  readonly position: string;
+}
+
+export interface CarouselSlot {
+  readonly x: string;
+  readonly scale: number;
+  readonly opacity: number;
+  readonly zIndex: number;
+  readonly gridPlacement: string;
+}
+
+export interface GameInitializeProps {
+  readonly hasInitialized: boolean;
+  readonly playersSize: number;
+  readonly hasFinishedInitialAnimation: boolean;
 }
 
 export interface RoomData {
@@ -110,14 +132,30 @@ export interface RoomPlayer {
   readonly username: string;
 }
 
+export interface GameActionProps {
+  readonly actionType: GameStateActionType;
+  readonly actionSocketId: string;
+  readonly isActionLocked: boolean | undefined;
+  readonly playedCards: Card[] | undefined; // THESE ARE ACTIONS OF PREVIOUS PLAYERS, ADDED THROUGH THE DTO
+  readonly cardDrew: Card | undefined;
+  readonly unoPenalty: boolean | undefined;
+}
+
 export interface GameData {
   readonly currentPlayerIndex: number;
   readonly playerOrder: GamePlayer[];
   readonly direction: number;
   readonly topCard: Card;
   readonly enforcedColor: CardColor;
-  readonly playedCards: Card[] | undefined;
-  readonly cardDrew: Card | undefined;
+  readonly turnEvents: TurnEvents;
+}
+
+export interface TurnEvents {
+  readonly skip_amount: number;
+  readonly reverse_amount: number;
+  readonly draw_two_amount: number;
+  readonly wild_amount: number;
+  readonly wild_draw_four_amount: number;
 }
 
 export interface GamePlayer {
@@ -125,6 +163,15 @@ export interface GamePlayer {
   readonly username: string;
   hand: Card[];
   readonly uno: boolean;
+}
+
+export interface CardStyle {
+  readonly card: Card;
+  readonly zIndex: number;
+  readonly width: number;
+  readonly height: number;
+  readonly calculatedPosition: number;
+  readonly dealDelay: number;
 }
 
 export interface Card {

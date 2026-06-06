@@ -1,83 +1,42 @@
-import type { Card, GameBoardProps } from "../../../types/commonTypes";
-import { getCardImgPath, getCardCoverImgPath } from "../../../api/helper";
+import type { GameBoardProps } from "../../../types/commonTypes";
+import {
+  getCardImgPath,
+  getCardCoverImgPath,
+  useCardsAnimation,
+} from "../../../api/helper";
 import { GameAction } from "../../../api/GameAction";
-import { useContext, useEffect, useState } from "react";
+import { useContext } from "react";
 import { motion } from "motion/react";
 import { GameModeSocket } from "../../../api/GameModeSocket";
+import { GameInitialize } from "../../../api/GameInitialize";
 
 export default function GameBoard({
-  topCard,
   enforcedColor,
   gridPosition,
   gameState,
-  setPlayers,
   hasInitialized,
-  setHasInitialized,
+  animationPhase,
+  cardsToDraw,
+  prevTopCard,
 }: GameBoardProps) {
-  const context = useContext(GameAction);
-  const { actionType, actionSocketId } = context!;
-
-  const [animationPhase, setAnimationPhase] = useState<
-    "idle" | "showcase" | "stacking"
-  >("idle");
-
-  const [drawCards, setDrawCards] = useState<boolean>(false);
-  const [prevTopCard, setPrevTopCard] = useState<Card>(topCard);
+  const actionContext = useContext(GameAction);
+  const initializeContext = useContext(GameInitialize);
+  const { actionSocketId, isActionLocked, playedCards } = actionContext!;
+  const { cardContainerRef, cardPhysics } = useCardsAnimation(
+    gridPosition.position,
+    gridPosition.index,
+    playedCards ? playedCards : [],
+    initializeContext!,
+  );
 
   const socket = useContext(GameModeSocket)!;
 
-  useEffect(() => {
-    if (
-      actionType === "played-cards" &&
-      gameState.playedCards &&
-      gameState.playedCards.length > 0
-    ) {
-      setAnimationPhase("showcase");
-
-      const stackTimer = setTimeout(() => {
-        setAnimationPhase("stacking");
-      }, 2000);
-
-      const cleanupTimer = setTimeout(() => {
-        setPrevTopCard(topCard);
-        setAnimationPhase("idle");
-      }, 3000);
-
-      return () => {
-        clearTimeout(stackTimer);
-        clearTimeout(cleanupTimer);
-      };
-    }
-
-    if (actionType === "draw-cards") {
-      setDrawCards(true);
-
-      const disappearTimer = setTimeout(() => {
-        setDrawCards(false);
-        setPlayers(gameState.playerOrder);
-      }, 50);
-
-      return () => {
-        clearTimeout(disappearTimer);
-      };
-    }
-
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [actionType, gameState]);
-
-  useEffect(() => {
-    function setCardsForPlayers(): void {
-      setPlayers(gameState.playerOrder);
-      setHasInitialized(true);
-    }
-    setCardsForPlayers();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, []);
-
+  // THIS RENDERS THE HAND IN A CLOCKWISE ORDER
   function renderTempHand(): React.ReactElement {
     const elements: React.ReactElement[] = [];
-    gameState.playerOrder.map((player) =>
-      player.hand.map((card) =>
+
+    gameState.playerOrder.forEach((player) => {
+      player.hand.forEach((card) => {
         elements.push(
           <motion.div
             key={card.id}
@@ -92,9 +51,10 @@ export default function GameBoard({
               />
             </div>
           </motion.div>,
-        ),
-      ),
-    );
+        );
+      });
+    });
+
     return (
       <div className="relative shrink h-full max-h-64 aspect-2/3">
         {elements}
@@ -104,15 +64,18 @@ export default function GameBoard({
 
   function renderShowcase(): React.ReactElement[] {
     const elements: React.ReactElement[] = [];
-    const playedCards: Card[] = gameState.playedCards!;
 
-    for (let i = 0; i < gameState.playedCards!.length; i++) {
+    for (let i = 0; i < cardPhysics.length; i++) {
       const dealDelay = i * 0.25;
       elements.push(
         <motion.div
-          key={playedCards[i].id}
-          layoutId={playedCards[i].id}
-          className="shrink h-full max-h-64 aspect-2/3 z-20"
+          key={cardPhysics[i].card.id}
+          layoutId={cardPhysics[i].card.id}
+          className="absolute shrink h-full max-h-64 aspect-2/3 z-20"
+          style={{
+            zIndex: cardPhysics[i].zIndex,
+            left: cardPhysics[i].calculatedPosition,
+          }}
           initial={{ scale: 0.8 }}
           animate={{ scale: 1.2 }}
           transition={{
@@ -126,7 +89,7 @@ export default function GameBoard({
           }}
         >
           <motion.div
-            className="w-full h-full relative transform-3d"
+            className="relative w-full h-full transform-3d"
             initial={{ rotateY: actionSocketId !== socket.id! ? 180 : 0 }}
             animate={{ rotateY: 0 }}
             transition={{
@@ -137,16 +100,16 @@ export default function GameBoard({
             }}
           >
             <img
-              src={getCardImgPath(playedCards[i])}
-              alt={playedCards[i].name}
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
+              src={getCardImgPath(playedCards![i])}
+              alt={playedCards![i].name}
+              className="absolute inset-0 w-full h-full object-contain backface-hidden rounded-md shadow-md"
             />
 
             {actionSocketId !== socket.id! && (
               <img
                 src={getCardCoverImgPath()}
                 alt="Card cover"
-                className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-md"
+                className="absolute inset-0 w-full h-full object-contain backface-hidden rotate-y-180 rounded-md shadow-md"
               />
             )}
           </motion.div>
@@ -158,14 +121,14 @@ export default function GameBoard({
 
   function renderStacking(): React.ReactElement[] {
     const elements: React.ReactElement[] = [];
-    const playedCards: Card[] = gameState.playedCards!;
 
-    for (let i = 0; i < playedCards.length; i++) {
+    for (let i = 0; i < playedCards!.length; i++) {
       elements.push(
         <motion.div
-          key={playedCards[i].id}
-          layoutId={playedCards[i].id}
+          key={playedCards![i].id}
+          layoutId={playedCards![i].id}
           className="absolute inset-0 w-full h-full z-10"
+          style={{ zIndex: i }}
           initial={{ scale: 1.2 }}
           animate={{ scale: 1 }}
           transition={{
@@ -175,9 +138,9 @@ export default function GameBoard({
         >
           <div className="w-full h-full relative transform-3d">
             <img
-              src={getCardImgPath(playedCards[i])}
-              alt={playedCards[i].name}
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
+              src={getCardImgPath(playedCards![i])}
+              alt={playedCards![i].name}
+              className="absolute inset-0 w-full h-full object-contain backface-hidden rounded-md shadow-md"
             />
           </div>
         </motion.div>,
@@ -188,58 +151,74 @@ export default function GameBoard({
 
   return (
     <div
-      className={`${gridPosition} relative flex justify-center items-center gap-1 p-1 text-center border`}
+      className={`${gridPosition.placement} relative flex flex-col justify-center items-center gap-2 p-1 text-center border w-full h-full min-h-0 min-w-0`}
     >
-      {!hasInitialized ? (
-        renderTempHand()
-      ) : (
-        <button
-          onClick={() => socket.emit("draw-card")}
-          className="relative h-full shrink-0"
-        >
+      <div className="flex flex-row justify-center items-center gap-2 w-full h-full min-h-0 min-w-0 shrink">
+        {!hasInitialized ? (
+          renderTempHand()
+        ) : (
+          <button
+            onClick={() => socket.emit("draw-card")}
+            className="relative h-full max-h-64 aspect-2/3 min-h-0 min-w-0 shrink"
+            disabled={isActionLocked}
+          >
+            <img
+              src={getCardCoverImgPath()}
+              alt="Draw cards"
+              className="absolute inset-0 w-full h-full object-contain rounded-md shadow-md"
+            />
+            {cardsToDraw &&
+              cardsToDraw.length > 0 &&
+              cardsToDraw.map((card, i) => {
+                return (
+                  <motion.div
+                    key={card.id}
+                    layoutId={card.id}
+                    className="absolute inset-0 w-full h-full shadow-sm"
+                    style={{ zIndex: i }}
+                  >
+                    <div className="w-full h-full relative transform-3d rotate-y-180">
+                      <img
+                        src={getCardCoverImgPath()}
+                        alt="Card cover"
+                        className="absolute inset-0 w-full h-full object-contain backface-hidden rounded-md"
+                      />
+                    </div>
+                  </motion.div>
+                );
+              })}
+          </button>
+        )}
+
+        {/* Stacking */}
+        <div className="relative h-full max-h-64 aspect-2/3 min-h-0 min-w-0 shrink">
           <img
-            src={getCardCoverImgPath()}
-            alt="Draw cards"
-            className="w-full h-full max-h-64 aspect-2/3 object-cover rounded-md shadow-md"
+            src={getCardImgPath(prevTopCard!)}
+            alt={prevTopCard!.color + " " + prevTopCard!.value}
+            className="absolute inset-0 w-full h-full object-contain rounded-md shadow-md"
           />
-          {drawCards && (
-            <motion.div
-              key={gameState.cardDrew!.id}
-              layoutId={gameState.cardDrew!.id}
-              className="absolute inset-0 w-full h-full shadow-sm"
-            >
-              <div className="w-full h-full relative transform-3d rotate-y-180">
-                <img
-                  src={getCardCoverImgPath()}
-                  alt="Card cover"
-                  className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md"
-                />
-              </div>
-            </motion.div>
-          )}
-        </button>
-      )}
-
-      <div className="relative shrink h-full max-h-64 aspect-2/3">
-        <img
-          src={getCardImgPath(prevTopCard!)}
-          alt={prevTopCard!.color + " " + prevTopCard!.value}
-          className="absolute inset-0 w-full h-full object-cover rounded-md shadow-md"
-        />
-        {animationPhase === "stacking" && renderStacking()}
-      </div>
-
-      <div className="border">{prevTopCard!.color}</div>
-
-      <div className="border">
-        {topCard.color === "BLACK" ? enforcedColor : "No enforced color"}
-      </div>
-
-      {animationPhase === "showcase" && (
-        <div className="absolute inset-0 flex justify-center items-center -space-x-4 pointer-events-none z-50 border">
-          {renderShowcase()}
+          {animationPhase === "stacking" && renderStacking()}
         </div>
-      )}
+      </div>
+
+      <div className="flex flex-row justify-center items-center gap-2 w-full shrink-0 text-xs sm:text-sm font-semibold">
+        <div className="border px-2 py-1 rounded bg-white/50 truncate">
+          {prevTopCard.color === "BLACK"
+            ? `Choosen color: ${enforcedColor}`
+            : "No choosen color"}
+        </div>
+        <div className="border px-2 py-1 rounded bg-white/50 truncate">
+          {prevTopCard!.color}
+        </div>
+      </div>
+
+      {/* Showcase */}
+      <div
+        ref={cardContainerRef}
+        className={`absolute inset-0 pointer-events-none z-50 p-2`}
+      >
+        {animationPhase === "showcase" && renderShowcase()}
+      </div>
     </div>
   );
 }

@@ -1,132 +1,53 @@
-import { getCardImgPath } from "../../../../api/helper";
+import {
+  getCardCoverImgPath,
+  getCardImgPath,
+  useCardsAnimation,
+} from "../../../../api/helper";
 import type { Card, PlayHandProps } from "../../../../types/commonTypes";
 import ChooseColor from "../choose-color/ChooseColor";
-import { useContext, useEffect, useState, useRef } from "react";
+import { useContext, useEffect, useState } from "react";
 import { GameAction } from "../../../../api/GameAction";
-import { motion } from "motion/react";
 import { GameModeSocket } from "../../../../api/GameModeSocket";
+import { GameInitialize } from "../../../../api/GameInitialize";
+import { motion } from "motion/react";
+import { StateReceivedBetweenHands } from "../../../../api/StateReceivedBetweenHand";
 
 export default function PlayHand({
   pseudoHand,
   pseudoPlayHand,
   setPseudoPlayHand,
-  setNewStateReceived,
 }: PlayHandProps) {
-  const action = useContext(GameAction);
+  const actionContext = useContext(GameAction);
   const [showChooseColor, setShowChooseColor] = useState<boolean>(false);
   const [showChooseColorActionCb, setShowChooseColorActionCb] =
     useState<CallableFunction | null>(null);
 
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
-
+  const [isUno, setIsUno] = useState<boolean>(false);
   const [canUno, setCanUno] = useState<boolean>(false);
 
   const socket = useContext(GameModeSocket)!;
+  const initializeContext = useContext(GameInitialize);
 
+  const stateReceivedBetweenHandContext = useContext(
+    StateReceivedBetweenHands,
+  )!;
+  const { setIsStateReceivedBetweenHands, isStateReceivedBetweenHands } =
+    stateReceivedBetweenHandContext;
+
+  const { cardContainerRef, cardPhysics } = useCardsAnimation(
+    "bottom",
+    0,
+    pseudoPlayHand,
+    initializeContext!,
+  );
+
+  // CHECK IF THE PLAYER CAN UNO ON HAND CHANGE
   useEffect(() => {
-    if (
-      action!.actionType === "played-cards" &&
-      socket.id === action!.actionSocketId
-    ) {
-      setPseudoPlayHand([]);
+    if (pseudoHand.length <= 1) {
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setCanUno(true);
     }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [action]);
-
-  useEffect(() => {
-    setCanUno(false);
-  }, [pseudoPlayHand]);
-
-  // SET WIDTH/HEIGHT OF CONTAINER THE MICROSECOND THE DIV APPEARS
-  useEffect(() => {
-    if (!containerRef.current) return;
-
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerSize({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
-
-    observer.observe(containerRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  function renderHand(): React.ReactElement[] {
-    const htmlList: React.ReactElement[] = [];
-
-    const actualCardHeight = Math.min(containerSize.height + 15, 256);
-    const dynamicCardWidth = actualCardHeight * (2 / 3);
-
-    // CALCULATE THE STEPS
-    let step = 0;
-    if (pseudoPlayHand.length > 1 && containerSize.width > 0) {
-      step =
-        (containerSize.width - dynamicCardWidth) / (pseudoPlayHand.length - 1);
-      step = Math.min(step, dynamicCardWidth + 10);
-      step = Math.max(step, 30);
-    }
-
-    // CENTERING THE CARDS
-    const totalUsedWidth =
-      dynamicCardWidth + (pseudoPlayHand.length - 1) * step;
-    const startOffset = (containerSize.width - totalUsedWidth) / 2;
-
-    for (let i = 0; i < pseudoPlayHand.length; i++) {
-      const dealDelay = i * 0.05;
-
-      // CALCULATE PIXEL POSITION
-      const leftPosition = startOffset + i * step;
-
-      htmlList.push(
-        <motion.div
-          key={pseudoPlayHand[i].id}
-          layoutId={pseudoPlayHand[i].id}
-          onClick={() => {
-            removeCardFromPlayHand(pseudoPlayHand[i]);
-          }}
-          className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer shadow-lg"
-          style={{ zIndex: i, width: dynamicCardWidth }}
-          whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
-          initial={{ scale: 0.8 }}
-          animate={{ scale: 1, left: leftPosition }}
-          transition={{
-            layout: {
-              type: "spring",
-              stiffness: 80,
-              damping: 14,
-              delay: dealDelay,
-            },
-            scale: { type: "tween", duration: 0.6, delay: dealDelay },
-            left: { type: "spring", stiffness: 200, damping: 20 },
-          }}
-        >
-          <motion.div
-            className="absolute w-full h-full transform-3d"
-            transition={{
-              type: "tween",
-              duration: 0.6,
-              ease: "easeInOut",
-              delay: dealDelay,
-            }}
-          >
-            <img
-              src={getCardImgPath(pseudoPlayHand[i])}
-              alt={pseudoPlayHand[i].name}
-              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-md"
-            />
-          </motion.div>
-        </motion.div>,
-      );
-    }
-    return htmlList;
-  }
+  }, [pseudoHand, pseudoPlayHand]);
 
   function removeCardFromPlayHand(card: Card) {
     setPseudoPlayHand(
@@ -134,7 +55,9 @@ export default function PlayHand({
         return card.id !== pseudoCard.id;
       }),
     );
-    setNewStateReceived(false);
+    setIsStateReceivedBetweenHands(true);
+    setCanUno(false);
+    setIsUno(false);
   }
 
   function playCondition(action: CallableFunction) {
@@ -162,6 +85,9 @@ export default function PlayHand({
         uno: canUno,
       });
 
+      setPseudoPlayHand([]);
+      setCanUno(false);
+      setIsUno(false);
       setShowChooseColor(false);
     };
     playCondition(callback);
@@ -169,25 +95,109 @@ export default function PlayHand({
 
   function uno() {
     if (pseudoHand.length <= 1) {
-      setCanUno(true);
+      setCanUno(false);
+      setIsUno(true);
     }
+  }
+
+  function resetSetStateReceivedDelayed(ms: number) {
+    setTimeout(() => {
+      setIsStateReceivedBetweenHands(false);
+    }, ms);
+  }
+
+  function renderHandContainer(): React.ReactElement {
+    const cardElements: React.ReactElement[] = [];
+
+    cardPhysics.forEach((cardStyle) => {
+      cardElements.push(
+        <motion.div
+          key={cardStyle.card.id}
+          layoutId={cardStyle.card.id}
+          onClick={() => {
+            removeCardFromPlayHand(cardStyle.card);
+          }}
+          className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer shadow-lg"
+          style={{
+            zIndex: cardStyle.zIndex,
+            width: cardStyle.width + 10,
+            left: cardStyle.calculatedPosition,
+            pointerEvents:
+              !initializeContext!.hasFinishedInitialAnimation ||
+              isStateReceivedBetweenHands
+                ? "none"
+                : "auto",
+          }}
+          whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
+          initial={{ scale: 0.8 }}
+          animate={{ scale: 1 }}
+          transition={{
+            layout: {
+              type: "spring",
+              stiffness: 80,
+              damping: 14,
+              delay: cardStyle.dealDelay,
+            },
+            scale: { type: "tween", duration: 0.6, delay: cardStyle.dealDelay },
+            left: { type: "spring", stiffness: 200, damping: 20 },
+          }}
+        >
+          <motion.div
+            className="absolute w-full h-full transform-3d"
+            initial={{ rotateY: 0 }}
+            animate={{ rotateY: 0 }}
+            onAnimationComplete={() => {
+              resetSetStateReceivedDelayed(50);
+            }}
+            transition={{
+              type: "tween",
+              duration: 0.6,
+              ease: "easeInOut",
+              delay: cardStyle.dealDelay,
+            }}
+          >
+            <img
+              src={getCardImgPath(cardStyle.card)}
+              alt={cardStyle.card.name}
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-lg"
+            />
+            <img
+              src={getCardCoverImgPath()}
+              alt="Card cover"
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-lg"
+            />
+          </motion.div>
+        </motion.div>,
+      );
+    });
+
+    return (
+      <div
+        ref={cardContainerRef}
+        className="relative flex-1 w-full h-full min-h-0 min-w-0 border"
+      >
+        {cardElements}
+      </div>
+    );
   }
 
   return (
     <>
       <div className="border p-1 flex flex-1 justify-center">
         <div className="grow flex flex-col min-h-0">
-          <div ref={containerRef} className="relative w-full border h-full">
-            {renderHand()}
-          </div>
+          {renderHandContainer()}
           <div className="flex justify-center border p-1 gap-1 shrink-0">
-            <button onClick={playCards} className="border">
+            <button
+              onClick={playCards}
+              className={`border ${!actionContext!.isActionLocked ? "opacity-100" : "opacity-50"}`}
+              disabled={actionContext!.isActionLocked}
+            >
               PLAY CARDS
             </button>
             <button
-              className={`border ${canUno ? "opacity-50" : "opacity-100"}`}
+              className={`border ${canUno && !isUno ? "opacity-100" : "opacity-50"}`}
               onClick={uno}
-              disabled={canUno ? true : false}
+              disabled={(canUno && isUno) || actionContext!.isActionLocked}
             >
               UNO
             </button>

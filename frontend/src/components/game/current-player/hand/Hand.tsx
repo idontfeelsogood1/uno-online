@@ -1,129 +1,129 @@
-import { useEffect, useRef, useState } from "react";
-import { getCardCoverImgPath, getCardImgPath } from "../../../../api/helper";
+import { useContext } from "react";
+import {
+  getCardCoverImgPath,
+  getCardImgPath,
+  useCardsAnimation,
+} from "../../../../api/helper";
 import type { Card, HandProps } from "../../../../types/commonTypes";
+import { GameInitialize } from "../../../../api/GameInitialize";
+import { GameAction } from "../../../../api/GameAction";
 import { motion } from "motion/react";
+import { StateReceivedBetweenHands } from "../../../../api/StateReceivedBetweenHand";
 
 export default function Hand({
   pseudoHand,
   pseudoPlayHand,
   setPseudoPlayHand,
-  newStateReceived,
-  hasInitialized,
+  gridPositionIndex,
 }: HandProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [containerSize, setContainerSize] = useState({ width: 0, height: 0 });
+  const initializeContext = useContext(GameInitialize);
+  const actionContext = useContext(GameAction);
+  const {
+    cardContainerRef,
+    cardPhysics,
+    updateStyleOnInitialAnimationComplete,
+  } = useCardsAnimation(
+    "bottom",
+    gridPositionIndex,
+    pseudoHand,
+    initializeContext!,
+  );
+
+  const stateReceivedBetweenHandContext = useContext(
+    StateReceivedBetweenHands,
+  )!;
+  const { isStateReceivedBetweenHands, setIsStateReceivedBetweenHands } =
+    stateReceivedBetweenHandContext;
 
   function addCardToPlayHand(card: Card) {
     setPseudoPlayHand([...pseudoPlayHand, card]);
+    setIsStateReceivedBetweenHands(true);
   }
 
-  // SET WIDTH/HEIGHT OF CONTAINER THE MICROSECOND THE DIV APPEARS
-  useEffect(() => {
-    if (!containerRef.current) return;
+  function resetSetStateReceivedDelayed(ms: number) {
+    setTimeout(() => {
+      setIsStateReceivedBetweenHands(false);
+    }, ms);
+  }
 
-    const observer = new ResizeObserver((entries) => {
-      for (const entry of entries) {
-        setContainerSize({
-          width: entry.contentRect.width,
-          height: entry.contentRect.height,
-        });
-      }
-    });
+  function renderHandContainer(): React.ReactElement {
+    const cardElements: React.ReactElement[] = [];
 
-    observer.observe(containerRef.current);
-
-    return () => {
-      observer.disconnect();
-    };
-  }, []);
-
-  function renderHand(): React.ReactElement[] {
-    const htmlList: React.ReactElement[] = [];
-
-    const actualCardHeight = Math.min(containerSize.height + 30, 256);
-    const dynamicCardWidth = actualCardHeight * (2 / 3);
-
-    // CALCULATE THE STEPS
-    let step = 0;
-    if (pseudoHand.length > 1 && containerSize.width > 0) {
-      step = (containerSize.width - dynamicCardWidth) / (pseudoHand.length - 1);
-      step = Math.min(step, dynamicCardWidth + 10);
-      step = Math.max(step, 30);
-    }
-
-    // CENTERING THE CARDS
-    const totalUsedWidth = dynamicCardWidth + (pseudoHand.length - 1) * step;
-    const startOffset = (containerSize.width - totalUsedWidth) / 2;
-
-    for (let i = 0; i < pseudoHand.length; i++) {
-      const dealDelay = i * (!hasInitialized ? 1.2 : 0.05);
-
-      // CALCULATE PIXEL POSITION
-      const leftPosition = startOffset + i * step;
-
-      htmlList.push(
+    cardPhysics.forEach((cardStyle) => {
+      cardElements.push(
         <motion.div
-          key={pseudoHand[i].id}
-          layoutId={pseudoHand[i].id}
+          key={cardStyle.card.id}
+          layoutId={cardStyle.card.id}
           onClick={() => {
-            addCardToPlayHand(pseudoHand[i]);
+            addCardToPlayHand(cardStyle.card);
           }}
-          className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer"
-          style={{ zIndex: i, width: dynamicCardWidth }}
+          className="absolute top-1/2 -translate-y-1/2 h-full max-h-64 aspect-2/3 cursor-pointer shadow-lg"
+          style={{
+            zIndex: cardStyle.zIndex,
+            width: cardStyle.width + 10,
+            left: cardStyle.calculatedPosition,
+            pointerEvents: isStateReceivedBetweenHands ? "none" : "auto",
+          }}
           whileHover={{ y: "-10%", zIndex: 100, scale: 1.1 }}
+          onAnimationComplete={() => {
+            updateStyleOnInitialAnimationComplete(cardStyle.card.id);
+          }}
           initial={{ scale: 0.8 }}
-          animate={{ scale: 1, left: leftPosition }}
+          animate={{ scale: 1 }}
           transition={{
             layout: {
               type: "spring",
               stiffness: 80,
               damping: 14,
-              delay: dealDelay,
+              delay: cardStyle.dealDelay,
             },
-            scale: { type: "tween", duration: 0.4, delay: dealDelay },
+            scale: { type: "tween", duration: 0.6, delay: cardStyle.dealDelay },
             left: { type: "spring", stiffness: 200, damping: 20 },
           }}
         >
           <motion.div
-            className="w-full h-full absolute transform-3d"
-            initial={{ rotateY: newStateReceived ? 180 : 0 }}
+            className="absolute w-full h-full transform-3d"
+            initial={{
+              rotateY:
+                isStateReceivedBetweenHands || !actionContext!.isActionLocked
+                  ? 0
+                  : 180,
+            }}
             animate={{ rotateY: 0 }}
+            onAnimationComplete={() => {
+              resetSetStateReceivedDelayed(50);
+            }}
             transition={{
               type: "tween",
               duration: 0.6,
               ease: "easeInOut",
-              delay: dealDelay,
+              delay: cardStyle.dealDelay,
             }}
           >
             <img
-              src={getCardImgPath(pseudoHand[i])}
-              alt={pseudoHand[i].name}
+              src={getCardImgPath(cardStyle.card)}
+              alt={cardStyle.card.name}
               className="absolute inset-0 w-full h-full object-cover backface-hidden rounded-md shadow-lg"
             />
-
-            {newStateReceived && (
-              <img
-                src={getCardCoverImgPath()}
-                alt="Card cover"
-                className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-lg"
-              />
-            )}
+            <img
+              src={getCardCoverImgPath()}
+              alt="Card cover"
+              className="absolute inset-0 w-full h-full object-cover backface-hidden rotate-y-180 rounded-md shadow-lg"
+            />
           </motion.div>
         </motion.div>,
       );
-    }
+    });
 
-    return htmlList;
+    return (
+      <div
+        ref={cardContainerRef}
+        className="relative flex-1 w-full h-full min-h-0 min-w-0 border"
+      >
+        {cardElements}
+      </div>
+    );
   }
 
-  return (
-    <div className="flex-1">
-      <div
-        ref={containerRef}
-        className="relative w-full h-full min-h-0 border p-1"
-      >
-        {renderHand()}
-      </div>
-    </div>
-  );
+  return <div className="flex-1">{renderHandContainer()}</div>;
 }

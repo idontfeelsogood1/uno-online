@@ -1,20 +1,22 @@
-import { useEffect, useState } from "react";
+import { useContext, useState } from "react";
 import type { Card, CurrentPlayerProps } from "../../../types/commonTypes";
 import Hand from "./hand/Hand";
 import PlayHand from "./play-hand/PlayHand";
+import { RenderTurn } from "../../../api/RenderTurn";
+import { useRenderIndicator } from "../../../api/helper";
+import { StateReceivedBetweenHands } from "../../../api/StateReceivedBetweenHand";
 
 export default function CurrentPlayer({
   player,
   gridPosition,
-  hasInitialized,
 }: CurrentPlayerProps) {
   const [pseudoPlayHand, setPseudoPlayHand] = useState<Card[]>([]);
-  const [newStateReceived, setNewStateReceived] = useState<boolean>(true);
+  const [isStateReceivedBetweenHands, setIsStateReceivedBetweenHands] =
+    useState<boolean>(false);
 
-  useEffect(() => {
-    // eslint-disable-next-line react-hooks/set-state-in-effect
-    setNewStateReceived(true);
-  }, [player]);
+  const renderContext = useContext(RenderTurn);
+
+  const { isIndicatorTurn } = useRenderIndicator(renderContext!, player);
 
   function isCardInPseudoPlayHand(card: Card): boolean {
     let isInHand: boolean = false;
@@ -30,28 +32,32 @@ export default function CurrentPlayer({
     return !isCardInPseudoPlayHand(card);
   });
 
-  // FIX THE CURRENT PLAYER COMPONENT'S HAND AND PLAYHAND NOT DISTRIBUTED EVENLY ON DIFFERENT SCREEN SIZE
+  function getIndicatorStyle(): string {
+    return isIndicatorTurn ? "border-green-500" : "";
+  }
 
   return (
     <div
-      className={`${gridPosition} flex flex-col gap-1 p-1 ml-[25%] mr-[25%] border`}
+      className={`${gridPosition.placement} ${getIndicatorStyle()} flex flex-col gap-1 p-1 border`}
     >
       <div className="border flex items-center justify-center text-center">
         <span>{player.username}</span>
       </div>
-      <PlayHand
-        pseudoHand={pseudoHand}
-        pseudoPlayHand={pseudoPlayHand}
-        setPseudoPlayHand={setPseudoPlayHand}
-        setNewStateReceived={setNewStateReceived}
-      />
-      <Hand
-        pseudoHand={pseudoHand}
-        pseudoPlayHand={pseudoPlayHand}
-        setPseudoPlayHand={setPseudoPlayHand}
-        newStateReceived={newStateReceived}
-        hasInitialized={hasInitialized}
-      />
+      <StateReceivedBetweenHands.Provider
+        value={{ isStateReceivedBetweenHands, setIsStateReceivedBetweenHands }}
+      >
+        <PlayHand
+          pseudoHand={pseudoHand}
+          pseudoPlayHand={pseudoPlayHand}
+          setPseudoPlayHand={setPseudoPlayHand}
+        />
+        <Hand
+          pseudoHand={pseudoHand}
+          pseudoPlayHand={pseudoPlayHand}
+          setPseudoPlayHand={setPseudoPlayHand}
+          gridPositionIndex={gridPosition.index}
+        />
+      </StateReceivedBetweenHands.Provider>
     </div>
   );
 }
