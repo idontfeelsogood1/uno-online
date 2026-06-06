@@ -27,7 +27,7 @@ This project was built to explore real-time, event-driven architectures and comp
 
 - **Containerization**: Fully containerized using Docker and Docker Compose, ensuring environment parity across local development, CI, and production.
 - **Secure Tunneling**: Integrates Cloudflare Tunnels (`cloudflared`) to securely expose the application without modifying local firewalls or NAT configurations.
-- **Self-Hosted CI/CD**: Includes a custom Docker-out-of-Docker (DooD) GitHub Actions runner configured within the `docker-compose.yml`, enabling automated, isolated pipeline executions directly on the host machine.
+- **Self-Hosted CI/CD**: Includes a custom Docker-out-of-Docker GitHub Actions runner configured within the `docker-compose.yml`, enabling automated, isolated pipeline executions directly on the host machine.
 
 ## 🛠️ Technical Stack
 
@@ -47,7 +47,7 @@ This project was built to explore real-time, event-driven architectures and comp
 │   │   ├── model/           # OOP models (Card, GameBoard, Player, GameRoom)
 │   │   ├── gateway-dto/     # Strict typing/validation for incoming Socket payloads
 │   │   ├── gateway-filter/  # Custom error boundaries for WS exceptions
-│   │   ├── bot-vs-player/   # PvE orchestrator and AI decision logic
+│   │   ├── bot-vs-player/   # PvE orchestrator and Bot decision logic
 │   │   └── player-vs-player/# PvP orchestrator and room management
 ├── frontend/src/
 │   ├── api/                 # WebSocket event emitters and listeners
