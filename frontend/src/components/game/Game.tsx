@@ -38,7 +38,7 @@ export default function Game({ gameState, actionContext }: GameProps) {
     animationPhase,
     cardsToDraw,
     prevTopCard,
-  } = useAnimationsOrchestrator(gameState, actionContext);
+  } = useAnimationsOrchestrator(gameState, actionContext, isLoading);
 
   const leftPlacement: string =
     "col-start-1 row-start-1 row-span-2 flex-row-reverse h-full w-full min-h-0 min-w-0";

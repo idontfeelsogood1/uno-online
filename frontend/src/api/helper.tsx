@@ -260,6 +260,7 @@ export function useCardsAnimation(
 export function useAnimationsOrchestrator(
   gameState: GameData,
   actionContext: GameActionProps,
+  isPresetLoading: boolean,
 ) {
   const [hasInitialized, setHasInitialized] = useState<boolean>(false);
   const [hasFinishedInitialAnimation, setHasFinishedInitialAnimation] =
@@ -301,8 +302,11 @@ export function useAnimationsOrchestrator(
       }, 9000);
     }
 
+    if (isPresetLoading) return;
+
     setPlayers(getEmptyHandPlayers());
     setCardsForPlayers();
+
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
@@ -406,6 +410,8 @@ export function useAnimationsOrchestrator(
         currCardsToDraw: currCardsToDraw,
       };
     }
+
+    if (isPresetLoading) return; // Prevent anymation plays before preset has loaded
 
     if (actionType === "create-game") {
       let ms: number = 0;
